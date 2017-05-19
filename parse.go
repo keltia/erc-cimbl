@@ -3,44 +3,33 @@ package main
 import (
 	"os"
 	"encoding/csv"
-	"regexp"
 	"strings"
-	"fmt"
 )
 
-var (
-	EXTS = []string{
-		".apk", ".app", ".bat", ".cab",
-		".chm", ".cmd", ".com", ".dll",
-		".exe", ".hlp", ".hta", ".inf",
-		".jar", ".jnl", ".jnt", ".js",
-		".jse", ".lnk", ".mht", ".mhtml",
-		".msh", ".msh1", ".msh1xml", ".msh2",
-		".msh2xml", ".msi", ".msp", ".ocx",
-		".pif", ".ps1", ".ps1xml", ".ps2",
-		".ps2xml", ".psc1", ".psc2", ".pub",
-		".reg", ".scf", ".scr", ".url", ".vb",
-		".vbe", ".vbs", ".ws", ".wsc",
-		".wsf", ".wsh",
-	}
+/*
+Fields in the CSV file:
 
-	REstr string
-)
+observable_uuid,
+kill_chain,
+type,
+time_start,
+time_end,
+value,
+to_ids,
+blacklist,
+malware_research,
+vuln_mgt,indicator_uuid,
+indicator_detect_time,
+indicator_threat_type,
+indicator_threat_level,
+indicator_targeted_domain,
+indicator_start_time,
+indicator_end_time,
+indicator_title
 
-func init() {
-	REstr = fmt.Sprintf("(%s)$", strings.Join(EXTS, "|"))
-}
+We filter on "type", looking for "url" & "filename".
 
-func handlePath(path string) {
-	if regexp.MatchString(REstr, path) {
-
-	}
-}
-
-func handleURL(url string) {
-
-}
-
+ */
 func handleCSV(file string) {
 	var fh *os.File
 
@@ -57,8 +46,18 @@ func handleCSV(file string) {
 	all := csv.NewReader(fh)
 	allLines, err := all.ReadAll()
 
-	entries := make(map[string]string)
 	for _, line := range allLines {
+		// type at index 2
+		// value at index 5
+		vtype := line[2]
+		etype := strings.Split(vtype, "|")
+
+		switch etype[0] {
+		case "filename":
+			handlePath(entryToPath(line[5]))
+		case "url":
+			handleURL(line[5])
+		}
 
 	}
 	return
