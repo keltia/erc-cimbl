@@ -30,15 +30,20 @@ indicator_title
 We filter on "type", looking for "url" & "filename".
 
  */
-func handleCSV(file string) {
-	var fh *os.File
 
-	_, err := os.Stat(file)
+func openFile(file string) (fh *os.File, err error) {
+	_, err = os.Stat(file)
 	if err != nil {
 		return
 	}
 
-	if fh, err = os.Open(file); err != nil {
+	fh, err = os.Open(file)
+	return
+}
+
+func handleCSV(file string) {
+	fh, err := openFile(file)
+	if err != nil {
 		return
 	}
 	defer fh.Close()
