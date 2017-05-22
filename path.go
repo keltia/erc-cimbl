@@ -8,18 +8,18 @@ import (
 
 var (
     EXTS = []string{
-        ".apk", ".app", ".bat", ".cab",
-        ".chm", ".cmd", ".com", ".dll",
-        ".exe", ".hlp", ".hta", ".inf",
-        ".jar", ".jnl", ".jnt", ".js",
-        ".jse", ".lnk", ".mht", ".mhtml",
-        ".msh", ".msh1", ".msh1xml", ".msh2",
-        ".msh2xml", ".msi", ".msp", ".ocx",
-        ".pif", ".ps1", ".ps1xml", ".ps2",
-        ".ps2xml", ".psc1", ".psc2", ".pub",
-        ".reg", ".scf", ".scr", ".url", ".vb",
-        ".vbe", ".vbs", ".ws", ".wsc",
-        ".wsf", ".wsh",
+        "apk", "app", "bat", "cab",
+        "chm", "cmd", "com", "dll",
+        "exe", "hlp", "hta", "inf",
+        "jar", "jnl", "jnt", "js",
+        "jse", "lnk", "mht", "mhtml",
+        "msh", "msh1", "msh1xml", "msh2",
+        "msh2xml", "msi", "msp", "ocx",
+        "pif", "ps1", ".ps1xml", "ps2",
+        "s2xml", "psc1", "psc2", "pub",
+        "reg", "scf", "scr", "url", "vb",
+        "vbe", "vbs", "ws", "wsc",
+        "wsf", "wsh",
     }
 
     REstr *regexp.Regexp
@@ -29,7 +29,7 @@ var (
 )
 
 func init() {
-    REstr = regexp.MustCompile(fmt.Sprintf("(%s)$", strings.Join(EXTS, "|")))
+    REstr = regexp.MustCompile(fmt.Sprintf("\\.(i:%s)$", strings.Join(EXTS, "|")))
 }
 
 func handlePath(path string) {
