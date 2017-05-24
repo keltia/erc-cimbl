@@ -49,7 +49,7 @@ func openFile(file string) (fh *os.File, err error) {
 	return
 }
 
-func handleCSV(file string) {
+func handleCSV(file string) (err error) {
 	fh, err := openFile(file)
 	if err != nil {
 		return
@@ -72,5 +72,5 @@ func handleCSV(file string) {
 			handleURL(line[5])
 		}
 	}
-	return
+	return nil
 }
