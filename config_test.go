@@ -4,6 +4,8 @@ package main
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
+    "os"
+    "path/filepath"
 )
 
 func TestLoadConfigNone(t *testing.T) {
@@ -23,6 +25,22 @@ func TestLoadConfigBad(t *testing.T) {
     c, err := loadConfig()
     assert.Nil(t, c, "nil value")
     assert.Error(t, err, "should be in error")
+}
+
+func TestLoadConfigPerms(t *testing.T) {
+    baseDir = "test"
+    configName = "config.toml"
+
+    file := filepath.Join(baseDir, configName)
+    err := os.Chmod(file, 0000)
+    assert.NoError(t, err, "should be fine")
+
+    c, err := loadConfig()
+    assert.Nil(t, c, "nil value")
+    assert.Error(t, err, "should be in error")
+
+    err = os.Chmod(file, 0644)
+    assert.NoError(t, err, "should be fine")
 }
 
 func TestLoadConfigGood(t *testing.T) {
