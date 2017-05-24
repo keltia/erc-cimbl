@@ -1,0 +1,4 @@
+from = "foo@example.com"
+to = "security@example.com"
+subject = "CIMBL"
+server = "SMTP"
