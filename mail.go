@@ -15,7 +15,7 @@ Dear Service Desk,
 {{.URLs}}
 
 Best regards,
-Your friendly script — {{.MYName}}/{{.MyVersion}}
+Your friendly script — {{.MyName}}/{{.MyVersion}}
     `
 
 	PathsTmpl = "Please add the following to the list of blocked filenames:"
