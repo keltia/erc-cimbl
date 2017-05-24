@@ -18,6 +18,8 @@ var (
 
     user string
     password string
+
+    proxyURL *url.URL
 )
 
 func init() {
