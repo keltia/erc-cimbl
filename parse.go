@@ -1,16 +1,16 @@
 package main
 
 import (
-	"os"
 	"encoding/csv"
+	"os"
 	"strings"
 )
 
 var (
-	URLs = map[string]string{}
+	URLs    = map[string]string{}
 	cntURLs int
 
-	Paths = map[string]bool{}
+	Paths    = map[string]bool{}
 	cntPaths int
 )
 
@@ -37,7 +37,7 @@ indicator_title
 
 We filter on "type", looking for "url" & "filename".
 
- */
+*/
 
 func openFile(file string) (fh *os.File, err error) {
 	_, err = os.Stat(file)
@@ -71,7 +71,6 @@ func handleCSV(file string) {
 		case "url":
 			handleURL(line[5])
 		}
-
 	}
 	return
 }
