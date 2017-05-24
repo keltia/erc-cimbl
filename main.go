@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -49,7 +48,7 @@ func main() {
 	// No config file is not an error but you do not get to send mail
 	config, err := loadConfig()
 	if err != nil {
-		log.Printf("no config file, mail is disabled: %s", err)
+		log.Println("no config file, mail is disabled.")
 		fDoMail = false
 	}
 
@@ -60,7 +59,9 @@ func main() {
 				log.Printf("Checking %s…\n", file)
 			}
 			err := handleCSV(file)
-			log.Printf("error reading %s: %v", file, err)
+            if err != nil {
+                log.Printf("error reading %s: %v", file, err)
+            }
 		} else {
 			if fVerbose {
 				log.Printf("Ignoring %s…", file)
@@ -69,32 +70,8 @@ func main() {
 	}
 
 	// Do something with the results
-	if fDoMail {
-		err := doSendMail(config)
-		if err != nil {
-			log.Fatalf("sending mail: %v", err)
-		}
-	} else {
-		fmt.Println("Results:")
-
-		if !fNoPaths {
-			if cntPaths != 0 {
-				fmt.Println("Paths:")
-				for k, _ := range Paths {
-					fmt.Printf("  %s\n", k)
-				}
-			}
-		}
-
-		if !fNoURLs {
-			if cntURLs != 0 {
-				fmt.Println("URLs:")
-				for k, v := range URLs {
-					if v == "**BLOCK**" {
-						fmt.Printf("  %s\n", k)
-					}
-				}
-			}
-		}
+	err = doSendMail(config)
+	if err != nil {
+		log.Fatalf("sending mail: %v", err)
 	}
 }
