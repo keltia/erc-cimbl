@@ -24,8 +24,6 @@ var (
 
     REstr *regexp.Regexp
 
-    Paths []string
-    cntPaths int
 )
 
 func init() {
