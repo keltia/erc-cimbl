@@ -5,17 +5,22 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"fmt"
 )
 
 var (
 	MyName = "erc-cimbl"
+	MyVersion = "0.0.1"
 
 	fVerbose bool
 	fNoURLs  bool
 	fNoPaths bool
+	fDoMail  bool
+
 )
 
 func init() {
+	flag.BoolVar(&fDoMail, "M", false, "Send mail")
 	flag.BoolVar(&fNoPaths, "P", false, "Do not check filenames")
 	flag.BoolVar(&fNoURLs, "U", false, "Do not check URLs")
 	flag.BoolVar(&fVerbose, "v", false, "Verbose mode")
@@ -28,22 +33,69 @@ func checkFilename(file string) (ok bool) {
 }
 
 func main() {
+	var config *Config
 
 	// Parse CLI
 	flag.Parse()
 
+	if fVerbose {
+		log.Printf("%s/%s", MyName, MyVersion)
+	}
+
 	if (fNoURLs && fNoPaths) || flag.NArg() == 0 {
 		log.Println("Nothing to do!")
-		os.Exit(1)
+		os.Exit(0)
 	}
 
-	if fVerbose {
-		log.Printf("%s\n%s", MyName)
+	// No config file is not an error but you do not get to send mail
+	config, err := loadConfig()
+	if err != nil {
+		log.Printf("no config file, mail is disabled: %s", err)
+		fDoMail = false
 	}
 
+	// For all csv files on the CLI
 	for _, file := range flag.Args() {
 		if checkFilename(file) {
-			handleCSV(file)
+			if fVerbose {
+				log.Printf("Checking %s…\n", file)
+			}
+			err := handleCSV(file)
+			log.Printf("error reading %s: %v", file, err)
+		} else {
+			if fVerbose {
+				log.Printf("Ignoring %s…", file)
+			}
+		}
+	}
+
+	// Do something with the results
+	if fDoMail {
+		err := doSendMail(config)
+		if err != nil {
+			log.Fatalf("sending mail: %v", err)
+		}
+	} else {
+		fmt.Println("Results:")
+
+		if !fNoPaths {
+			if cntPaths != 0 {
+				fmt.Println("Paths:")
+				for k, _ := range Paths {
+					fmt.Printf("  %s\n", k)
+				}
+			}
+		}
+
+		if !fNoURLs {
+			if cntURLs != 0 {
+				fmt.Println("URLs:")
+				for k, v := range URLs {
+					if v == "**BLOCK**" {
+						fmt.Printf("  %s\n", k)
+					}
+				}
+			}
 		}
 	}
 }
