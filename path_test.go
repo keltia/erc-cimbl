@@ -12,15 +12,12 @@ func TestHandlePath(t *testing.T) {
     path1 := "foo.exe"
     handlePath(path1)
     assert.EqualValues(t, Plen, len(Paths), "same value")
-    assert.Panics(t, func() {
-            path1 = Paths[0]
-        }, "should panic")
 
     path2 := "foo.docx"
     handlePath(path2)
     assert.EqualValues(t, 1, cntPaths, "plus one")
     assert.EqualValues(t, Plen + 1, len(Paths), "plus one")
-    assert.EqualValues(t, path2, Paths[0], "inserted")
+    assert.EqualValues(t, true, Paths[path2], "inserted")
 }
 
 func TestEntryToPath(t *testing.T) {
