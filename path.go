@@ -4,6 +4,7 @@ import (
     "regexp"
     "strings"
     "fmt"
+    "log"
 )
 
 var (
@@ -32,8 +33,17 @@ func init() {
 
 func handlePath(path string) {
     if !REstr.MatchString(path) {
-        Paths = append(Paths, path)
-        cntPaths++
+        if ok, _ := Paths[path]; !ok {
+            if fVerbose {
+                log.Printf("Filename %s CHECK", path)
+            }
+            Paths[path] = true
+            cntPaths++
+        }
+    } else {
+        if fVerbose {
+            log.Printf("Filename %s: IGNORED ", path)
+        }
     }
 }
 
