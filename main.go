@@ -18,7 +18,7 @@ var (
 func init() {
 	flag.BoolVar(&fNoPaths, "P", false, "Do not check filenames")
 	flag.BoolVar(&fNoURLs, "U", false, "Do not check URLs")
-	flag.BoolVar(&fVerbose, "v,verbose", false, "Verbose mode")
+	flag.BoolVar(&fVerbose, "v", false, "Verbose mode")
 }
 
 func checkFilename(file string) (ok bool) {
