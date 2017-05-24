@@ -29,7 +29,7 @@ func loadConfig() (c *Config, err error) {
     file := filepath.Join(baseDir, configName)
 
     // Check if there is any config file
-    if _, err := os.Stat(file); err != nil {
+    if _, err = os.Stat(file); err != nil {
         c = &Config{}
         return
     }
