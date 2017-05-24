@@ -2,21 +2,20 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"regexp"
-	"fmt"
 )
 
 var (
-	MyName = "erc-cimbl"
+	MyName    = "erc-cimbl"
 	MyVersion = "0.0.1"
 
 	fVerbose bool
 	fNoURLs  bool
 	fNoPaths bool
 	fDoMail  bool
-
 )
 
 func init() {
