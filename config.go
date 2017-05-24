@@ -34,7 +34,10 @@ func loadConfig() (c *Config, err error) {
         return
     }
 
-    log.Printf("file=%s, found it", file)
+    if fVerbose {
+        log.Printf("file=%s, found it", file)
+    }
+
     // Read it
     buf, err := ioutil.ReadFile(file)
     if err != nil {
