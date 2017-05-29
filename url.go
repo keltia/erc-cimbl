@@ -73,8 +73,6 @@ func doCheck(ctx *Context, req *http.Request) string {
 	}
 
 	switch resp.StatusCode {
-	case 302:
-		return fmt.Sprintf("REDIRECT: %s", resp.Header.Get("Location"))
 	case 403:
 		return "BLOCKED-EEC"
 	case 407:
