@@ -135,6 +135,14 @@ func handleURL(ctx *Context, str string) {
 	   Setup connection including proxy stuff
 	*/
 	req, transport := setupCheck(str)
+    if req == nil || transport == nil {
+        return
+    }
+
+    // It is better to re-use than creating a new one each time
+    if ctx.Client == nil {
+        ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
+    }
 
 	/*
 	   Do the thing, manage redirects, auth requests and stuff

@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+    "net/http"
 )
 
 var (
@@ -22,6 +23,7 @@ type Context struct {
     files  []string
     Paths  map[string]bool
     URLs   map[string]string
+    Client *http.Client
 }
 
 func init() {
