@@ -73,6 +73,12 @@ func setupProxy(file string) (err error) {
 }
 
 func setupCheck(str string) (*http.Request, *http.Transport) {
+
+    // Fix really invalid URLs
+    if !strings.HasPrefix(str, "http://") {
+        str = "http://" + str
+    }
+
 	/*
 	   Proxy code taken from https://github.com/LeoCBS/poc-proxy-https/blob/master/main.go
 	*/
