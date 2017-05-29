@@ -36,6 +36,27 @@ func TestAddURLsUnknown(t *testing.T) {
     assert.Equal(t, URLsTmpl, str, "should be equal")
 }
 
-func TestDoSendMail(t *testing.T) {
+func TestDoSendMailNoMail(t *testing.T) {
+    config, err := loadConfig()
+    assert.NoError(t, err, "no error")
+    ctx := &Context{
+        config: config,
+        Paths: map[string]bool{"foo.docx": true, },
+    }
 
+    err = doSendMail(ctx)
+    assert.NoError(t, err, "no error")
+}
+
+func TestDoSendMailWithMail(t *testing.T) {
+    config, err := loadConfig()
+    assert.NoError(t, err, "no error")
+    ctx := &Context{
+        config: config,
+        Paths: map[string]bool{"foo.docx": true, },
+    }
+    fDoMail = true
+
+    err = doSendMail(ctx)
+    assert.NoError(t, err, "no error")
 }
