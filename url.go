@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-    "time"
+	"time"
 )
 
 var (
@@ -75,25 +75,25 @@ func setupProxy(file string) (err error) {
 
 func setupCheck(str string) (*http.Request, *http.Transport) {
 
-    // Fix really invalid URLs
-    if !strings.HasPrefix(str, "http://") {
-        str = "http://" + str
-    }
+	// Fix really invalid URLs
+	if !strings.HasPrefix(str, "http://") {
+		str = "http://" + str
+	}
 
 	/*
 	   Proxy code taken from https://github.com/LeoCBS/poc-proxy-https/blob/master/main.go
 	*/
 	myurl, err := url.Parse(str)
 	if err != nil {
-        log.Printf("error parsing %s: %v", str, err)
+		log.Printf("error parsing %s: %v", str, err)
 		return nil, nil
 	}
 
 	req, err := http.NewRequest("HEAD", str, nil)
-    if err != nil {
-        log.Printf("error: req is nil: %v", err)
-        return nil, nil
-    }
+	if err != nil {
+		log.Printf("error: req is nil: %v", err)
+		return nil, nil
+	}
 	req.Header.Set("Host", myurl.Host)
 	req.Header.Add("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
 
@@ -123,9 +123,9 @@ func doCheck(ctx *Context, req *http.Request) string {
 
 	resp, err := ctx.Client.Do(req)
 	if err != nil {
-        if fVerbose {
-            log.Printf("err: %s", err)
-        }
+		if fVerbose {
+			log.Printf("err: %s", err)
+		}
 		return ""
 	}
 
@@ -147,14 +147,14 @@ func handleURL(ctx *Context, str string) {
 	   Setup connection including proxy stuff
 	*/
 	req, transport := setupCheck(str)
-    if req == nil || transport == nil {
-        return
-    }
+	if req == nil || transport == nil {
+		return
+	}
 
-    // It is better to re-use than creating a new one each time
-    if ctx.Client == nil {
-        ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-    }
+	// It is better to re-use than creating a new one each time
+	if ctx.Client == nil {
+		ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
+	}
 
 	/*
 	   Do the thing, manage redirects, auth requests and stuff

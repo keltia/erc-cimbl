@@ -25,7 +25,7 @@ func TestOpenFileGood(t *testing.T) {
 
 func TestParseCSVNone(t *testing.T) {
 	file := "/noneexistent"
-    ctx := &Context{}
+	ctx := &Context{}
 	err := handleCSV(ctx, file)
 
 	assert.Error(t, err, "should be in error")

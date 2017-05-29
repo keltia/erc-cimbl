@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
-    "net/http"
 )
 
 var (
@@ -19,11 +19,11 @@ var (
 )
 
 type Context struct {
-    config *Config
-    files  []string
-    Paths  map[string]bool
-    URLs   map[string]string
-    Client *http.Client
+	config *Config
+	files  []string
+	Paths  map[string]bool
+	URLs   map[string]string
+	Client *http.Client
 }
 
 func init() {
@@ -61,17 +61,17 @@ func main() {
 		fDoMail = false
 	}
 
-    // No mail server configured but the rest is valid.
-    if config.Server == "" {
-        log.Println("no mail server, mail is disabled.")
-        fDoMail = false
-    }
+	// No mail server configured but the rest is valid.
+	if config.Server == "" {
+		log.Println("no mail server, mail is disabled.")
+		fDoMail = false
+	}
 
-    ctx := &Context{
-        config: config,
-        Paths:  map[string]bool{},
-        URLs:   map[string]string{},
-    }
+	ctx := &Context{
+		config: config,
+		Paths:  map[string]bool{},
+		URLs:   map[string]string{},
+	}
 
 	// For all csv files on the CLI
 	for _, file := range flag.Args() {
@@ -80,10 +80,10 @@ func main() {
 				log.Printf("Checking %s…\n", file)
 			}
 			err := handleCSV(ctx, file)
-            if err != nil {
-                log.Printf("error reading %s: %v", file, err)
-            }
-            ctx.files = append(ctx.files, file)
+			if err != nil {
+				log.Printf("error reading %s: %v", file, err)
+			}
+			ctx.files = append(ctx.files, file)
 		} else {
 			if fVerbose {
 				log.Printf("Ignoring %s…", file)
