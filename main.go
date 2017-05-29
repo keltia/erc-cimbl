@@ -59,7 +59,11 @@ func main() {
 		fDoMail = false
 	}
 
-    ctx := &Context{config: config}
+    ctx := &Context{
+        config: config,
+        Paths:  map[string]bool{},
+        URLs:   map[string]string{},
+    }
 
 	// For all csv files on the CLI
 	for _, file := range flag.Args() {
