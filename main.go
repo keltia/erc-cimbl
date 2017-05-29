@@ -73,6 +73,11 @@ func main() {
 		URLs:   map[string]string{},
 	}
 
+	loadDbrc(dbrcFile)
+
+	if err != nil {
+
+	}
 	// For all csv files on the CLI
 	for _, file := range flag.Args() {
 		if checkFilename(file) {

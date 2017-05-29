@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
@@ -9,69 +8,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
 
 var (
-	dbrcFile = filepath.Join(os.Getenv("HOME"), ".dbrc")
-
-	user     string
-	password string
-
 	proxyURL *url.URL
 )
-
-func init() {
-	err := setupProxy(dbrcFile)
-	if err != nil {
-		log.Printf("No dbrc file: %v", err)
-	}
-	if fVerbose {
-		log.Printf("Proxy user %s found.", user)
-	}
-}
-
-func setupProxy(file string) (err error) {
-	fh, err := os.Open(file)
-	if err != nil {
-		return fmt.Errorf("Error: can not find %s: %v", dbrcFile, err)
-	}
-	defer fh.Close()
-
-	/*
-	   Format:
-	   <db>     <user>    <pass>   <type>
-	*/
-	scanner := bufio.NewScanner(fh)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "" {
-			break
-		}
-
-		// Replace all tabs by a single space
-		l := strings.Replace(line, "\t", " ", -1)
-		flds := strings.Split(l, " ")
-
-		// Check what we need
-		if flds[0] == "cimbl" {
-			user = flds[1]
-			password = flds[2]
-			break
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("reading dbrc %s", dbrcFile)
-	}
-
-	if user == "" {
-		return fmt.Errorf("no user/password for cimbl in %s", dbrcFile)
-	}
-
-	return
-}
 
 func setupCheck(str string) (*http.Request, *http.Transport) {
 
