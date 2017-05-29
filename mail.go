@@ -13,7 +13,7 @@ var (
 Dear Service Desk,
 
 After reading the following files received from CERT-EU:
-{{.Files}}
+  {{.Files}}
 
 {{.Paths}}
 {{.URLs}}
