@@ -49,10 +49,8 @@ func createMail(ctx *Context) (str string, err error) {
 		Files:     strings.Join(ctx.files, ", "),
 	}
 
-	fmt.Println("Results:")
-
-    vars.Paths = addPaths()
-    vars.URLs  = addURLs()
+	vars.Paths = addPaths()
+	vars.URLs = addURLs()
 
 	t := template.Must(template.New("mail").Parse(MailTmpl))
 	err = t.Execute(&txt, vars)
@@ -79,10 +77,10 @@ func addURLs() string {
 	if !fNoURLs {
 		if cntURLs != 0 {
 			txt = fmt.Sprintf("%s", URLsTmpl)
-            for k, v := range URLs {
-                if v == "**BLOCK**" {
-                    txt = fmt.Sprintf("%s  %s\n", txt, k)
-                }
+			for k, v := range URLs {
+				if v == "**BLOCK**" {
+					txt = fmt.Sprintf("%s  %s\n", txt, k)
+				}
 			}
 		}
 	}
