@@ -12,7 +12,7 @@ var (
 	MailTmpl = `
 Dear Service Desk,
 
-After reading the following files received by CERT-EU:
+After reading the following files received from CERT-EU:
 {{.Files}}
 
 {{.Paths}}
