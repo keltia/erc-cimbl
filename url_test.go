@@ -16,17 +16,7 @@ func TestCheckSetup(t *testing.T) {
 
 func TestDoCheck(t *testing.T) {
 	// Check values
-	cnf := &Config{
-		From:    "foo@example.com",
-		To:      "security@example.com",
-		Cc:      "root@example.com",
-		Subject: "CRQ: New URLs/files to be BLOCKED",
-		Server:  "SMTP",
-	}
-
 	ctx := &Context{
-		config: cnf,
-		Paths:  map[string]bool{},
 		URLs:   map[string]string{},
 	}
 
