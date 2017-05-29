@@ -1,4 +1,4 @@
 from = "foo@example.com"
 to = "security@example.com"
-subject = "CIMBL"
+subject = "CIMBL: New URLs/files to be BLOCKED"
 server = "SMTP"
