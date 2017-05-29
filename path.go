@@ -20,7 +20,7 @@ var (
 		"s2xml", "psc1", "psc2", "pub",
 		"reg", "scf", "scr", "url", "vb",
 		"vbe", "vbs", "ws", "wsc",
-		"wsf", "wsh",
+		"wsf", "wsh", "mst", "msu",
 	}
 
 	REstr *regexp.Regexp
