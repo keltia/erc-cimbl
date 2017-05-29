@@ -32,13 +32,13 @@ type MailVars struct {
 	Paths     string
 }
 
-func createMail(config *Config) (str string, err error) {
+func createMail(ctx *Context) (str string, err error) {
 	var txt bytes.Buffer
 
 	vars := MailVars{
-		From:      config.From,
-		To:        config.To,
-		Subject:   config.Subject,
+		From:      ctx.config.From,
+		To:        ctx.config.To,
+		Subject:   ctx.config.Subject,
 		MyName:    MyName,
 		MyVersion: MyVersion,
 	}
@@ -83,12 +83,12 @@ func addURLs() string {
 	return txt
 }
 
-func doSendMail(config *Config) (err error) {
+func doSendMail(ctx *Context) (err error) {
 
-	mailText, err := createMail(config)
+	mailText, err := createMail(ctx)
 
 	if fDoMail {
-		err := sendMail(config, mailText)
+		err := sendMail(ctx, mailText)
 		if err != nil {
 			log.Fatalf("sending mail: %v", err)
 		}
@@ -98,6 +98,6 @@ func doSendMail(config *Config) (err error) {
 	return
 }
 
-func sendMail(config *Config, text string) (err error) {
+func sendMail(ctx *Context, text string) (err error) {
 	return
 }

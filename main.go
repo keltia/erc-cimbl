@@ -17,6 +17,11 @@ var (
 	fDoMail  bool
 )
 
+type Context struct {
+    config *Config
+    files  []string
+}
+
 func init() {
 	flag.BoolVar(&fDoMail, "M", false, "Send mail")
 	flag.BoolVar(&fNoPaths, "P", false, "Do not check filenames")
@@ -52,6 +57,8 @@ func main() {
 		fDoMail = false
 	}
 
+    ctx := &Context{config: config}
+
 	// For all csv files on the CLI
 	for _, file := range flag.Args() {
 		if checkFilename(file) {
@@ -62,6 +69,7 @@ func main() {
             if err != nil {
                 log.Printf("error reading %s: %v", file, err)
             }
+            ctx.files = append(ctx.files, file)
 		} else {
 			if fVerbose {
 				log.Printf("Ignoring %s…", file)
@@ -70,7 +78,7 @@ func main() {
 	}
 
 	// Do something with the results
-	err = doSendMail(config)
+	err = doSendMail(ctx)
 	if err != nil {
 		log.Fatalf("sending mail: %v", err)
 	}
