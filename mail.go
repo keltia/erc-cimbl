@@ -97,6 +97,10 @@ func doSendMail(ctx *Context) (err error) {
 				log.Fatalf("sending mail: %v", err)
 			}
 		} else {
+			fmt.Printf("From: %s\n", ctx.config.From)
+			fmt.Printf("To: %s\n", ctx.config.To)
+			fmt.Printf("Cc: %s\n", ctx.config.Cc)
+			fmt.Printf("Subject: %s\n\n", ctx.config.Subject)
 			fmt.Println(mailText)
 		}
 	}

@@ -14,6 +14,7 @@ type Config struct {
 	To      string
 	Server  string
 	Subject string
+	Cc      string
 }
 
 var (
