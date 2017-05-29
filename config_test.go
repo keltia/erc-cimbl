@@ -54,6 +54,7 @@ func TestLoadConfigGood(t *testing.T) {
 	cnf := &Config{
 		From:    "foo@example.com",
 		To:      "security@example.com",
+        Cc:      "root@example.com",
 		Subject: "CRQ: New URLs/files to be BLOCKED",
 		Server:  "SMTP",
 	}
@@ -73,6 +74,7 @@ func TestLoadConfigGoodVerbose(t *testing.T) {
 	cnf := &Config{
 		From:    "foo@example.com",
 		To:      "security@example.com",
+        Cc:      "root@example.com",
 		Subject: "CRQ: New URLs/files to be BLOCKED",
 		Server:  "SMTP",
 	}
