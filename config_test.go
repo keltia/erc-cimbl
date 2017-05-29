@@ -54,7 +54,7 @@ func TestLoadConfigGood(t *testing.T) {
 	cnf := &Config{
 		From:    "foo@example.com",
 		To:      "security@example.com",
-		Subject: "CIMBL: New URLs/files to be BLOCKED",
+		Subject: "CRQ: New URLs/files to be BLOCKED",
 		Server:  "SMTP",
 	}
 	assert.Equal(t, cnf, c, "should be equal")
@@ -73,7 +73,7 @@ func TestLoadConfigGoodVerbose(t *testing.T) {
 	cnf := &Config{
 		From:    "foo@example.com",
 		To:      "security@example.com",
-		Subject: "CIMBL: New URLs/files to be BLOCKED",
+		Subject: "CRQ: New URLs/files to be BLOCKED",
 		Server:  "SMTP",
 	}
 	assert.Equal(t, cnf, c, "should be equal")
