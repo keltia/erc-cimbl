@@ -61,6 +61,12 @@ func main() {
 		fDoMail = false
 	}
 
+    // No mail server configured but the rest is valid.
+    if config.Server == "" {
+        log.Println("no mail server, mail is disabled.")
+        fDoMail = false
+    }
+
     ctx := &Context{
         config: config,
         Paths:  map[string]bool{},
