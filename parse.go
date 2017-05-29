@@ -67,9 +67,13 @@ func handleCSV(ctx *Context, file string) (err error) {
 
 		switch etype[0] {
 		case "filename":
-			handlePath(entryToPath(line[5]))
+			if!fNoPaths {
+				handlePath(ctx, entryToPath(line[5]))
+			}
 		case "url":
-			handleURL(line[5])
+			if !fNoURLs {
+				handleURL(ctx, line[5])
+			}
 		}
 	}
 	return nil
