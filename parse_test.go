@@ -53,3 +53,27 @@ func TestHandleCSV(t *testing.T) {
 	assert.Equal(t, realPaths, ctx.Paths, "should be equal")
 	assert.Equal(t, realURLs, ctx.URLs, "should be equal")
 }
+
+func TestHandleCSVVerbose(t *testing.T) {
+	file := "test/CIMBL-0666-CERTS.csv"
+	config, err := loadConfig()
+	assert.NoError(t, err, "no error")
+
+	fVerbose = true
+	ctx := &Context{
+		config: config,
+		Paths:  map[string]bool{},
+		URLs:   map[string]string{},
+	}
+
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
+	realURLs := map[string]string{
+		"http://pontonerywariva342.top/search.php": "**BLOCK**",
+	}
+	err = handleCSV(ctx, file)
+	assert.NoError(t, err, "no error")
+	assert.Equal(t, realPaths, ctx.Paths, "should be equal")
+	assert.Equal(t, realURLs, ctx.URLs, "should be equal")
+}
