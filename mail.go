@@ -49,21 +49,21 @@ func createMail(ctx *Context) (str string, err error) {
 		Files:     strings.Join(ctx.files, ", "),
 	}
 
-	vars.Paths = addPaths()
-	vars.URLs = addURLs()
+	vars.Paths = addPaths(ctx)
+	vars.URLs = addURLs(ctx)
 
 	t := template.Must(template.New("mail").Parse(MailTmpl))
 	err = t.Execute(&txt, vars)
 	return txt.String(), err
 }
 
-func addPaths() string {
+func addPaths(ctx *Context) string {
 	var txt string
 
 	if !fNoPaths {
-		if cntPaths != 0 {
+		if len(ctx.Paths) != 0 {
 			txt = fmt.Sprintf("%s", PathsTmpl)
-			for k, _ := range Paths {
+			for k, _ := range ctx.Paths {
 				txt = fmt.Sprintf("%s  %s\n", txt, k)
 			}
 		}
@@ -71,13 +71,13 @@ func addPaths() string {
 	return txt
 }
 
-func addURLs() string {
+func addURLs(ctx *Context) string {
 	var txt string
 
 	if !fNoURLs {
-		if cntURLs != 0 {
+		if len(ctx.URLs) != 0 {
 			txt = fmt.Sprintf("%s", URLsTmpl)
-			for k, v := range URLs {
+			for k, v := range ctx.URLs {
 				if v == "**BLOCK**" {
 					txt = fmt.Sprintf("%s  %s\n", txt, k)
 				}

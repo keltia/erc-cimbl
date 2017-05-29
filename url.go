@@ -130,7 +130,7 @@ func doCheck(req *http.Request, transport *http.Transport) string {
 
 }
 
-func handleURL(str string) {
+func handleURL(ctx *Context, str string) {
 	/*
 	   Setup connection including proxy stuff
 	*/
@@ -140,8 +140,7 @@ func handleURL(str string) {
 	   Do the thing, manage redirects, auth requests and stuff
 	*/
 	result := doCheck(req, transport)
-	URLs[str] = result
-	cntURLs++
+	ctx.URLs[str] = result
 	if fVerbose {
 		log.Printf("Checking %s: %s", str, result)
 	}

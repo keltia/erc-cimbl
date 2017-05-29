@@ -67,7 +67,7 @@ func main() {
 			if fVerbose {
 				log.Printf("Checking %s…\n", file)
 			}
-			err := handleCSV(file)
+			err := handleCSV(ctx, file)
             if err != nil {
                 log.Printf("error reading %s: %v", file, err)
             }

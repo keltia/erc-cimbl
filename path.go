@@ -30,14 +30,13 @@ func init() {
 	REstr = regexp.MustCompile(fmt.Sprintf("\\.(i:%s)$", strings.Join(EXTS, "|")))
 }
 
-func handlePath(path string) {
+func handlePath(ctx *Context, path string) {
 	if !REstr.MatchString(path) {
-		if ok, _ := Paths[path]; !ok {
+		if ok, _ := ctx.Paths[path]; !ok {
 			if fVerbose {
 				log.Printf("Filename %s CHECK", path)
 			}
-			Paths[path] = true
-			cntPaths++
+			ctx.Paths[path] = true
 		}
 	} else {
 		if fVerbose {

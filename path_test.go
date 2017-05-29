@@ -6,18 +6,21 @@ import (
 )
 
 func TestHandlePath(t *testing.T) {
-	Plen := len(Paths)
-	cntPaths = 0
+	ctx := &Context{
+		Paths: map[string]bool{},
+		URLs:  map[string]string{},
+	}
+	Plen := len(ctx.Paths)
 
 	path1 := "foo.exe"
-	handlePath(path1)
-	assert.EqualValues(t, Plen, len(Paths), "same value")
+	handlePath(ctx, path1)
+	assert.EqualValues(t, Plen, len(ctx.Paths), "same value")
 
 	path2 := "foo.docx"
-	handlePath(path2)
-	assert.EqualValues(t, 1, cntPaths, "plus one")
-	assert.EqualValues(t, Plen+1, len(Paths), "plus one")
-	assert.EqualValues(t, true, Paths[path2], "inserted")
+	handlePath(ctx, path2)
+	assert.EqualValues(t, 1, len(ctx.Paths), "plus one")
+	assert.EqualValues(t, Plen+1, len(ctx.Paths), "plus one")
+	assert.EqualValues(t, true, ctx.Paths[path2], "inserted")
 }
 
 func TestEntryToPath(t *testing.T) {

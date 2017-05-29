@@ -49,7 +49,7 @@ func openFile(file string) (fh *os.File, err error) {
 	return
 }
 
-func handleCSV(file string) (err error) {
+func handleCSV(ctx *Context, file string) (err error) {
 	fh, err := openFile(file)
 	if err != nil {
 		return
