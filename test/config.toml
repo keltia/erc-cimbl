@@ -1,4 +1,5 @@
 from = "foo@example.com"
 to = "security@example.com"
+cc = "root@example.com"
 subject = "CRQ: New URLs/files to be BLOCKED"
 server = "SMTP"
