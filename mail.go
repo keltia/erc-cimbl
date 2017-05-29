@@ -17,13 +17,12 @@ After reading the following files received from CERT-EU:
 
 {{.Paths}}
 {{.URLs}}
-
 Best regards,
 Your friendly script — {{.MyName}}/{{.MyVersion}}
     `
 
-	PathsTmpl = "Please add the following to the list of blocked filenames:"
-	URLsTmpl  = "Please add the following to the list of blocked URLs on BlueCoat:"
+	PathsTmpl = "Please add the following to the list of blocked filenames:\n"
+	URLsTmpl  = "Please add the following to the list of blocked URLs on BlueCoat:\n"
 )
 
 type MailVars struct {
