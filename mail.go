@@ -90,13 +90,15 @@ func doSendMail(ctx *Context) (err error) {
 
 	mailText, err := createMail(ctx)
 
-	if fDoMail {
-		err := sendMail(ctx, mailText)
-		if err != nil {
-			log.Fatalf("sending mail: %v", err)
+	if len(ctx.Paths) != 0 || len(ctx.URLs) != 0 {
+		if fDoMail {
+			err := sendMail(ctx, mailText)
+			if err != nil {
+				log.Fatalf("sending mail: %v", err)
+			}
+		} else {
+			fmt.Println(mailText)
 		}
-	} else {
-		fmt.Println(mailText)
 	}
 	return
 }
