@@ -37,3 +37,10 @@ func TestSetupProxyGood(t *testing.T) {
 	assert.EqualValues(t, "test", user, "test user")
 	assert.EqualValues(t, "test", password, "test password")
 }
+
+func TestCheckSetup(t *testing.T) {
+	url := "foo.bar\\%%%%%%"
+	r, tr := setupCheck(url)
+	assert.Nil(t, r, "should be nil")
+	assert.Nil(t, tr, "should be nil")
+}
