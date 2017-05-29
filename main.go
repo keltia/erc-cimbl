@@ -20,6 +20,8 @@ var (
 type Context struct {
     config *Config
     files  []string
+    Paths  map[string]bool
+    URLs   map[string]string
 }
 
 func init() {
