@@ -4,12 +4,16 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strings"
 	"text/template"
 )
 
 var (
 	MailTmpl = `
 Dear Service Desk,
+
+After reading the following files received by CERT-EU:
+{{.Files}}
 
 {{.Paths}}
 {{.URLs}}
@@ -30,6 +34,7 @@ type MailVars struct {
 	MyVersion string
 	URLs      string
 	Paths     string
+	Files     string
 }
 
 func createMail(ctx *Context) (str string, err error) {
@@ -41,6 +46,7 @@ func createMail(ctx *Context) (str string, err error) {
 		Subject:   ctx.config.Subject,
 		MyName:    MyName,
 		MyVersion: MyVersion,
+		Files:     strings.Join(ctx.files, ", "),
 	}
 
 	fmt.Println("Results:")
