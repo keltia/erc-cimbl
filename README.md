@@ -25,11 +25,10 @@ OPTIONS
 
 | Option  | Default | Description|
 | ------- |---------|------------|
-| -I      | false   | Do not fetch tls.imirhil.fr grade |
-| -S      | none    | Displays that site info only |
-| -t      | text    | Output plain text or csv |
+| -M      | false   | Actually send mail |
+| -P      | false   | Do not check filenames |
+| -U      | false   | Do not check URLs |
 | -v      | false   | Be verbose |
-| -V      | false   | More verbose: displays ciphers info |
 
 ## Using behind a web Proxy
 
