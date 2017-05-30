@@ -6,6 +6,11 @@ import (
 	"os"
 	"testing"
 	"time"
+	"github.com/jarcoal/httpmock"
+)
+
+const (
+	TestSite = "http://pontonerywariva342.top/search.php"
 )
 
 func TestSetupTransport(t *testing.T) {
@@ -33,7 +38,7 @@ func TestGetProxy(t *testing.T) {
 		URLs: map[string]string{},
 	}
 
-	str := "http://pontonerywariva342.top/search.php"
+	str := TestSite
 	req, transport := setupTransport(ctx, str)
 	assert.NotNil(t, req, "not nil")
 	assert.NotNil(t, transport, "not nil")
@@ -49,7 +54,26 @@ func TestDoCheck(t *testing.T) {
 		URLs: map[string]string{},
 	}
 
-	str := "http://pontonerywariva342.top/search.php"
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	// mock to add a new measurement
+	httpmock.RegisterResponder("HEAD", TestSite,
+		func(req *http.Request) (*http.Response, error) {
+
+			if req.Method != "HEAD" {
+				return httpmock.NewStringResponse(400, "Bad method"), nil
+			}
+
+			if req.RequestURI != TestSite {
+				return httpmock.NewStringResponse(400, "Bad URL"), nil
+			}
+
+			return httpmock.NewStringResponse(200, "To be blocked"), nil
+		},
+	)
+
+	str := TestSite
 	req, transport := setupTransport(ctx, str)
 	assert.NotNil(t, req, "not nil")
 	assert.NotNil(t, transport, "not nil")
@@ -59,3 +83,4 @@ func TestDoCheck(t *testing.T) {
 	res := doCheck(ctx, req)
 	assert.Equal(t, "**BLOCK**", res, "should be block")
 }
+

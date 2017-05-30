@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"github.com/jarcoal/httpmock"
+	"net/http"
 )
 
 func TestOpenFileBad(t *testing.T) {
@@ -46,8 +48,28 @@ func TestHandleCSV(t *testing.T) {
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
 	realURLs := map[string]string{
-		"http://pontonerywariva342.top/search.php": "**BLOCK**",
+		TestSite: "**BLOCK**",
 	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	// mock to add a new measurement
+	httpmock.RegisterResponder("HEAD", TestSite,
+		func(req *http.Request) (*http.Response, error) {
+
+			if req.Method != "HEAD" {
+				return httpmock.NewStringResponse(400, "Bad method"), nil
+			}
+
+			if req.RequestURI != TestSite {
+				return httpmock.NewStringResponse(400, "Bad URL"), nil
+			}
+
+			return httpmock.NewStringResponse(200, "To be blocked"), nil
+		},
+	)
+
 	err = handleCSV(ctx, file)
 	assert.NoError(t, err, "no error")
 	assert.Equal(t, realPaths, ctx.Paths, "should be equal")
@@ -70,8 +92,27 @@ func TestHandleCSVVerbose(t *testing.T) {
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
 	realURLs := map[string]string{
-		"http://pontonerywariva342.top/search.php": "**BLOCK**",
+		TestSite: "**BLOCK**",
 	}
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	// mock to add a new measurement
+	httpmock.RegisterResponder("HEAD", TestSite,
+		func(req *http.Request) (*http.Response, error) {
+
+			if req.Method != "HEAD" {
+				return httpmock.NewStringResponse(400, "Bad method"), nil
+			}
+
+			if req.RequestURI != TestSite {
+				return httpmock.NewStringResponse(400, "Bad URL"), nil
+			}
+
+			return httpmock.NewStringResponse(200, "To be blocked"), nil
+		},
+	)
+
 	err = handleCSV(ctx, file)
 	assert.NoError(t, err, "no error")
 	assert.Equal(t, realPaths, ctx.Paths, "should be equal")
