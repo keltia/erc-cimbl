@@ -61,8 +61,8 @@ func addPaths(ctx *Context) string {
 
 	if !fNoPaths {
 		if len(ctx.Paths) != 0 {
-			txt = fmt.Sprintf("%s", PathsTmpl)
-			for k, _ := range ctx.Paths {
+			txt = fmt.Sprintf("%s", pathsTmpl)
+			for k := range ctx.Paths {
 				txt = fmt.Sprintf("%s  %s\n", txt, k)
 			}
 		}
