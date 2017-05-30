@@ -70,6 +70,7 @@ func loadDbrc(filename string) (err error) {
 	if fVerbose {
 		log.Printf("Proxy user %s found.", user)
 	}
+	return
 }
 
 func setupProxy(file string) (err error) {
