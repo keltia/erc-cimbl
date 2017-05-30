@@ -7,9 +7,13 @@ import (
 	"net/http"
 )
 
-func TestCheckSetup(t *testing.T) {
+func TestSetupTransport(t *testing.T) {
 	url := "foo.bar\\%%%%%%"
-	r, tr := setupCheck(url)
+	ctx := &Context{
+		URLs:   map[string]string{},
+	}
+
+	r, tr := setupTransport(ctx, url)
 	assert.Nil(t, r, "should be nil")
 	assert.Nil(t, tr, "should be nil")
 }
@@ -21,7 +25,7 @@ func TestDoCheck(t *testing.T) {
 	}
 
 	str := "http://pontonerywariva342.top/search.php"
-	req, transport := setupCheck(str)
+	req, transport := setupTransport(ctx, str)
 	assert.NotNil(t, req, "not nil")
 	assert.NotNil(t, transport, "not nil")
 

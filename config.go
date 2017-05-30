@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/naoina/toml"
 	"io/ioutil"
@@ -62,18 +63,25 @@ func loadConfig() (c *Config, err error) {
 	return
 }
 
-func loadDbrc(filename string) (err error) {
-	err = setupProxy(filename)
+func loadDbrc(ctx *Context, filename string) (err error) {
+	err = setupProxyAuth(filename)
 	if err != nil {
 		log.Printf("No dbrc file: %v", err)
 	}
 	if fVerbose {
 		log.Printf("Proxy user %s found.", user)
 	}
+
+	// Do we have a proxy user/password?
+	if user != "" && password != "" {
+		auth := fmt.Sprintf("%s:%s", user, password)
+		ctx.proxyauth = "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
+	}
+
 	return
 }
 
-func setupProxy(file string) (err error) {
+func setupProxyAuth(file string) (err error) {
 	fh, err := os.Open(file)
 	if err != nil {
 		return fmt.Errorf("Error: can not find %s: %v", file, err)

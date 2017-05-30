@@ -84,22 +84,25 @@ func TestLoadConfigGoodVerbose(t *testing.T) {
 
 func TestLoadDbrc(t *testing.T) {
 	dbrc := "test/test-dbrc"
-	err := loadDbrc(dbrc)
+	ctx := &Context{}
+	err := loadDbrc(ctx, dbrc)
 	assert.Error(t, err, "should be an error")
 
     dbrc = "test/test-dbrc"
-    err = loadDbrc(dbrc)
+    err = loadDbrc(ctx, dbrc)
     assert.NoError(t, err, "no error")
 }
 
 func TestLoadDbrcVerbose(t *testing.T) {
     fVerbose = true
+	ctx := &Context{}
+
     dbrc := "test/test-dbrc"
-    err := loadDbrc(dbrc)
+    err := loadDbrc(ctx, dbrc)
     assert.Error(t, err, "should be an error")
 
     dbrc = "test/test-dbrc"
-    err = loadDbrc(dbrc)
+    err = loadDbrc(ctx, dbrc)
     assert.NoError(t, err, "no error")
 }
 
@@ -108,7 +111,7 @@ func TestSetupProxyNoFile(t *testing.T) {
 	user = ""
 	password = ""
 
-	err := setupProxy(file)
+	err := setupProxyAuth(file)
 	assert.Error(t, err, "error")
 	assert.EqualValues(t, "", user, "null user")
 	assert.EqualValues(t, "", password, "null password")
@@ -119,7 +122,7 @@ func TestSetupProxyZero(t *testing.T) {
 	user = ""
 	password = ""
 
-	err := setupProxy(file)
+	err := setupProxyAuth(file)
 	assert.Error(t, err, "error")
 	assert.EqualValues(t, "", user, "test user")
 	assert.EqualValues(t, "", password, "test password")
@@ -130,7 +133,7 @@ func TestSetupProxyGood(t *testing.T) {
 	user = ""
 	password = ""
 
-	err := setupProxy(file)
+	err := setupProxyAuth(file)
 	assert.NoError(t, err, "no error")
 	assert.EqualValues(t, "test", user, "test user")
 	assert.EqualValues(t, "test", password, "test password")

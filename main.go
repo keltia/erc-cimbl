@@ -23,10 +23,11 @@ var (
 // Context is the way to share info across functions.
 type Context struct {
 	config *Config
-	files  []string
 	Paths  map[string]bool
 	URLs   map[string]string
 	Client *http.Client
+    files  []string
+    proxyauth string
 }
 
 func init() {
@@ -76,7 +77,7 @@ func main() {
 		URLs:   map[string]string{},
 	}
 
-	err = loadDbrc(dbrcFile)
+	err = loadDbrc(ctx, dbrcFile)
 	if err != nil {
 		log.Println("No dbrc file, no proxy auth.")
 	}
