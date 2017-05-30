@@ -12,7 +12,7 @@ var (
 	// MyName is the application
 	MyName    = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.0.1"
+	MyVersion = "0.1.0"
 
 	fVerbose bool
 	fNoURLs  bool
