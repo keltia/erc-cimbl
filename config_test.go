@@ -83,9 +83,24 @@ func TestLoadConfigGoodVerbose(t *testing.T) {
 }
 
 func TestLoadDbrc(t *testing.T) {
-	dbrc := "data/dbrc"
+	dbrc := "test/test-dbrc"
 	err := loadDbrc(dbrc)
-	assert.NoError(t, err, "no error")
+	assert.Error(t, err, "should be an error")
+
+    dbrc = "test/test-dbrc"
+    err = loadDbrc(dbrc)
+    assert.NoError(t, err, "no error")
+}
+
+func TestLoadDbrcVerbose(t *testing.T) {
+    fVerbose = true
+    dbrc := "test/test-dbrc"
+    err := loadDbrc(dbrc)
+    assert.Error(t, err, "should be an error")
+
+    dbrc = "test/test-dbrc"
+    err = loadDbrc(dbrc)
+    assert.NoError(t, err, "no error")
 }
 
 func TestSetupProxyNoFile(t *testing.T) {
