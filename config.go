@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// Config is the main configuration object
 type Config struct {
 	From    string
 	To      string
