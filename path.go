@@ -23,15 +23,15 @@ var (
 		"wsf", "wsh", "mst", "msu",
 	}
 
-	REstr *regexp.Regexp
+	restr *regexp.Regexp
 )
 
 func init() {
-	REstr = regexp.MustCompile(fmt.Sprintf("\\.(i:%s)$", strings.Join(fileEXTS, "|")))
+	restr = regexp.MustCompile(fmt.Sprintf("\\.(i:%s)$", strings.Join(fileEXTS, "|")))
 }
 
 func handlePath(ctx *Context, path string) {
-	if !REstr.MatchString(path) {
+	if !restr.MatchString(path) {
 		if ok, _ := ctx.Paths[path]; !ok {
 			if fVerbose {
 				log.Printf("Filename %s CHECK", path)
