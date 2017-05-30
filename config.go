@@ -76,7 +76,7 @@ func loadDbrc(filename string) (err error) {
 func setupProxy(file string) (err error) {
 	fh, err := os.Open(file)
 	if err != nil {
-		return fmt.Errorf("Error: can not find %s: %v", dbrcFile, err)
+		return fmt.Errorf("Error: can not find %s: %v", file, err)
 	}
 	defer fh.Close()
 
