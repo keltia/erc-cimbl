@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	EXTS = []string{
+	fileEXTS = []string{
 		"apk", "app", "bat", "cab",
 		"chm", "cmd", "com", "dll",
 		"exe", "hlp", "hta", "inf",
@@ -27,7 +27,7 @@ var (
 )
 
 func init() {
-	REstr = regexp.MustCompile(fmt.Sprintf("\\.(i:%s)$", strings.Join(EXTS, "|")))
+	REstr = regexp.MustCompile(fmt.Sprintf("\\.(i:%s)$", strings.Join(fileEXTS, "|")))
 }
 
 func handlePath(ctx *Context, path string) {
