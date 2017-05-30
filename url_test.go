@@ -2,16 +2,16 @@ package main
 
 import (
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 	"net/http"
 	"os"
+	"testing"
+	"time"
 )
 
 func TestSetupTransport(t *testing.T) {
 	url := "foo.bar\\%%%%%%"
 	ctx := &Context{
-		URLs:   map[string]string{},
+		URLs: map[string]string{},
 	}
 
 	r, tr := setupTransport(ctx, url)
@@ -30,7 +30,7 @@ func TestGetProxy(t *testing.T) {
 		os.Unsetenv(env)
 	}
 	ctx := &Context{
-		URLs:   map[string]string{},
+		URLs: map[string]string{},
 	}
 
 	str := "http://pontonerywariva342.top/search.php"
@@ -46,7 +46,7 @@ func TestGetProxy(t *testing.T) {
 func TestDoCheck(t *testing.T) {
 	// Check values
 	ctx := &Context{
-		URLs:   map[string]string{},
+		URLs: map[string]string{},
 	}
 
 	str := "http://pontonerywariva342.top/search.php"

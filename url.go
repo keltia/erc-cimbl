@@ -15,14 +15,14 @@ var (
 )
 
 func getProxy(req *http.Request) (uri *url.URL, err error) {
-    uri, err = http.ProxyFromEnvironment(req)
-    if err != nil {
-        log.Printf("no proxy in environment")
-        uri = &url.URL{}
-    } else if uri == nil {
-        log.Println("No proxy configured or url excluded")
-    }
-    return
+	uri, err = http.ProxyFromEnvironment(req)
+	if err != nil {
+		log.Printf("no proxy in environment")
+		uri = &url.URL{}
+	} else if uri == nil {
+		log.Println("No proxy configured or url excluded")
+	}
+	return
 }
 
 func setupTransport(ctx *Context, str string) (*http.Request, *http.Transport) {
@@ -49,16 +49,16 @@ func setupTransport(ctx *Context, str string) (*http.Request, *http.Transport) {
 	req.Header.Set("Host", myurl.Host)
 	req.Header.Add("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
 
-    // Get proxy URL
+	// Get proxy URL
 	proxyURL, err = getProxy(req)
-    if ctx.proxyauth != "" {
-        req.Header.Add("Proxy-Authorization", ctx.proxyauth)
-    }
+	if ctx.proxyauth != "" {
+		req.Header.Add("Proxy-Authorization", ctx.proxyauth)
+	}
 
 	transport := &http.Transport{
 		Proxy:              http.ProxyURL(proxyURL),
 		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
-        ProxyConnectHeader: req.Header,
+		ProxyConnectHeader: req.Header,
 	}
 
 	return req, transport

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/base64"
 	"fmt"
 	"github.com/naoina/toml"
@@ -8,7 +9,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"bufio"
 	"strings"
 )
 
