@@ -85,8 +85,7 @@ func TestLoadConfigGoodVerbose(t *testing.T) {
 func TestLoadDbrc(t *testing.T) {
 	dbrc := "data/dbrc"
 	err := loadDbrc(dbrc)
-
-
+	assert.NoError(t, err, "no error")
 }
 
 func TestSetupProxyNoFile(t *testing.T) {
