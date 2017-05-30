@@ -62,8 +62,8 @@ func loadConfig() (c *Config, err error) {
 	return
 }
 
-func loadDbrc(filename string) {
-	err := setupProxy(filename)
+func loadDbrc(filename string) (err error) {
+	err = setupProxy(filename)
 	if err != nil {
 		log.Printf("No dbrc file: %v", err)
 	}

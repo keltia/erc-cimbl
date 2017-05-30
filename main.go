@@ -76,10 +76,9 @@ func main() {
 		URLs:   map[string]string{},
 	}
 
-	loadDbrc(dbrcFile)
-
+	err = loadDbrc(dbrcFile)
 	if err != nil {
-
+		log.Println("No dbrc file, no proxy auth.")
 	}
 	// For all csv files on the CLI
 	for _, file := range flag.Args() {

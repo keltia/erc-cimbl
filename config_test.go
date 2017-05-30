@@ -84,7 +84,7 @@ func TestLoadConfigGoodVerbose(t *testing.T) {
 
 func TestLoadDbrc(t *testing.T) {
 	dbrc := "data/dbrc"
-	loadDbrc(dbrc)
+	err := loadDbrc(dbrc)
 
 
 }
