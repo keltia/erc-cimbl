@@ -9,7 +9,9 @@ import (
 )
 
 var (
+	// MyName is the application
 	MyName    = "erc-cimbl"
+	// MyVersion is our version
 	MyVersion = "0.0.1"
 
 	fVerbose bool
@@ -18,6 +20,7 @@ var (
 	fDoMail  bool
 )
 
+// Context is the way to share info across functions.
 type Context struct {
 	config *Config
 	files  []string
