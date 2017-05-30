@@ -83,8 +83,9 @@ func TestLoadConfigGoodVerbose(t *testing.T) {
 }
 
 func TestLoadDbrc(t *testing.T) {
-	dbrc := "test/test-dbrc"
+	dbrc := "test/no-dbrc"
 	ctx := &Context{}
+
 	err := loadDbrc(ctx, dbrc)
 	assert.Error(t, err, "should be an error")
 
@@ -97,7 +98,7 @@ func TestLoadDbrcVerbose(t *testing.T) {
     fVerbose = true
 	ctx := &Context{}
 
-    dbrc := "test/test-dbrc"
+    dbrc := "test/no-dbrc"
     err := loadDbrc(ctx, dbrc)
     assert.Error(t, err, "should be an error")
 
