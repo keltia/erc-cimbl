@@ -63,8 +63,8 @@ func loadConfig() (c *Config, err error) {
 	return
 }
 
-func loadDbrc(ctx *Context, filename string) (err error) {
-	err = setupProxyAuth(filename)
+func setupProxyAuth(ctx *Context, filename string) (err error) {
+	err = loadDbrc(filename)
 	if err != nil {
 		log.Printf("No dbrc file: %v", err)
 	}
@@ -81,7 +81,7 @@ func loadDbrc(ctx *Context, filename string) (err error) {
 	return
 }
 
-func setupProxyAuth(file string) (err error) {
+func loadDbrc(file string) (err error) {
 	fh, err := os.Open(file)
 	if err != nil {
 		return fmt.Errorf("Error: can not find %s: %v", file, err)

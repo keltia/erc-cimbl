@@ -77,7 +77,7 @@ func main() {
 		URLs:   map[string]string{},
 	}
 
-	err = loadDbrc(ctx, dbrcFile)
+	err = setupProxyAuth(ctx, dbrcFile)
 	if err != nil {
 		log.Println("No dbrc file, no proxy auth.")
 	}

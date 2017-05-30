@@ -82,59 +82,60 @@ func TestLoadConfigGoodVerbose(t *testing.T) {
 	fVerbose = false
 }
 
-func TestLoadDbrc(t *testing.T) {
+// ---
+func TestSetupProxyAuth(t *testing.T) {
 	dbrc := "test/no-dbrc"
 	ctx := &Context{}
 
-	err := loadDbrc(ctx, dbrc)
+	err := setupProxyAuth(ctx, dbrc)
 	assert.Error(t, err, "should be an error")
 
     dbrc = "test/test-dbrc"
-    err = loadDbrc(ctx, dbrc)
+    err = setupProxyAuth(ctx, dbrc)
     assert.NoError(t, err, "no error")
 }
 
-func TestLoadDbrcVerbose(t *testing.T) {
+func TestSetupProxyAuthVerbose(t *testing.T) {
     fVerbose = true
 	ctx := &Context{}
 
     dbrc := "test/no-dbrc"
-    err := loadDbrc(ctx, dbrc)
+    err := setupProxyAuth(ctx, dbrc)
     assert.Error(t, err, "should be an error")
 
     dbrc = "test/test-dbrc"
-    err = loadDbrc(ctx, dbrc)
+    err = setupProxyAuth(ctx, dbrc)
     assert.NoError(t, err, "no error")
 }
 
-func TestSetupProxyNoFile(t *testing.T) {
+func TestLoadDbrcNoFile(t *testing.T) {
 	file := ""
 	user = ""
 	password = ""
 
-	err := setupProxyAuth(file)
+	err := loadDbrc(file)
 	assert.Error(t, err, "error")
 	assert.EqualValues(t, "", user, "null user")
 	assert.EqualValues(t, "", password, "null password")
 }
 
-func TestSetupProxyZero(t *testing.T) {
+func TestLoadDbrcZero(t *testing.T) {
 	file := "test/zero-dbrc"
 	user = ""
 	password = ""
 
-	err := setupProxyAuth(file)
+	err := loadDbrc(file)
 	assert.Error(t, err, "error")
 	assert.EqualValues(t, "", user, "test user")
 	assert.EqualValues(t, "", password, "test password")
 }
 
-func TestSetupProxyGood(t *testing.T) {
+func TestLoadDbrcGood(t *testing.T) {
 	file := "test/test-dbrc"
 	user = ""
 	password = ""
 
-	err := setupProxyAuth(file)
+	err := loadDbrc(file)
 	assert.NoError(t, err, "no error")
 	assert.EqualValues(t, "test", user, "test user")
 	assert.EqualValues(t, "test", password, "test password")
