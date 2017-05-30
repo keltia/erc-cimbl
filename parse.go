@@ -6,14 +6,6 @@ import (
 	"strings"
 )
 
-var (
-	URLs    = map[string]string{}
-	cntURLs int
-
-	Paths    = map[string]bool{}
-	cntPaths int
-)
-
 /*
 Fields in the CSV file:
 
