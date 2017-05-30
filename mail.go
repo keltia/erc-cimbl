@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	MailTmpl = `
+	mailTmpl = `
 Dear Service Desk,
 
 After reading the following files received from CERT-EU:
@@ -21,11 +21,11 @@ Best regards,
 Your friendly script — {{.MyName}}/{{.MyVersion}}
     `
 
-	PathsTmpl = "Please add the following to the list of blocked filenames:\n"
-	URLsTmpl  = "Please add the following to the list of blocked URLs on BlueCoat:\n"
+	pathsTmpl = "Please add the following to the list of blocked filenames:\n"
+	urlsTmpl  = "Please add the following to the list of blocked URLs on BlueCoat:\n"
 )
 
-type MailVars struct {
+type mailVars struct {
 	From      string
 	To        string
 	Subject   string
@@ -39,7 +39,7 @@ type MailVars struct {
 func createMail(ctx *Context) (str string, err error) {
 	var txt bytes.Buffer
 
-	vars := MailVars{
+	vars := mailVars{
 		From:      ctx.config.From,
 		To:        ctx.config.To,
 		Subject:   ctx.config.Subject,
@@ -51,7 +51,7 @@ func createMail(ctx *Context) (str string, err error) {
 	vars.Paths = addPaths(ctx)
 	vars.URLs = addURLs(ctx)
 
-	t := template.Must(template.New("mail").Parse(MailTmpl))
+	t := template.Must(template.New("mail").Parse(mailTmpl))
 	err = t.Execute(&txt, vars)
 	return txt.String(), err
 }
@@ -75,7 +75,7 @@ func addURLs(ctx *Context) string {
 
 	if !fNoURLs {
 		if len(ctx.URLs) != 0 {
-			txt = fmt.Sprintf("%s", URLsTmpl)
+			txt = fmt.Sprintf("%s", urlsTmpl)
 			for k, v := range ctx.URLs {
 				if v == "**BLOCK**" {
 					txt = fmt.Sprintf("%s  %s\n", txt, k)
