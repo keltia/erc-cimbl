@@ -49,16 +49,33 @@ func TestGetProxy(t *testing.T) {
 }
 
 func TestDoCheck(t *testing.T) {
+	var testSite string
+
 	// Check values
 	ctx := &Context{
 		URLs: map[string]string{},
 	}
 
+	err := setupProxyAuth(ctx, dbrcFile)
+	if err != nil {
+		t.Log("No dbrc file, no proxy auth.")
+	}
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
+	str := TestSite
+	req, transport := setupTransport(ctx, str)
+	assert.NotNil(t, req, "not nil")
+	assert.NotNil(t, transport, "not nil")
+
+	if proxyURL != nil {
+		testSite = proxyURL.Host
+	} else {
+		testSite = TestSite
+	}
 	// mock to add a new measurement
-	httpmock.RegisterResponder("HEAD", TestSite,
+	httpmock.RegisterResponder("HEAD", testSite,
 		func(req *http.Request) (*http.Response, error) {
 
 			if req.Method != "HEAD" {
@@ -73,10 +90,7 @@ func TestDoCheck(t *testing.T) {
 		},
 	)
 
-	str := TestSite
-	req, transport := setupTransport(ctx, str)
-	assert.NotNil(t, req, "not nil")
-	assert.NotNil(t, transport, "not nil")
+
 
 	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
 

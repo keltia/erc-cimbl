@@ -34,6 +34,8 @@ func TestParseCSVNone(t *testing.T) {
 }
 
 func TestHandleCSV(t *testing.T) {
+    var testSite string
+
 	file := "test/CIMBL-0666-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err, "no error")
@@ -44,7 +46,12 @@ func TestHandleCSV(t *testing.T) {
 		URLs:   map[string]string{},
 	}
 
-	realPaths := map[string]bool{
+    err = setupProxyAuth(ctx, dbrcFile)
+    if err != nil {
+        t.Log("No dbrc file, no proxy auth.")
+    }
+
+    realPaths := map[string]bool{
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
 	realURLs := map[string]string{
@@ -54,8 +61,14 @@ func TestHandleCSV(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
+    if proxyURL != nil {
+        testSite = proxyURL.Host
+    } else {
+        testSite = TestSite
+    }
+
 	// mock to add a new measurement
-	httpmock.RegisterResponder("HEAD", TestSite,
+	httpmock.RegisterResponder("HEAD", testSite,
 		func(req *http.Request) (*http.Response, error) {
 
 			if req.Method != "HEAD" {
@@ -77,6 +90,8 @@ func TestHandleCSV(t *testing.T) {
 }
 
 func TestHandleCSVVerbose(t *testing.T) {
+    var testSite string
+    
 	file := "test/CIMBL-0666-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err, "no error")
@@ -88,6 +103,11 @@ func TestHandleCSVVerbose(t *testing.T) {
 		URLs:   map[string]string{},
 	}
 
+    err = setupProxyAuth(ctx, dbrcFile)
+    if err != nil {
+        t.Log("No dbrc file, no proxy auth.")
+    }
+
 	realPaths := map[string]bool{
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
@@ -97,8 +117,14 @@ func TestHandleCSVVerbose(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
+    if proxyURL != nil {
+        testSite = proxyURL.Host
+    } else {
+        testSite = TestSite
+    }
+
 	// mock to add a new measurement
-	httpmock.RegisterResponder("HEAD", TestSite,
+	httpmock.RegisterResponder("HEAD", testSite,
 		func(req *http.Request) (*http.Response, error) {
 
 			if req.Method != "HEAD" {
