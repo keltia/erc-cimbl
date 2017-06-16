@@ -43,8 +43,12 @@ func TestGetProxy(t *testing.T) {
 	assert.NotNil(t, req, "not nil")
 	assert.NotNil(t, transport, "not nil")
 
-	uri, err := getProxy(req)
-	assert.Nil(t, uri, "should be nil")
+	hp := os.Getenv("http_proxy")
+	assert.Empty(t, hp, "should be empty")
+
+	_, err := getProxy(req)
+	assert.Empty(t, ctx.proxyauth, "should be empty")
+	//assert.Nil(t, urii, "should be nil")
 	assert.NoError(t, err, "no error")
 }
 
@@ -95,6 +99,6 @@ func TestDoCheck(t *testing.T) {
 	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
 
 	res := doCheck(ctx, req)
-	assert.Equal(t, "**BLOCK**", res, "should be block")
+	assert.Equal(t, "BLOCKED-EEC", res, "should be block")
 }
 
