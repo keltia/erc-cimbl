@@ -23,6 +23,8 @@ Your friendly script — {{.MyName}}/{{.MyVersion}}
 
 	pathsTmpl = "Please add the following to the list of blocked filenames:\n"
 	urlsTmpl  = "Please add the following to the list of blocked URLs on BlueCoat:\n"
+
+	skipped = []string{}
 )
 
 type mailVars struct {
@@ -78,7 +80,11 @@ func addURLs(ctx *Context) string {
 			txt = fmt.Sprintf("%s", urlsTmpl)
 			for k, v := range ctx.URLs {
 				if v == "**BLOCK**" {
-					txt = fmt.Sprintf("%s  %s\n", txt, k)
+					if strings.HasPrefix(k, "https://") {
+						skipped = append(skipped, k)
+					} else {
+						txt = fmt.Sprintf("%s  %s\n", txt, k)
+					}
 				}
 			}
 		}
@@ -102,6 +108,10 @@ func doSendMail(ctx *Context) (err error) {
 			fmt.Printf("Cc: %s\n", ctx.config.Cc)
 			fmt.Printf("Subject: %s\n\n", ctx.config.Subject)
 			fmt.Println(mailText)
+
+			if len(skipped) != 0 {
+				fmt.Printf("\nSkipped URLs:\n%s", strings.Join(skipped, "\n"))
+			}
 		}
 	}
 	return
