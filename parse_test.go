@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"github.com/jarcoal/httpmock"
+	"net/http"
 )
 
 func TestOpenFileBad(t *testing.T) {
@@ -32,6 +34,8 @@ func TestParseCSVNone(t *testing.T) {
 }
 
 func TestHandleCSV(t *testing.T) {
+    var testSite string
+
 	file := "test/CIMBL-0666-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err, "no error")
@@ -42,12 +46,43 @@ func TestHandleCSV(t *testing.T) {
 		URLs:   map[string]string{},
 	}
 
-	realPaths := map[string]bool{
+    err = setupProxyAuth(ctx, dbrcFile)
+    if err != nil {
+        t.Log("No dbrc file, no proxy auth.")
+    }
+
+    realPaths := map[string]bool{
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
 	realURLs := map[string]string{
-		"http://pontonerywariva342.top/search.php": "**BLOCK**",
+		TestSite: "BLOCKED-EEC",
 	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+    if proxyURL != nil {
+        testSite = proxyURL.Host
+    } else {
+        testSite = TestSite
+    }
+
+	// mock to add a new measurement
+	httpmock.RegisterResponder("HEAD", testSite,
+		func(req *http.Request) (*http.Response, error) {
+
+			if req.Method != "HEAD" {
+				return httpmock.NewStringResponse(400, "Bad method"), nil
+			}
+
+			if req.RequestURI != TestSite {
+				return httpmock.NewStringResponse(400, "Bad URL"), nil
+			}
+
+			return httpmock.NewStringResponse(200, "To be blocked"), nil
+		},
+	)
+
 	err = handleCSV(ctx, file)
 	assert.NoError(t, err, "no error")
 	assert.Equal(t, realPaths, ctx.Paths, "should be equal")
@@ -55,6 +90,8 @@ func TestHandleCSV(t *testing.T) {
 }
 
 func TestHandleCSVVerbose(t *testing.T) {
+    var testSite string
+
 	file := "test/CIMBL-0666-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err, "no error")
@@ -66,12 +103,42 @@ func TestHandleCSVVerbose(t *testing.T) {
 		URLs:   map[string]string{},
 	}
 
+    err = setupProxyAuth(ctx, dbrcFile)
+    if err != nil {
+        t.Log("No dbrc file, no proxy auth.")
+    }
+
 	realPaths := map[string]bool{
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
 	realURLs := map[string]string{
-		"http://pontonerywariva342.top/search.php": "**BLOCK**",
+		TestSite: "BLOCKED-EEC",
 	}
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+    if proxyURL != nil {
+        testSite = proxyURL.Host
+    } else {
+        testSite = TestSite
+    }
+
+	// mock to add a new measurement
+	httpmock.RegisterResponder("HEAD", testSite,
+		func(req *http.Request) (*http.Response, error) {
+
+			if req.Method != "HEAD" {
+				return httpmock.NewStringResponse(400, "Bad method"), nil
+			}
+
+			if req.RequestURI != TestSite {
+				return httpmock.NewStringResponse(400, "Bad URL"), nil
+			}
+
+			return httpmock.NewStringResponse(200, "To be blocked"), nil
+		},
+	)
+
 	err = handleCSV(ctx, file)
 	assert.NoError(t, err, "no error")
 	assert.Equal(t, realPaths, ctx.Paths, "should be equal")

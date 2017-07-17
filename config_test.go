@@ -90,22 +90,22 @@ func TestSetupProxyAuth(t *testing.T) {
 	err := setupProxyAuth(ctx, dbrc)
 	assert.Error(t, err, "should be an error")
 
-    dbrc = "test/test-dbrc"
-    err = setupProxyAuth(ctx, dbrc)
-    assert.NoError(t, err, "no error")
+	dbrc = "test/test-dbrc"
+	err = setupProxyAuth(ctx, dbrc)
+	assert.NoError(t, err, "no error")
 }
 
 func TestSetupProxyAuthVerbose(t *testing.T) {
-    fVerbose = true
+	fVerbose = true
 	ctx := &Context{}
 
-    dbrc := "test/no-dbrc"
-    err := setupProxyAuth(ctx, dbrc)
-    assert.Error(t, err, "should be an error")
+	dbrc := "test/no-dbrc"
+	err := setupProxyAuth(ctx, dbrc)
+	assert.Error(t, err, "should be an error")
 
-    dbrc = "test/test-dbrc"
-    err = setupProxyAuth(ctx, dbrc)
-    assert.NoError(t, err, "no error")
+	dbrc = "test/test-dbrc"
+	err = setupProxyAuth(ctx, dbrc)
+	assert.NoError(t, err, "no error")
 }
 
 func TestLoadDbrcNoFile(t *testing.T) {

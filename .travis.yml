@@ -12,6 +12,7 @@ branches:
 install:
   - go get github.com/naoina/toml
   - go get github.com/stretchr/testify/assert
+  - go get github.com/jarcoal/httpmock
 script:
   - go build -v ./...
   - go test -v ./...

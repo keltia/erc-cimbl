@@ -2,16 +2,21 @@ package main
 
 import (
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 	"net/http"
 	"os"
+	"testing"
+	"time"
+	"github.com/jarcoal/httpmock"
+)
+
+const (
+	TestSite = "http://pontonerywariva342.top/search.php"
 )
 
 func TestSetupTransport(t *testing.T) {
 	url := "foo.bar\\%%%%%%"
 	ctx := &Context{
-		URLs:   map[string]string{},
+		URLs: map[string]string{},
 	}
 
 	r, tr := setupTransport(ctx, url)
@@ -30,32 +35,70 @@ func TestGetProxy(t *testing.T) {
 		os.Unsetenv(env)
 	}
 	ctx := &Context{
-		URLs:   map[string]string{},
+		URLs: map[string]string{},
 	}
 
-	str := "http://pontonerywariva342.top/search.php"
+	str := TestSite
 	req, transport := setupTransport(ctx, str)
 	assert.NotNil(t, req, "not nil")
 	assert.NotNil(t, transport, "not nil")
 
-	uri, err := getProxy(req)
-	assert.Nil(t, uri, "should be nil")
+	hp := os.Getenv("http_proxy")
+	assert.Empty(t, hp, "should be empty")
+
+	_, err := getProxy(req)
+	assert.Empty(t, ctx.proxyauth, "should be empty")
+	//assert.Nil(t, urii, "should be nil")
 	assert.NoError(t, err, "no error")
 }
 
 func TestDoCheck(t *testing.T) {
+	var testSite string
+
 	// Check values
 	ctx := &Context{
-		URLs:   map[string]string{},
+		URLs: map[string]string{},
 	}
 
-	str := "http://pontonerywariva342.top/search.php"
+	err := setupProxyAuth(ctx, dbrcFile)
+	if err != nil {
+		t.Log("No dbrc file, no proxy auth.")
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	str := TestSite
 	req, transport := setupTransport(ctx, str)
 	assert.NotNil(t, req, "not nil")
 	assert.NotNil(t, transport, "not nil")
 
+	if proxyURL != nil {
+		testSite = proxyURL.Host
+	} else {
+		testSite = TestSite
+	}
+	// mock to add a new measurement
+	httpmock.RegisterResponder("HEAD", testSite,
+		func(req *http.Request) (*http.Response, error) {
+
+			if req.Method != "HEAD" {
+				return httpmock.NewStringResponse(400, "Bad method"), nil
+			}
+
+			if req.RequestURI != TestSite {
+				return httpmock.NewStringResponse(400, "Bad URL"), nil
+			}
+
+			return httpmock.NewStringResponse(200, "To be blocked"), nil
+		},
+	)
+
+
+
 	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
 
 	res := doCheck(ctx, req)
-	assert.Equal(t, "**BLOCK**", res, "should be block")
+	assert.Equal(t, "BLOCKED-EEC", res, "should be block")
 }
+
