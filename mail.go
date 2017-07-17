@@ -93,10 +93,12 @@ func addURLs(ctx *Context) string {
 }
 
 func doSendMail(ctx *Context) (err error) {
-
-	mailText, err := createMail(ctx)
-
 	if len(ctx.Paths) != 0 || len(ctx.URLs) != 0 {
+		mailText, err := createMail(ctx)
+		if err != nil {
+			return err
+		}
+
 		if fDoMail {
 			err := sendMail(ctx, mailText)
 			if err != nil {
@@ -113,6 +115,8 @@ func doSendMail(ctx *Context) (err error) {
 				fmt.Printf("\nSkipped URLs:\n%s", strings.Join(skipped, "\n"))
 			}
 		}
+	} else {
+		log.Print("Nothing to do…")
 	}
 	return
 }
