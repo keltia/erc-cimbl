@@ -10,9 +10,9 @@ import (
 
 var (
 	// MyName is the application
-	MyName    = "erc-cimbl"
+	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.1.0"
+	MyVersion = "0.2.0"
 
 	fVerbose bool
 	fNoURLs  bool
@@ -22,12 +22,12 @@ var (
 
 // Context is the way to share info across functions.
 type Context struct {
-	config *Config
-	Paths  map[string]bool
-	URLs   map[string]string
-	Client *http.Client
-    files  []string
-    proxyauth string
+	config    *Config
+	Paths     map[string]bool
+	URLs      map[string]string
+	Client    *http.Client
+	files     []string
+	proxyauth string
 }
 
 func init() {
