@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"encoding/base64"
 	"fmt"
-	"github.com/naoina/toml"
-	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
+	"path/filepath"
+	"io/ioutil"
+	"github.com/naoina/toml"
 )
 
 // Config is the main configuration object
@@ -20,20 +20,6 @@ type Config struct {
 	Subject string
 	Cc      string
 }
-
-var (
-	baseDir = filepath.Join(os.Getenv("HOME"),
-		".config",
-		MyName,
-	)
-
-	configName = "config.toml"
-
-	dbrcFile = filepath.Join(os.Getenv("HOME"), ".dbrc")
-
-	user     string
-	password string
-)
 
 func loadConfig() (c *Config, err error) {
 	file := filepath.Join(baseDir, configName)
@@ -120,3 +106,4 @@ func loadDbrc(file string) (err error) {
 
 	return
 }
+
