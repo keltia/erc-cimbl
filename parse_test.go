@@ -55,7 +55,7 @@ func TestHandleCSV(t *testing.T) {
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
 	realURLs := map[string]string{
-		TestSite: "**BLOCK**",
+		TestSite: "BLOCKED-EEC",
 	}
 
 	httpmock.Activate()
@@ -91,7 +91,7 @@ func TestHandleCSV(t *testing.T) {
 
 func TestHandleCSVVerbose(t *testing.T) {
     var testSite string
-    
+
 	file := "test/CIMBL-0666-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err, "no error")
@@ -112,7 +112,7 @@ func TestHandleCSVVerbose(t *testing.T) {
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
 	realURLs := map[string]string{
-		TestSite: "**BLOCK**",
+		TestSite: "BLOCKED-EEC",
 	}
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
