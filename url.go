@@ -104,8 +104,12 @@ func handleURL(ctx *Context, str string) {
 	   Do the thing, manage redirects, auth requests and stuff
 	*/
 	result := doCheck(ctx, req)
-	ctx.URLs[str] = result
-	if fVerbose {
-		log.Printf("Checking %s: %s", str, result)
+	if result != "" {
+		if result == "**BLOCK**" {
+			ctx.URLs[str] = result
+		}
+		if fVerbose {
+			log.Printf("Checking %s: %s", str, result)
+		}
 	}
 }
