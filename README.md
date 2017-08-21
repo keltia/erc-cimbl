@@ -25,7 +25,7 @@ OPTIONS
 
 | Option  | Default | Description|
 | ------- |---------|------------|
-| -M      | false   | Actually send mail |
+| -M      | false   | Actually send mail | ** NOT IMPLEMENTED **
 | -P      | false   | Do not check filenames |
 | -U      | false   | Do not check URLs |
 | -v      | false   | Be verbose |
@@ -44,6 +44,12 @@ Windows:
 ```
 
 The rules of Go's `ProxyFromEnvironment` apply (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`, lowercase variants allowed).
+
+Do not forget to run these commands to create the configuration file:
+
+    mkdir %APPLOCALDATA%\DG-CSS\CIMBL
+
+and to put the *edited* content of the default `config.toml` there.
 
 ## License
 
