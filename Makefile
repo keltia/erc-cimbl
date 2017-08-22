@@ -1,4 +1,3 @@
-
 # Main Makefile for labs2pg
 #
 # Copyright 2015 © by Ollivier Robert for the EEC
