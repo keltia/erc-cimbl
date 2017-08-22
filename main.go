@@ -23,7 +23,7 @@ var (
 // Context is the way to share info across functions.
 type Context struct {
 	config    *Config
-	current   string
+	tempdir   string
 	Paths     map[string]bool
 	URLs      map[string]string
 	Client    *http.Client
@@ -82,13 +82,13 @@ func main() {
 	if err != nil {
 		log.Println("No dbrc file, no proxy auth.")
 	}
-	// For all csv files on the CLI
+	// For all files on the CLI
 	for _, file := range flag.Args() {
 		if checkFilename(file) {
 			if fVerbose {
 				log.Printf("Checking %s…\n", file)
 			}
-			err := handleCSV(ctx, file)
+			err := handleSingleFile(ctx, file)
 			if err != nil {
 				log.Printf("error reading %s: %v", file, err)
 			}
