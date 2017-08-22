@@ -12,7 +12,7 @@ var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.2.2"
+	MyVersion = "0.3.0"
 
 	fVerbose bool
 	fNoURLs  bool
@@ -23,6 +23,7 @@ var (
 // Context is the way to share info across functions.
 type Context struct {
 	config    *Config
+	tempdir   string
 	Paths     map[string]bool
 	URLs      map[string]string
 	Client    *http.Client
@@ -38,7 +39,7 @@ func init() {
 }
 
 func checkFilename(file string) (ok bool) {
-	re := regexp.MustCompile(`CIMBL-\d+-CERTS\.csv`)
+	re := regexp.MustCompile(`CIMBL-\d+-CERTS\.(csv|zip)`)
 
 	return re.MatchString(file)
 }
@@ -81,13 +82,13 @@ func main() {
 	if err != nil {
 		log.Println("No dbrc file, no proxy auth.")
 	}
-	// For all csv files on the CLI
+	// For all files on the CLI
 	for _, file := range flag.Args() {
 		if checkFilename(file) {
 			if fVerbose {
 				log.Printf("Checking %s…\n", file)
 			}
-			err := handleCSV(ctx, file)
+			err := handleSingleFile(ctx, file)
 			if err != nil {
 				log.Printf("error reading %s: %v", file, err)
 			}
