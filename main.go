@@ -23,6 +23,7 @@ var (
 // Context is the way to share info across functions.
 type Context struct {
 	config    *Config
+	current   string
 	Paths     map[string]bool
 	URLs      map[string]string
 	Client    *http.Client
