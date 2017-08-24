@@ -23,6 +23,8 @@ var (
 		"wsf", "wsh", "mst", "msu",
 		".ova", ".ovf", ".vhd", ".vhdx",
 		".vmcx", ".vmdk", ".vmx", ".xva",
+		".ani", ".cpl", ".iso", ".sct",
+		".vdi",
 	}
 
 	restr *regexp.Regexp
