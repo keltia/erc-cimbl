@@ -64,17 +64,7 @@ func openFile(ctx *Context, file string) (fh *os.File, err error) {
 
 		if fVerbose {
 			log.Printf("found zip file %s", file)
-		}
-
-		// Extract in safe location
-		dir, err := ioutil.TempDir("", "erc-cimbl")
-		if err != nil {
-			log.Fatalf("unable to create sandbox %s: %v", dir, err)
-		}
-		defer cleanupTemp(dir)
-
-		if fVerbose {
-			log.Printf("extracting to %s", dir)
+			log.Printf("extracting to %s", ctx.tempdir)
 		}
 
 		fn = openZipfile(ctx, file)
