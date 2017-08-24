@@ -21,6 +21,8 @@ var (
 		"reg", "scf", "scr", "url", "vb",
 		"vbe", "vbs", "ws", "wsc",
 		"wsf", "wsh", "mst", "msu",
+		".ova", ".ovf", ".vhd", ".vhdx",
+		".vmcx", ".vmdk", ".vmx", ".xva",
 	}
 
 	restr *regexp.Regexp
