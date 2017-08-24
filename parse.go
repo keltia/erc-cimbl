@@ -64,7 +64,6 @@ func openFile(ctx *Context, file string) (fh *os.File, err error) {
 
 		if fVerbose {
 			log.Printf("found zip file %s", file)
-			log.Printf("extracting to %s", ctx.tempdir)
 		}
 
 		fn = openZipfile(ctx, file)
