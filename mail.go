@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 	"text/template"
+	"net/smtp"
 )
 
 var (
@@ -122,5 +123,13 @@ func doSendMail(ctx *Context) (err error) {
 }
 
 func sendMail(ctx *Context, text string) (err error) {
+	from := ctx.config.From
+	to := strings.Split(ctx.config.To, ",")
+
+	err = smtp.SendMail(ctx.config.Server, nil, from, to, []byte(text))
+	if err != nil {
+		log.Printf("error sending mail: %v", err)
+	}
+
 	return
 }
