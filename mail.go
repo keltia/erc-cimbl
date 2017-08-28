@@ -121,6 +121,11 @@ func doSendMail(ctx *Context) (err error) {
 			}
 		}
 	} else {
+		/* Send dummy mail if verbose */
+		if fDoMail && fVerbose {
+			txt, _ := createMail(ctx)
+			err = sendMail(ctx, txt)
+		}
 		log.Print("Nothing to do…")
 	}
 	return
