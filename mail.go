@@ -132,6 +132,9 @@ func doSendMail(ctx *Context) (err error) {
 }
 
 func sendMail(ctx *Context, text string) (err error) {
+	if fVerbose {
+		log.Printf("Connecting to %s…", ctx.config.Server)
+	}
 	from := ctx.config.From
 	to := strings.Split(ctx.config.To, ",")
 
@@ -140,5 +143,8 @@ func sendMail(ctx *Context, text string) (err error) {
 		log.Printf("error sending mail: %v", err)
 	}
 
+	if fVerbose {
+		log.Printf("Mail sent to %v…", ctx.config.To)
+	}
 	return
 }

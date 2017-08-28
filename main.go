@@ -70,6 +70,10 @@ func main() {
 	if config.Server == "" {
 		log.Println("no mail server, mail is disabled.")
 		fDoMail = false
+	} else {
+		if fVerbose {
+			log.Printf("Got mail server %s…", config.Server)
+		}
 	}
 
 	ctx := &Context{
