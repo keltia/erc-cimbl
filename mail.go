@@ -10,7 +10,10 @@ import (
 )
 
 var (
-	mailTmpl = `
+	mailTmpl = `Subject: {{.Subject}}
+To: {{.To}}
+X-Contact-Info: {{.From}}
+
 Dear Service Desk,
 
 After reading the following files received from CERT-EU:
@@ -19,8 +22,9 @@ After reading the following files received from CERT-EU:
 {{.Paths}}
 {{.URLs}}
 Best regards,
-Your friendly script — {{.MyName}}/{{.MyVersion}}
-    `
+--
+Your friendly script - {{.MyName}}/{{.MyVersion}}
+`
 
 	pathsTmpl = "Please add the following to the list of blocked filenames:\n"
 	urlsTmpl  = "Please add the following to the list of blocked URLs on BlueCoat:\n"
