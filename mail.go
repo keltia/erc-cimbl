@@ -6,10 +6,14 @@ import (
 	"log"
 	"strings"
 	"text/template"
+	"net/smtp"
 )
 
 var (
-	mailTmpl = `
+	mailTmpl = `Subject: {{.Subject}}
+To: {{.To}}
+X-Contact-Info: {{.From}}
+
 Dear Service Desk,
 
 After reading the following files received from CERT-EU:
@@ -18,8 +22,9 @@ After reading the following files received from CERT-EU:
 {{.Paths}}
 {{.URLs}}
 Best regards,
-Your friendly script — {{.MyName}}/{{.MyVersion}}
-    `
+--
+Your friendly script - {{.MyName}}/{{.MyVersion}}
+`
 
 	pathsTmpl = "Please add the following to the list of blocked filenames:\n"
 	urlsTmpl  = "Please add the following to the list of blocked URLs on BlueCoat:\n"
@@ -116,11 +121,30 @@ func doSendMail(ctx *Context) (err error) {
 			}
 		}
 	} else {
+		/* Send dummy mail if verbose */
+		if fDoMail && fVerbose {
+			txt, _ := createMail(ctx)
+			err = sendMail(ctx, txt)
+		}
 		log.Print("Nothing to do…")
 	}
 	return
 }
 
 func sendMail(ctx *Context, text string) (err error) {
+	if fVerbose {
+		log.Printf("Connecting to %s…", ctx.config.Server)
+	}
+	from := ctx.config.From
+	to := strings.Split(ctx.config.To, ",")
+
+	err = smtp.SendMail(ctx.config.Server, nil, from, to, []byte(text))
+	if err != nil {
+		log.Printf("error sending mail: %v", err)
+	}
+
+	if fVerbose {
+		log.Printf("Mail sent to %v…", ctx.config.To)
+	}
 	return
 }

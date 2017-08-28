@@ -12,7 +12,7 @@ var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.3.2"
+	MyVersion = "0.3.3"
 
 	fVerbose bool
 	fNoURLs  bool
@@ -70,6 +70,10 @@ func main() {
 	if config.Server == "" {
 		log.Println("no mail server, mail is disabled.")
 		fDoMail = false
+	} else {
+		if fVerbose {
+			log.Printf("Got mail server %s…", config.Server)
+		}
 	}
 
 	ctx := &Context{
