@@ -9,7 +9,8 @@ import (
 
 func TestOpenFileBad(t *testing.T) {
 	file := "foo.bar"
-	fh, err := openFile(file)
+	ctx := &Context{}
+	fh, err := openFile(ctx, file)
 	defer fh.Close()
 
 	assert.Nil(t, fh, "nil")
@@ -18,7 +19,8 @@ func TestOpenFileBad(t *testing.T) {
 
 func TestOpenFileGood(t *testing.T) {
 	file := "test/CIMBL-0666-CERTS.csv"
-	fh, err := openFile(file)
+	ctx := &Context{}
+	fh, err := openFile(ctx, file)
 	defer fh.Close()
 
 	assert.NoError(t, err, "no error")
@@ -28,7 +30,7 @@ func TestOpenFileGood(t *testing.T) {
 func TestParseCSVNone(t *testing.T) {
 	file := "/noneexistent"
 	ctx := &Context{}
-	err := handleCSV(ctx, file)
+	err := handleSingleFile(ctx, file)
 
 	assert.Error(t, err, "should be in error")
 }
@@ -83,7 +85,7 @@ func TestHandleCSV(t *testing.T) {
 		},
 	)
 
-	err = handleCSV(ctx, file)
+	err = handleSingleFile(ctx, file)
 	assert.NoError(t, err, "no error")
 	assert.Equal(t, realPaths, ctx.Paths, "should be equal")
 	assert.Equal(t, realURLs, ctx.URLs, "should be equal")
@@ -139,7 +141,7 @@ func TestHandleCSVVerbose(t *testing.T) {
 		},
 	)
 
-	err = handleCSV(ctx, file)
+	err = handleSingleFile(ctx, file)
 	assert.NoError(t, err, "no error")
 	assert.Equal(t, realPaths, ctx.Paths, "should be equal")
 	assert.Equal(t, realURLs, ctx.URLs, "should be equal")
