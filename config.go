@@ -9,7 +9,7 @@ import (
 	"strings"
 	"path/filepath"
 	"io/ioutil"
-	"github.com/naoina/toml"
+	"github.com/BurntSushi/toml"
 )
 
 // Config is the main configuration object
