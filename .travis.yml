@@ -10,7 +10,7 @@ branches:
   - develop
   - master
 install:
-  - go get github.com/naoina/toml
+  - go get github.com/BurntSushi/toml
   - go get github.com/stretchr/testify/assert
   - go get github.com/jarcoal/httpmock
 script:
