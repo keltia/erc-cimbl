@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net/smtp"
 	"strings"
 	"text/template"
-	"net/smtp"
 )
 
 var (
@@ -85,11 +85,7 @@ func addURLs(ctx *Context) string {
 			txt = fmt.Sprintf("%s", urlsTmpl)
 			for k, v := range ctx.URLs {
 				if v == "**BLOCK**" {
-					if strings.HasPrefix(k, "https://") {
-						skipped = append(skipped, k)
-					} else {
-						txt = fmt.Sprintf("%s  %s\n", txt, k)
-					}
+					txt = fmt.Sprintf("%s  %s\n", txt, k)
 				}
 			}
 		}
@@ -115,10 +111,6 @@ func doSendMail(ctx *Context) (err error) {
 			fmt.Printf("Cc: %s\n", ctx.config.Cc)
 			fmt.Printf("Subject: %s\n\n", ctx.config.Subject)
 			fmt.Println(mailText)
-
-			if len(skipped) != 0 {
-				fmt.Printf("\nSkipped URLs:\n%s", strings.Join(skipped, "\n"))
-			}
 		}
 	} else {
 		/* Send dummy mail if verbose */

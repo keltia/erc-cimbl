@@ -6,13 +6,14 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 )
 
 var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.3.3"
+	MyVersion = "0.3.4"
 
 	fVerbose bool
 	fNoURLs  bool
@@ -108,5 +109,9 @@ func main() {
 	err = doSendMail(ctx)
 	if err != nil {
 		log.Fatalf("sending mail: %v", err)
+	}
+
+	if len(skipped) != 0 {
+		log.Printf("\nSkipped URLs:\n%s", strings.Join(skipped, "\n"))
 	}
 }

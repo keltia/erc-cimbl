@@ -1,15 +1,15 @@
 package main
 
 import (
-	"encoding/csv"
-	"os"
-	"strings"
 	"archive/zip"
-	"log"
-	"path"
-	"io/ioutil"
-	"path/filepath"
+	"encoding/csv"
 	"io"
+	"io/ioutil"
+	"log"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
 )
 
 /*
@@ -77,35 +77,35 @@ func openFile(ctx *Context, file string) (fh *os.File, err error) {
 
 // readCSV reads the first csv in the zip file and copy into a temp file
 func readCSV(ctx *Context, fn *zip.File) (file string) {
-    dir := ctx.tempdir
-    if fVerbose {
-        log.Printf("found %s", fn.Name)
-    }
+	dir := ctx.tempdir
+	if fVerbose {
+		log.Printf("found %s", fn.Name)
+	}
 
-    // Open the CSV stream
-    fh, err := fn.Open()
-    if err != nil {
-        log.Fatalf("unable to extract %s", fn.Name)
-    }
+	// Open the CSV stream
+	fh, err := fn.Open()
+	if err != nil {
+		log.Fatalf("unable to extract %s", fn.Name)
+	}
 
-    // Create our temp file
-    ours, err := os.Create(filepath.Join(dir, fn.Name))
-    if err != nil {
-        log.Fatalf("unable to create %s in %s: %v", fn.Name, dir, err)
-    }
-    defer ours.Close()
+	// Create our temp file
+	ours, err := os.Create(filepath.Join(dir, fn.Name))
+	if err != nil {
+		log.Fatalf("unable to create %s in %s: %v", fn.Name, dir, err)
+	}
+	defer ours.Close()
 
-    if fVerbose {
-        log.Printf("created our tempfile %s", filepath.Join(dir, fn.Name))
-    }
+	if fVerbose {
+		log.Printf("created our tempfile %s", filepath.Join(dir, fn.Name))
+	}
 
-    // copy all the bits over
-    _, err = io.Copy(ours, fh)
-    if err != nil {
-        log.Fatalf("unable to write %s in %s: %v", fn.Name, dir, err)
-    }
-    file = filepath.Join(dir, fn.Name)
-    return
+	// copy all the bits over
+	_, err = io.Copy(ours, fh)
+	if err != nil {
+		log.Fatalf("unable to write %s in %s: %v", fn.Name, dir, err)
+	}
+	file = filepath.Join(dir, fn.Name)
+	return
 }
 
 // openZipfile extracts the first csv file out of he given zip.
@@ -145,7 +145,7 @@ func openZipfile(ctx *Context, file string) (fname string) {
 		if path.Ext(fn.Name) == ".csv" ||
 			path.Ext(fn.Name) == ".CSV" {
 
-            file = readCSV(ctx, fn)
+			file = readCSV(ctx, fn)
 			break
 		}
 	}

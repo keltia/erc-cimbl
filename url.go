@@ -87,6 +87,11 @@ func doCheck(ctx *Context, req *http.Request) string {
 }
 
 func handleURL(ctx *Context, str string) {
+	// https URLs will not be blocked, no MITM
+	if strings.HasPrefix(str, "https://") {
+		skipped = append(skipped, str)
+		return
+	}
 	/*
 	   Setup connection including proxy stuff
 	*/
