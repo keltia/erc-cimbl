@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -108,5 +109,9 @@ func main() {
 	err = doSendMail(ctx)
 	if err != nil {
 		log.Fatalf("sending mail: %v", err)
+	}
+
+	if len(skipped) != 0 {
+		log.Printf("\nSkipped URLs:\n%s", strings.Join(skipped, "\n"))
 	}
 }
