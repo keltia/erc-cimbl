@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"encoding/base64"
 	"fmt"
+	"github.com/BurntSushi/toml"
+	"io/ioutil"
 	"log"
 	"os"
-	"strings"
 	"path/filepath"
-	"io/ioutil"
-	"github.com/BurntSushi/toml"
+	"strings"
 )
 
 // Config is the main configuration object
@@ -106,4 +106,3 @@ func loadDbrc(file string) (err error) {
 
 	return
 }
-

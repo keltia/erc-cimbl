@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"os"
 	"testing"
 	"time"
-	"github.com/jarcoal/httpmock"
 )
 
 const (
@@ -94,11 +94,8 @@ func TestDoCheck(t *testing.T) {
 		},
 	)
 
-
-
 	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
 
 	res := doCheck(ctx, req)
 	assert.Equal(t, "BLOCKED-EEC", res, "should be block")
 }
-

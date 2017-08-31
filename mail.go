@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net/smtp"
 	"strings"
 	"text/template"
-	"net/smtp"
 )
 
 var (

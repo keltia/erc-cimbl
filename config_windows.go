@@ -20,4 +20,3 @@ var (
 	user     string
 	password string
 )
-
