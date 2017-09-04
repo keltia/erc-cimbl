@@ -86,6 +86,10 @@ func main() {
 	err = setupProxyAuth(ctx, dbrcFile)
 	if err != nil {
 		log.Println("No dbrc file, no proxy auth.")
+	} else {
+		if fVerbose {
+			log.Printf("Using %s as proxy…", os.Getenv("http_proxy"))
+		}
 	}
 	// For all files on the CLI
 	for _, file := range flag.Args() {
@@ -99,8 +103,14 @@ func main() {
 			}
 			ctx.files = append(ctx.files, file)
 		} else {
-			if fVerbose {
-				log.Printf("Ignoring %s…", file)
+			if strings.HasPrefix(file, "http:") {
+				if !fNoURLs {
+					handleURL(ctx, file)
+				}
+			} else {
+				if fVerbose {
+					log.Printf("Ignoring %s…", file)
+				}
 			}
 		}
 	}
