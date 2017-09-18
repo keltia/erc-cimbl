@@ -19,6 +19,7 @@ type Config struct {
 	Server  string
 	Subject string
 	Cc      string
+	KeyID   string
 }
 
 func loadConfig() (c *Config, err error) {

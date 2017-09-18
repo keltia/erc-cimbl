@@ -11,7 +11,7 @@ SRCSU= config_unix.go
 
 OPTS=	-ldflags="-s -w" -v
 
-all: erc-cimbl erc-cimbl.exe
+all: erc-cimbl # erc-cimbl.exe
 
 erc-cimbl: ${SRCS} ${SRCSU}
 	go build ${OPTS}

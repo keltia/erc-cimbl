@@ -40,7 +40,7 @@ func init() {
 }
 
 func checkFilename(file string) (ok bool) {
-	re := regexp.MustCompile(`(?i:CIMBL-\d+-CERTS\.(csv|zip))`)
+	re := regexp.MustCompile(`(?i:CIMBL-\d+-CERTS\.(csv|zip)(\.asc|))`)
 
 	return re.MatchString(file)
 }
