@@ -116,18 +116,12 @@ func openZipfile(ctx *Context, file string) (fname string) {
 		log.Printf("extracting to %s", dir)
 	}
 
-	fullFile, err := filepath.Abs(file)
-	if err != nil {
-		log.Fatalf("unable to get full path of %s", file)
-	}
-
 	// Go on
-	err = os.Chdir(dir)
-	if err != nil {
+	if err := os.Chdir(dir); err != nil {
 		log.Fatalf("unable to use tempdir %s: %v", dir, err)
 	}
 
-	zfh, err := zip.OpenReader(fullFile)
+	zfh, err := zip.OpenReader(file)
 	if err != nil {
 		log.Fatalf("error opening %s: %v", file, err)
 	}
