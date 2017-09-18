@@ -162,6 +162,11 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 	}
 	defer cleanupTemp(dir)
 
+	// We want the full path
+	if file, err := filepath.Abs(file); err != nil {
+		log.Fatalf("error checking %s in %s", file)
+	}
+
 	ctx.tempdir = dir
 	fh, err := openFile(ctx, file)
 	if err != nil {
