@@ -56,7 +56,7 @@ func TestLoadConfigGood(t *testing.T) {
 		To:      "security@example.com",
 		Cc:      "root@example.com",
 		Subject: "CRQ: New URLs/files to be BLOCKED",
-		Server:  "SMTP",
+		Server:  "SMTP:PORT",
 	}
 	assert.Equal(t, cnf, c, "should be equal")
 }
@@ -76,7 +76,7 @@ func TestLoadConfigGoodVerbose(t *testing.T) {
 		To:      "security@example.com",
 		Cc:      "root@example.com",
 		Subject: "CRQ: New URLs/files to be BLOCKED",
-		Server:  "SMTP",
+		Server:  "SMTP:PORT",
 	}
 	assert.Equal(t, cnf, c, "should be equal")
 	fVerbose = false
