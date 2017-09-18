@@ -93,7 +93,7 @@ func openFile(ctx *Context, file string) (fh *os.File, err error) {
 func decryptFile(ctx *Context, file string) (string, error) {
 	dir := ctx.tempdir
 	if fVerbose {
-		log.Printf("Deccypting %s into %s", file, dir)
+		log.Printf("Decrypting %s into %s", file, dir)
 	}
 
 	// Insure we got the full path
