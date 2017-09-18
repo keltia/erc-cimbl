@@ -35,6 +35,10 @@ func TestAddURLsUnknown(t *testing.T) {
 }
 
 func TestDoSendMailNoMail(t *testing.T) {
+	baseDir = "test"
+	configName = "config.toml"
+	fVerbose = false
+
 	config, err := loadConfig()
 	assert.NoError(t, err, "no error")
 	ctx := &Context{
@@ -47,6 +51,10 @@ func TestDoSendMailNoMail(t *testing.T) {
 }
 
 func TestDoSendMailWithMail(t *testing.T) {
+	baseDir = "test"
+	configName = "config.toml"
+	fVerbose = false
+
 	config, err := loadConfig()
 	assert.NoError(t, err, "no error")
 	ctx := &Context{
