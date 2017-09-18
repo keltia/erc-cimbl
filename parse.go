@@ -183,9 +183,6 @@ func readCSV(ctx *Context, fn *zip.File) (file string) {
 func openZipfile(ctx *Context, file string) (fname string) {
 
 	dir := ctx.tempdir
-	if fVerbose {
-		log.Printf("extracting to %s", dir)
-	}
 
 	// Go on
 	if err := os.Chdir(dir); err != nil {
