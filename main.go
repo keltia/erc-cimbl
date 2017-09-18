@@ -13,7 +13,7 @@ var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.3.5"
+	MyVersion = "0.4.0"
 
 	fVerbose bool
 	fNoURLs  bool
@@ -40,7 +40,7 @@ func init() {
 }
 
 func checkFilename(file string) (ok bool) {
-	re := regexp.MustCompile(`(?i:CIMBL-\d+-CERTS\.(csv|zip))`)
+	re := regexp.MustCompile(`(?i:CIMBL-\d+-CERTS\.(csv|zip)(\.asc|))`)
 
 	return re.MatchString(file)
 }

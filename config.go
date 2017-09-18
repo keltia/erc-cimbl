@@ -19,6 +19,7 @@ type Config struct {
 	Server  string
 	Subject string
 	Cc      string
+	KeyID   string
 }
 
 func loadConfig() (c *Config, err error) {
@@ -90,7 +91,7 @@ func loadDbrc(file string) (err error) {
 		flds := strings.Split(l, " ")
 
 		// Check what we need
-		if flds[0] == "cimbl" {
+		if flds[0] == "proxy" {
 			user = flds[1]
 			password = flds[2]
 			break
