@@ -10,6 +10,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"github.com/proglottis/gpgme"
 )
 
 /*
@@ -59,6 +60,19 @@ func openFile(ctx *Context, file string) (fh *os.File, err error) {
 		log.Printf("found %s", file)
 	}
 
+	// Decrypt if needed
+	if path.Ext(file) == ".asc" ||
+		path.Ext(file) == ".ASC" {
+		if fVerbose {
+			log.Printf("found encrypted file %s", file)
+		}
+		file, err = decryptFile(ctx, file)
+		if err != nil {
+			log.Fatalf("error decrypting %s: %v", file, err)
+		}
+	}
+
+	// Next pass, check for zip file
 	if path.Ext(file) == ".zip" ||
 		path.Ext(file) == ".ZIP" {
 
@@ -73,6 +87,50 @@ func openFile(ctx *Context, file string) (fh *os.File, err error) {
 		log.Fatalf("error: %v", err)
 	}
 	return
+}
+
+// decryptFiles returns the path name of the decrypted file
+func decryptFile(ctx *Context, file string) (string, error) {
+	dir := ctx.tempdir
+	if fVerbose {
+		log.Printf("Deccypting %s into %s", file, dir)
+	}
+
+	// Insure we got the full path
+	file, _ = filepath.Abs(file)
+
+	// Go into the sandbox
+	err := os.Chdir(dir)
+	if err != nil {
+		log.Fatalf("unable to use tempdir %s: %v", dir, err)
+	}
+
+	// Carefully open the box
+	fh, err := os.Open(file)
+	if err != nil {
+		return "", err
+	}
+	defer fh.Close()
+
+	// Do the decryption thing
+	plain, err := gpgme.Decrypt(fh)
+	if err != nil {
+		return "", err
+	}
+	defer plain.Close()
+
+	// Save "plain" text
+	base := filepath.Base(file)
+	ext := filepath.Ext(base)
+	zipname := strings.Replace(base, "." + ext, "", 1)
+	dfh, err := os.Create(filepath.Join(dir, zipname))
+	_, err = io.Copy(dfh, plain)
+	if err != nil {
+		return "", err
+	}
+
+	dfh.Close()
+	return filepath.Join(dir, zipname), nil
 }
 
 // readCSV reads the first csv in the zip file and copy into a temp file
