@@ -56,10 +56,6 @@ func openFile(ctx *Context, file string) (fh *os.File, err error) {
 		return
 	}
 
-	if fVerbose {
-		log.Printf("found %s", file)
-	}
-
 	myfile = file
 	// Decrypt if needed
 	if path.Ext(file) == ".asc" ||
@@ -70,6 +66,10 @@ func openFile(ctx *Context, file string) (fh *os.File, err error) {
 		myfile, err = decryptFile(ctx, file)
 		if err != nil {
 			log.Fatalf("error decrypting %s: %v", file, err)
+		}
+	} else {
+		if fVerbose {
+			log.Printf("found plain file %s", file)
 		}
 	}
 
