@@ -1,7 +1,6 @@
 language: go
 go:
-- 1.8.3
-- 1.9
+- 1.9.1
 - master
 matrix:
   allow_failures:
@@ -14,6 +13,7 @@ install:
   - go get github.com/BurntSushi/toml
   - go get github.com/stretchr/testify/assert
   - go get github.com/jarcoal/httpmock
+  - go get github.com/maxim2266/csvplus
 script:
   - make
   - make test

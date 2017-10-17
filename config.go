@@ -12,6 +12,10 @@ import (
 	"strings"
 )
 
+const (
+	proxyTag = "proxy"
+)
+
 // Config is the main configuration object
 type Config struct {
 	From    string
@@ -53,18 +57,21 @@ func loadConfig() (c *Config, err error) {
 func setupProxyAuth(ctx *Context, filename string) (err error) {
 	err = loadDbrc(filename)
 	if err != nil {
-		log.Printf("No dbrc file: %v", err)
-	}
-	if fVerbose {
-		log.Printf("Proxy user %s found.", user)
-	}
+		if fVerbose {
+			log.Printf("No dbrc file: %v", err)
+		}
+	} else {
+		// Do we have a proxy user/password?
+		if user != "" && password != "" {
+			auth := fmt.Sprintf("%s:%s", user, password)
+			ctx.proxyauth = "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
 
-	// Do we have a proxy user/password?
-	if user != "" && password != "" {
-		auth := fmt.Sprintf("%s:%s", user, password)
-		ctx.proxyauth = "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
-	}
+			if fVerbose {
+				log.Printf("Proxy user %s found.", user)
+			}
 
+		}
+	}
 	return
 }
 
@@ -91,7 +98,7 @@ func loadDbrc(file string) (err error) {
 		flds := strings.Split(l, " ")
 
 		// Check what we need
-		if flds[0] == "proxy" {
+		if flds[0] == proxyTag {
 			user = flds[1]
 			password = flds[2]
 			break
@@ -102,7 +109,7 @@ func loadDbrc(file string) (err error) {
 	}
 
 	if user == "" {
-		return fmt.Errorf("no user/password for cimbl in %s", dbrcFile)
+		return fmt.Errorf("no user/password for %s in %s", proxyTag, dbrcFile)
 	}
 
 	return

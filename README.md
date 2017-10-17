@@ -38,7 +38,13 @@ Linux/Unix:
     setenv HTTP_PROXY [http://]host[:port] (csh/tcsh)
 ```
 
-Windows:
+Do not forget to run these commands to create the configuration file:
+
+    mkdir -p $HOME/.config/erc-cimbl
+
+and to put the *edited* content of the default `config.toml` there.
+
+Windows — ONLY if you use a version < 0.4 as I can not use `cgo` when cross-building.
 ```
     set HTTP_PROXY=[http://]host[:port]
 ```
@@ -50,6 +56,10 @@ Do not forget to run these commands to create the configuration file:
     mkdir %APPLOCALDATA%\DG-CSS\CIMBL
 
 and to put the *edited* content of the default `config.toml` there.
+
+## BUGS
+
+v0.4 started supporting direct GPGME decryption and this does not work on Windows.
 
 ## License
 
