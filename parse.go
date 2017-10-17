@@ -2,7 +2,6 @@ package main
 
 import (
 	"archive/zip"
-	"encoding/csv"
 	"io"
 	"io/ioutil"
 	"log"
@@ -11,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"github.com/proglottis/gpgme"
+	"github.com/maxim2266/csvplus"
 )
 
 /*
@@ -48,7 +48,7 @@ func cleanupTemp(dir string) {
 }
 
 // openFile looks at the file and give it to openZipfile() if needed
-func openFile(ctx *Context, file string) (fh *os.File, err error) {
+func openFile(ctx *Context, file string) (fn string, err error) {
 	var myfile string
 
 	_, err = os.Stat(file)
@@ -83,11 +83,7 @@ func openFile(ctx *Context, file string) (fh *os.File, err error) {
 
 		myfile = openZipfile(ctx, myfile)
 	}
-
-	fh, err = os.Open(myfile)
-	if err != nil {
-		log.Fatalf("error opening %s: %v", myfile, err)
-	}
+	fn = myfile
 	return
 }
 
@@ -232,29 +228,28 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 	}
 
 	ctx.tempdir = dir
-	fh, err := openFile(ctx, myfile)
+
+	// Look at the file and whatever might be inside (and decrypt/unzip/…)
+	myfile, err = openFile(ctx, myfile)
 	if err != nil {
 		return
 	}
-	defer fh.Close()
 
-	all := csv.NewReader(fh)
-	allLines, err := all.ReadAll()
+	allLines := csvplus.FromFile(myfile).SelectColumns("type", "value")
+	rows, err := csvplus.Take(allLines).
+		Filter(csvplus.Any(csvplus.Like(csvplus.Row{"type": "url"}),
+						   csvplus.Like(csvplus.Row{"type": "filename"}))).
+		ToRows()
 
-	for _, line := range allLines {
-		// type at index 2
-		// value at index 5
-		vtype := line[2]
-		etype := strings.Split(vtype, "|")
-
-		switch etype[0] {
+	for _, row := range rows {
+		switch row["type"] {
 		case "filename":
 			if !fNoPaths {
-				handlePath(ctx, entryToPath(line[5]))
+				handlePath(ctx, entryToPath(row["value"]))
 			}
 		case "url":
 			if !fNoURLs {
-				handleURL(ctx, line[5])
+				handleURL(ctx, row["value"])
 			}
 		}
 	}
