@@ -2,6 +2,8 @@ package main
 
 import (
 	"archive/zip"
+	"github.com/maxim2266/csvplus"
+	"github.com/proglottis/gpgme"
 	"io"
 	"io/ioutil"
 	"log"
@@ -9,8 +11,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"github.com/proglottis/gpgme"
-	"github.com/maxim2266/csvplus"
 )
 
 /*
@@ -238,7 +238,7 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 	allLines := csvplus.FromFile(myfile).SelectColumns("type", "value")
 	rows, err := csvplus.Take(allLines).
 		Filter(csvplus.Any(csvplus.Like(csvplus.Row{"type": "url"}),
-						   csvplus.Like(csvplus.Row{"type": "filename"}))).
+			csvplus.Like(csvplus.Row{"type": "filename"}))).
 		ToRows()
 
 	for _, row := range rows {
