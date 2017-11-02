@@ -24,7 +24,7 @@ var (
 		".ova", ".ovf", ".vhd", ".vhdx",
 		".vmcx", ".vmdk", ".vmx", ".xva",
 		".ani", ".cpl", ".iso", ".sct",
-		".vdi",
+		".vdi", "ace",
 	}
 
 	restr *regexp.Regexp
