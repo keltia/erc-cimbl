@@ -105,11 +105,11 @@ func loadDbrc(file string) (err error) {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("reading dbrc %s", dbrcFile)
+		return fmt.Errorf("reading dbrc %s", file)
 	}
 
 	if user == "" {
-		return fmt.Errorf("no user/password for %s in %s", proxyTag, dbrcFile)
+		return fmt.Errorf("no user/password for %s in %s", proxyTag, file)
 	}
 
 	return
