@@ -11,18 +11,22 @@ SRCSU= config_unix.go
 
 OPTS=	-ldflags="-s -w" -v
 
-all: erc-cimbl # erc-cimbl.exe
+PROG=	erc-cimbl
+BIN=	${PROG}
+EXE=	${PROG}.exe
 
-erc-cimbl: ${SRCS} ${SRCSU}
+all: ${BIN}
+
+${BIN}: ${SRCS} ${SRCSU}
 	go build ${OPTS}
 
-erc-cimbl.exe: ${SRCS} ${SRCSW}
+${EXE}: ${SRCS} ${SRCSW}
 	GOOS=windows go build ${OPTS}
 
 test:
 	go test -v
 
-install: erc-cimbl
+install: ${BIN}
 	go install ${OPTS}
 
 clean:
@@ -33,5 +37,3 @@ push:
 	git push --tags
 	git push --all backup
 	git push --tags backup
-	git push --all upstream
-	git push --tags upstream
