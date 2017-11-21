@@ -11,8 +11,7 @@ branches:
   - master
 before_install:
 - sudo apt-get update -qq
-- sudo apt-get install -qq libgpgme-dev libassuan-dev libgpg-error-dev libgpgme11 libassuan0
-- sudo apt-get install -qq libgpg-error0 gnupg2
+- sudo apt-get install -qq libgpgme11 libassuan-dev libassuan0 libgpg-error0 gnupg2
 install:
   - go get github.com/BurntSushi/toml
   - go get github.com/stretchr/testify/assert
