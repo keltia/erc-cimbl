@@ -5,7 +5,7 @@
 
 GOBIN=   ${GOPATH}/bin
 
-SRCS= config.go mail.go main.go parse.go path.go url.go
+SRCS= config.go mail.go main.go parse.go path.go url.go utils.go
 SRCSW= config_windows.go
 SRCSU= config_unix.go
 
