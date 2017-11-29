@@ -69,9 +69,7 @@ func doCheck(ctx *Context, req *http.Request) string {
 
 	resp, err := ctx.Client.Do(req)
 	if err != nil {
-		if fVerbose {
-			log.Printf("err: %s", err)
-		}
+		verbose("err: %s", err)
 		return ""
 	}
 
@@ -113,8 +111,6 @@ func handleURL(ctx *Context, str string) {
 		if result == "**BLOCK**" {
 			ctx.URLs[str] = result
 		}
-		if fVerbose {
-			log.Printf("Checking %s: %s", str, result)
-		}
+		verbose("Checking %s: %s", str, result)
 	}
 }

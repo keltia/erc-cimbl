@@ -60,26 +60,20 @@ func openFile(ctx *Context, file string) (fn string, err error) {
 	// Decrypt if needed
 	if path.Ext(file) == ".asc" ||
 		path.Ext(file) == ".ASC" {
-		if fVerbose {
-			log.Printf("found encrypted file %s", file)
-		}
+		verbose("found encrypted file %s", file)
 		myfile, err = decryptFile(ctx, file)
 		if err != nil {
 			log.Fatalf("error decrypting %s: %v", file, err)
 		}
 	} else {
-		if fVerbose {
-			log.Printf("found plain file %s", file)
-		}
+		verbose("found plain file %s", file)
 	}
 
 	// Next pass, check for zip file
 	if path.Ext(myfile) == ".zip" ||
 		path.Ext(myfile) == ".ZIP" {
 
-		if fVerbose {
-			log.Printf("found zip file %s", myfile)
-		}
+		verbose("found zip file %s", myfile)
 
 		myfile = openZipfile(ctx, myfile)
 	}
@@ -90,9 +84,7 @@ func openFile(ctx *Context, file string) (fn string, err error) {
 // decryptFiles returns the path name of the decrypted file
 func decryptFile(ctx *Context, file string) (string, error) {
 	dir := ctx.tempdir
-	if fVerbose {
-		log.Printf("Sandbox is %s", dir)
-	}
+	verbose("Sandbox is %s", dir)
 
 	// Insure we got the full path
 	file, _ = filepath.Abs(file)
@@ -124,9 +116,7 @@ func decryptFile(ctx *Context, file string) (string, error) {
 
 	plainfile := filepath.Join(dir, zipname)
 
-	if fVerbose {
-		log.Printf("Decrypting %s as %s", file, plainfile)
-	}
+	verbose("Decrypting %s as %s", file, plainfile)
 
 	dfh, err := os.Create(plainfile)
 	if err != nil {
@@ -145,9 +135,7 @@ func decryptFile(ctx *Context, file string) (string, error) {
 // readCSV reads the first csv in the zip file and copy into a temp file
 func readCSV(ctx *Context, fn *zip.File) (file string) {
 	dir := ctx.tempdir
-	if fVerbose {
-		log.Printf("found %s", fn.Name)
-	}
+	verbose("found %s", fn.Name)
 
 	// Open the CSV stream
 	fh, err := fn.Open()
@@ -162,9 +150,7 @@ func readCSV(ctx *Context, fn *zip.File) (file string) {
 	}
 	defer ours.Close()
 
-	if fVerbose {
-		log.Printf("created our tempfile %s", filepath.Join(dir, fn.Name))
-	}
+	verbose("created our tempfile %s", filepath.Join(dir, fn.Name))
 
 	// copy all the bits over
 	_, err = io.Copy(ours, fh)
@@ -191,14 +177,10 @@ func openZipfile(ctx *Context, file string) (fname string) {
 	}
 	defer zfh.Close()
 
-	if fVerbose {
-		log.Printf("exploring %s", file)
-	}
+	verbose("exploring %s", file)
 
 	for _, fn := range zfh.File {
-		if fVerbose {
-			log.Printf("looking at %s", fn.Name)
-		}
+		verbose("looking at %s", fn.Name)
 
 		if path.Ext(fn.Name) == ".csv" ||
 			path.Ext(fn.Name) == ".CSV" {

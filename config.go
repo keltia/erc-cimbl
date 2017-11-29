@@ -35,9 +35,7 @@ func loadConfig() (c *Config, err error) {
 		return
 	}
 
-	if fVerbose {
-		log.Printf("file=%s, found it", file)
-	}
+	verbose("file=%s, found it", file)
 
 	// Read it
 	buf, err := ioutil.ReadFile(file)
@@ -66,9 +64,7 @@ func setupProxyAuth(ctx *Context, filename string) (err error) {
 			auth := fmt.Sprintf("%s:%s", user, password)
 			ctx.proxyauth = "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
 
-			if fVerbose {
-				log.Printf("Proxy user %s found.", user)
-			}
+			verbose("Proxy user %s found.", user)
 
 		}
 	}
