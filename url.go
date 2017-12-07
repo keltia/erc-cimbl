@@ -52,7 +52,7 @@ func setupTransport(ctx *Context, str string) (*http.Request, *http.Transport) {
 	// Get proxy URL
 	proxyURL, err = getProxy(req)
 	if ctx.proxyauth != "" {
-		req.Header.Add("Proxy-Authorization", ctx.proxyauth)
+		req.Header.Set("Proxy-Authorization", ctx.proxyauth)
 	}
 
 	transport := &http.Transport{
