@@ -5,7 +5,6 @@ import (
 	"github.com/maxim2266/csvplus"
 	"github.com/proglottis/gpgme"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -38,14 +37,6 @@ indicator_title
 We filter on "type", looking for "url" & "filename".
 
 */
-
-// cleanupTemp removes the temporary directory
-func cleanupTemp(dir string) {
-	err := os.RemoveAll(dir)
-	if err != nil {
-		log.Printf("cleanup failed for %s: %v", dir, err)
-	}
-}
 
 // openFile looks at the file and give it to openZipfile() if needed
 func openFile(ctx *Context, file string) (fn string, err error) {
@@ -197,19 +188,10 @@ func openZipfile(ctx *Context, file string) (fname string) {
 func handleSingleFile(ctx *Context, file string) (err error) {
 	var myfile string
 
-	// Extract in safe location
-	dir, err := ioutil.TempDir("", "erc-cimbl")
-	if err != nil {
-		log.Fatalf("unable to create sandbox %s: %v", dir, err)
-	}
-	defer cleanupTemp(dir)
-
 	// We want the full path
 	if myfile, err = filepath.Abs(file); err != nil {
 		log.Fatalf("error checking %s in %s", myfile)
 	}
-
-	ctx.tempdir = dir
 
 	// Look at the file and whatever might be inside (and decrypt/unzip/…)
 	myfile, err = openFile(ctx, myfile)

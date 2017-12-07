@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"io/ioutil"
 )
 
 var (
@@ -43,6 +44,25 @@ func checkFilename(file string) (ok bool) {
 	re := regexp.MustCompile(`(?i:CIMBL-\d+-CERTS\.(csv|zip)(\.asc|))`)
 
 	return re.MatchString(file)
+}
+
+// cleanupTemp removes the temporary directory
+func cleanupTemp(dir string) {
+	err := os.RemoveAll(dir)
+	if err != nil {
+		log.Printf("cleanup failed for %s: %v", dir, err)
+	}
+}
+
+// createSandbox creates our our directory with TEMPDIR (wherever it is)
+func createSandbox(tag string) (path string) {
+
+	// Extract in safe location
+	dir, err := ioutil.TempDir("", tag)
+	if err != nil {
+		log.Fatalf("unable to create sandbox %s: %v", dir, err)
+	}
+	return dir
 }
 
 func main() {
@@ -85,6 +105,10 @@ func main() {
 	} else {
 		verbose("Using %s as proxy…", os.Getenv("http_proxy"))
 	}
+
+	ctx.tempdir = createSandbox(MyName)
+	defer cleanupTemp(ctx.tempdir)
+
 	// For all files on the CLI
 	for _, file := range flag.Args() {
 		if checkFilename(file) {
