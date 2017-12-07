@@ -7,13 +7,14 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"io/ioutil"
 )
 
 var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.4.1"
+	MyVersion = "0.4.2"
 
 	fVerbose bool
 	fNoURLs  bool
@@ -45,15 +46,32 @@ func checkFilename(file string) (ok bool) {
 	return re.MatchString(file)
 }
 
+// cleanupTemp removes the temporary directory
+func cleanupTemp(dir string) {
+	err := os.RemoveAll(dir)
+	if err != nil {
+		log.Printf("cleanup failed for %s: %v", dir, err)
+	}
+}
+
+// createSandbox creates our our directory with TEMPDIR (wherever it is)
+func createSandbox(tag string) (path string) {
+
+	// Extract in safe location
+	dir, err := ioutil.TempDir("", tag)
+	if err != nil {
+		log.Fatalf("unable to create sandbox %s: %v", dir, err)
+	}
+	return dir
+}
+
 func main() {
 	var config *Config
 
 	// Parse CLI
 	flag.Parse()
 
-	if fVerbose {
-		log.Printf("%s/%s", MyName, MyVersion)
-	}
+	verbose("%s/%s", MyName, MyVersion)
 
 	if (fNoURLs && fNoPaths) || flag.NArg() == 0 {
 		log.Println("Nothing to do!")
@@ -72,9 +90,7 @@ func main() {
 		log.Println("no mail server, mail is disabled.")
 		fDoMail = false
 	} else {
-		if fVerbose {
-			log.Printf("Got mail server %s…", config.Server)
-		}
+		verbose("Got mail server %s…", config.Server)
 	}
 
 	ctx := &Context{
@@ -87,10 +103,12 @@ func main() {
 	if err != nil {
 		log.Println("No dbrc file, no proxy auth.")
 	} else {
-		if fVerbose {
-			log.Printf("Using %s as proxy…", os.Getenv("http_proxy"))
-		}
+		verbose("Using %s as proxy…", os.Getenv("http_proxy"))
 	}
+
+	ctx.tempdir = createSandbox(MyName)
+	defer cleanupTemp(ctx.tempdir)
+
 	// For all files on the CLI
 	for _, file := range flag.Args() {
 		if checkFilename(file) {
@@ -108,9 +126,7 @@ func main() {
 					handleURL(ctx, file)
 				}
 			} else {
-				if fVerbose {
-					log.Printf("Ignoring %s…", file)
-				}
+				verbose("Ignoring %s…", file)
 			}
 		}
 	}

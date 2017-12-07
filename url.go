@@ -52,7 +52,7 @@ func setupTransport(ctx *Context, str string) (*http.Request, *http.Transport) {
 	// Get proxy URL
 	proxyURL, err = getProxy(req)
 	if ctx.proxyauth != "" {
-		req.Header.Add("Proxy-Authorization", ctx.proxyauth)
+		req.Header.Set("Proxy-Authorization", ctx.proxyauth)
 	}
 
 	transport := &http.Transport{
@@ -69,9 +69,7 @@ func doCheck(ctx *Context, req *http.Request) string {
 
 	resp, err := ctx.Client.Do(req)
 	if err != nil {
-		if fVerbose {
-			log.Printf("err: %s", err)
-		}
+		verbose("err: %s", err)
 		return ""
 	}
 
@@ -113,8 +111,6 @@ func handleURL(ctx *Context, str string) {
 		if result == "**BLOCK**" {
 			ctx.URLs[str] = result
 		}
-		if fVerbose {
-			log.Printf("Checking %s: %s", str, result)
-		}
+		verbose("Checking %s: %s", str, result)
 	}
 }

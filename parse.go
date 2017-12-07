@@ -2,15 +2,14 @@ package main
 
 import (
 	"archive/zip"
+	"github.com/maxim2266/csvplus"
+	"github.com/proglottis/gpgme"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
-	"github.com/proglottis/gpgme"
-	"github.com/maxim2266/csvplus"
 )
 
 /*
@@ -39,14 +38,6 @@ We filter on "type", looking for "url" & "filename".
 
 */
 
-// cleanupTemp removes the temporary directory
-func cleanupTemp(dir string) {
-	err := os.RemoveAll(dir)
-	if err != nil {
-		log.Printf("cleanup failed for %s: %v", dir, err)
-	}
-}
-
 // openFile looks at the file and give it to openZipfile() if needed
 func openFile(ctx *Context, file string) (fn string, err error) {
 	var myfile string
@@ -60,26 +51,20 @@ func openFile(ctx *Context, file string) (fn string, err error) {
 	// Decrypt if needed
 	if path.Ext(file) == ".asc" ||
 		path.Ext(file) == ".ASC" {
-		if fVerbose {
-			log.Printf("found encrypted file %s", file)
-		}
+		verbose("found encrypted file %s", file)
 		myfile, err = decryptFile(ctx, file)
 		if err != nil {
 			log.Fatalf("error decrypting %s: %v", file, err)
 		}
 	} else {
-		if fVerbose {
-			log.Printf("found plain file %s", file)
-		}
+		verbose("found plain file %s", file)
 	}
 
 	// Next pass, check for zip file
 	if path.Ext(myfile) == ".zip" ||
 		path.Ext(myfile) == ".ZIP" {
 
-		if fVerbose {
-			log.Printf("found zip file %s", myfile)
-		}
+		verbose("found zip file %s", myfile)
 
 		myfile = openZipfile(ctx, myfile)
 	}
@@ -90,9 +75,7 @@ func openFile(ctx *Context, file string) (fn string, err error) {
 // decryptFiles returns the path name of the decrypted file
 func decryptFile(ctx *Context, file string) (string, error) {
 	dir := ctx.tempdir
-	if fVerbose {
-		log.Printf("Sandbox is %s", dir)
-	}
+	verbose("Sandbox is %s", dir)
 
 	// Insure we got the full path
 	file, _ = filepath.Abs(file)
@@ -124,9 +107,7 @@ func decryptFile(ctx *Context, file string) (string, error) {
 
 	plainfile := filepath.Join(dir, zipname)
 
-	if fVerbose {
-		log.Printf("Decrypting %s as %s", file, plainfile)
-	}
+	verbose("Decrypting %s as %s", file, plainfile)
 
 	dfh, err := os.Create(plainfile)
 	if err != nil {
@@ -145,9 +126,7 @@ func decryptFile(ctx *Context, file string) (string, error) {
 // readCSV reads the first csv in the zip file and copy into a temp file
 func readCSV(ctx *Context, fn *zip.File) (file string) {
 	dir := ctx.tempdir
-	if fVerbose {
-		log.Printf("found %s", fn.Name)
-	}
+	verbose("found %s", fn.Name)
 
 	// Open the CSV stream
 	fh, err := fn.Open()
@@ -162,9 +141,7 @@ func readCSV(ctx *Context, fn *zip.File) (file string) {
 	}
 	defer ours.Close()
 
-	if fVerbose {
-		log.Printf("created our tempfile %s", filepath.Join(dir, fn.Name))
-	}
+	verbose("created our tempfile %s", filepath.Join(dir, fn.Name))
 
 	// copy all the bits over
 	_, err = io.Copy(ours, fh)
@@ -191,14 +168,10 @@ func openZipfile(ctx *Context, file string) (fname string) {
 	}
 	defer zfh.Close()
 
-	if fVerbose {
-		log.Printf("exploring %s", file)
-	}
+	verbose("exploring %s", file)
 
 	for _, fn := range zfh.File {
-		if fVerbose {
-			log.Printf("looking at %s", fn.Name)
-		}
+		verbose("looking at %s", fn.Name)
 
 		if path.Ext(fn.Name) == ".csv" ||
 			path.Ext(fn.Name) == ".CSV" {
@@ -215,19 +188,10 @@ func openZipfile(ctx *Context, file string) (fname string) {
 func handleSingleFile(ctx *Context, file string) (err error) {
 	var myfile string
 
-	// Extract in safe location
-	dir, err := ioutil.TempDir("", "erc-cimbl")
-	if err != nil {
-		log.Fatalf("unable to create sandbox %s: %v", dir, err)
-	}
-	defer cleanupTemp(dir)
-
 	// We want the full path
 	if myfile, err = filepath.Abs(file); err != nil {
 		log.Fatalf("error checking %s in %s", myfile)
 	}
-
-	ctx.tempdir = dir
 
 	// Look at the file and whatever might be inside (and decrypt/unzip/…)
 	myfile, err = openFile(ctx, myfile)
@@ -238,7 +202,7 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 	allLines := csvplus.FromFile(myfile).SelectColumns("type", "value")
 	rows, err := csvplus.Take(allLines).
 		Filter(csvplus.Any(csvplus.Like(csvplus.Row{"type": "url"}),
-						   csvplus.Like(csvplus.Row{"type": "filename"}))).
+			csvplus.Like(csvplus.Row{"type": "filename"}))).
 		ToRows()
 
 	for _, row := range rows {

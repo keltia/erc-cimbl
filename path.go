@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 )
@@ -24,7 +23,7 @@ var (
 		".ova", ".ovf", ".vhd", ".vhdx",
 		".vmcx", ".vmdk", ".vmx", ".xva",
 		".ani", ".cpl", ".iso", ".sct",
-		".vdi",
+		".vdi", "ace",
 	}
 
 	restr *regexp.Regexp
@@ -37,15 +36,11 @@ func init() {
 func handlePath(ctx *Context, path string) {
 	if !restr.MatchString(path) {
 		if ok, _ := ctx.Paths[path]; !ok {
-			if fVerbose {
-				log.Printf("Filename %s CHECK", path)
-			}
+			verbose("Filename %s CHECK", path)
 			ctx.Paths[path] = true
 		}
 	} else {
-		if fVerbose {
-			log.Printf("Filename %s: IGNORED ", path)
-		}
+		verbose("Filename %s: IGNORED ", path)
 	}
 }
 
