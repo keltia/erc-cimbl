@@ -204,6 +204,9 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 		Filter(csvplus.Any(csvplus.Like(csvplus.Row{"type": "url"}),
 			csvplus.Like(csvplus.Row{"type": "filename"}))).
 		ToRows()
+	if err != nil {
+		log.Printf("error getting rows from %s: %v", myfile, err)
+	}
 
 	for _, row := range rows {
 		switch row["type"] {
