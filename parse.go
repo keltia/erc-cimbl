@@ -190,7 +190,7 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 
 	// We want the full path
 	if myfile, err = filepath.Abs(file); err != nil {
-		log.Fatalf("error checking %s in %s", myfile)
+		log.Fatalf("error checking %s: %v", file, err)
 	}
 
 	// Look at the file and whatever might be inside (and decrypt/unzip/…)
