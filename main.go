@@ -112,9 +112,7 @@ func main() {
 	// For all files on the CLI
 	for _, file := range flag.Args() {
 		if checkFilename(file) {
-			if fVerbose {
-				log.Printf("Checking %s…\n", file)
-			}
+			verbose("Checking %s…\n", file)
 			err := handleSingleFile(ctx, file)
 			if err != nil {
 				log.Printf("error reading %s: %v", file, err)
