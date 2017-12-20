@@ -56,7 +56,7 @@ func setupTransport(ctx *Context, str string) (*http.Request, *http.Transport) {
 	req.Header.Add("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
 
 	// Get proxy URL
-	proxyURL, err = getProxy(req)
+	proxyURL, _ = getProxy(req)
 	if ctx.proxyauth != "" {
 		req.Header.Set("Proxy-Authorization", ctx.proxyauth)
 	}
