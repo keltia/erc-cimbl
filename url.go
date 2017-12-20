@@ -10,6 +10,12 @@ import (
 	"time"
 )
 
+const (
+	ActionAuth    = "AUTH"
+	ActionBlock   = "**BLOCK**"
+	ActionBlocked = "BLOCKED-EEC"
+)
+
 var (
 	proxyURL *url.URL
 )
@@ -75,11 +81,11 @@ func doCheck(ctx *Context, req *http.Request) string {
 
 	switch resp.StatusCode {
 	case 403:
-		return "BLOCKED-EEC"
+		return ActionBlocked
 	case 407:
-		return "AUTH"
+		return ActionAuth
 	default:
-		return "**BLOCK**"
+		return ActionBlock
 	}
 
 }
@@ -108,7 +114,7 @@ func handleURL(ctx *Context, str string) {
 	*/
 	result := doCheck(ctx, req)
 	if result != "" {
-		if result == "**BLOCK**" {
+		if result == ActionBlock {
 			ctx.URLs[str] = result
 		}
 		verbose("Checking %s: %s", str, result)
