@@ -107,9 +107,7 @@ func doSendMail(ctx *Context) (err error) {
 
 		// Otherwise, display it
 		fmt.Printf("From: %s\n", ctx.config.From)
-		fmt.Printf("To: %s\n", ctx.config.To)
 		fmt.Printf("Cc: %s\n", ctx.config.Cc)
-		fmt.Printf("Subject: %s\n\n", ctx.config.Subject)
 		fmt.Println(mailText)
 
 		return nil
@@ -137,6 +135,10 @@ func sendMail(ctx *Context, text string) (err error) {
 		to = []string{from}
 	} else {
 		to = strings.Split(ctx.config.To, ",")
+		if ctx.config.Cc != "" {
+		    cc := strings.Split(ctx.config.Cc, ",")
+		    to = append(to, cc...)
+        }
 	}
 
 	debug("from: %s - To: %v", from, to)
