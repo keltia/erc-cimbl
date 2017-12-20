@@ -12,6 +12,7 @@ import (
 var (
 	mailTmpl = `Subject: {{.Subject}}
 To: {{.To}}
+Cc: {{.Cc}}
 X-Contact-Info: {{.From}}
 
 Dear Service Desk,
@@ -35,6 +36,7 @@ Your friendly script - {{.MyName}}/{{.MyVersion}}
 type mailVars struct {
 	From      string
 	To        string
+	Cc        string
 	Subject   string
 	MyName    string
 	MyVersion string
@@ -49,14 +51,14 @@ func createMail(ctx *Context) (str string, err error) {
 	vars := mailVars{
 		From:      ctx.config.From,
 		To:        ctx.config.To,
+		Cc:        ctx.config.Cc,
 		Subject:   ctx.config.Subject,
 		MyName:    MyName,
 		MyVersion: MyVersion,
 		Files:     strings.Join(ctx.files, ", "),
+		Paths:	   addPaths(ctx),
+		URLs:      addURLs(ctx),
 	}
-
-	vars.Paths = addPaths(ctx)
-	vars.URLs = addURLs(ctx)
 
 	t := template.Must(template.New("mail").Parse(mailTmpl))
 	err = t.Execute(&txt, vars)
