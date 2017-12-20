@@ -113,12 +113,12 @@ func decryptFile(ctx *Context, file string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer dfh.Close()
 
 	_, err = io.Copy(dfh, plain)
 	if err != nil {
 		return "", err
 	}
-	dfh.Close()
 
 	return plainfile, nil
 }
@@ -190,7 +190,7 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 
 	// We want the full path
 	if myfile, err = filepath.Abs(file); err != nil {
-		log.Fatalf("error checking %s in %s", myfile)
+		log.Fatalf("error checking %s: %v", file, err)
 	}
 
 	// Look at the file and whatever might be inside (and decrypt/unzip/…)
@@ -204,6 +204,9 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 		Filter(csvplus.Any(csvplus.Like(csvplus.Row{"type": "url"}),
 			csvplus.Like(csvplus.Row{"type": "filename"}))).
 		ToRows()
+	if err != nil {
+		log.Printf("error getting rows from %s: %v", myfile, err)
+	}
 
 	for _, row := range rows {
 		switch row["type"] {

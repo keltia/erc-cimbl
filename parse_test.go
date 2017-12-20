@@ -10,21 +10,19 @@ import (
 func TestOpenFileBad(t *testing.T) {
 	file := "foo.bar"
 	ctx := &Context{}
-	fh, err := openFile(ctx, file)
-	defer fh.Close()
+	fn, err := openFile(ctx, file)
 
-	assert.Nil(t, fh, "nil")
+	assert.Empty(t, fn, "empty")
 	assert.Error(t, err, "got error")
 }
 
 func TestOpenFileGood(t *testing.T) {
 	file := "test/CIMBL-0666-CERTS.csv"
 	ctx := &Context{}
-	fh, err := openFile(ctx, file)
-	defer fh.Close()
+	fn, err := openFile(ctx, file)
 
 	assert.NoError(t, err, "no error")
-	assert.NotNil(t, fh, "not nil")
+	assert.NotEmpty(t, fn, "not empty")
 }
 
 func TestParseCSVNone(t *testing.T) {
@@ -57,7 +55,7 @@ func TestHandleCSV(t *testing.T) {
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
 	realURLs := map[string]string{
-		TestSite: "BLOCKED-EEC",
+		TestSite: ActionBlocked,
 	}
 
 	httpmock.Activate()
