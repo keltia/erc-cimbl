@@ -16,10 +16,11 @@ var (
 	// MyVersion is our version
 	MyVersion = "0.4.2"
 
+	fDebug   bool
+	fDoMail  bool
 	fVerbose bool
 	fNoURLs  bool
 	fNoPaths bool
-	fDoMail  bool
 )
 
 // Context is the way to share info across functions.
@@ -34,6 +35,7 @@ type Context struct {
 }
 
 func init() {
+	flag.BoolVar(&fDebug, "D", false, "Debug mode")
 	flag.BoolVar(&fDoMail, "M", false, "Send mail")
 	flag.BoolVar(&fNoPaths, "P", false, "Do not check filenames")
 	flag.BoolVar(&fNoURLs, "U", false, "Do not check URLs")
