@@ -113,12 +113,12 @@ func decryptFile(ctx *Context, file string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer dfh.Close()
 
 	_, err = io.Copy(dfh, plain)
 	if err != nil {
 		return "", err
 	}
-	dfh.Close()
 
 	return plainfile, nil
 }
