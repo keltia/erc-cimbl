@@ -67,9 +67,38 @@ func createSandbox(tag string) (path string) {
 	return dir
 }
 
-func main() {
-	var config *Config
+func setup() *Context {
+    // No config file is not an error but you do not get to send mail
+    config, err := loadConfig()
+    if err != nil {
+        log.Println("no config file, mail is disabled.")
+        fDoMail = false
+    }
 
+    // No mail server configured but the rest is valid.
+    if config.Server == "" {
+        log.Println("no mail server, mail is disabled.")
+        fDoMail = false
+    } else {
+        verbose("Got mail server %s…", config.Server)
+    }
+
+    ctx := &Context{
+        config: config,
+        Paths:  map[string]bool{},
+        URLs:   map[string]string{},
+    }
+
+    err = setupProxyAuth(ctx, dbrcFile)
+    if err != nil {
+        log.Println("No dbrc file, no proxy auth.")
+    } else {
+        verbose("Using %s as proxy…", os.Getenv("http_proxy"))
+    }
+    return ctx
+}
+
+func main() {
 	// Parse CLI
 	flag.Parse()
 
@@ -80,33 +109,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	// No config file is not an error but you do not get to send mail
-	config, err := loadConfig()
-	if err != nil {
-		log.Println("no config file, mail is disabled.")
-		fDoMail = false
-	}
-
-	// No mail server configured but the rest is valid.
-	if config.Server == "" {
-		log.Println("no mail server, mail is disabled.")
-		fDoMail = false
-	} else {
-		verbose("Got mail server %s…", config.Server)
-	}
-
-	ctx := &Context{
-		config: config,
-		Paths:  map[string]bool{},
-		URLs:   map[string]string{},
-	}
-
-	err = setupProxyAuth(ctx, dbrcFile)
-	if err != nil {
-		log.Println("No dbrc file, no proxy auth.")
-	} else {
-		verbose("Using %s as proxy…", os.Getenv("http_proxy"))
-	}
+	ctx := setup()
 
 	ctx.tempdir = createSandbox(MyName)
 	defer cleanupTemp(ctx.tempdir)
@@ -115,8 +118,7 @@ func main() {
 	for _, file := range flag.Args() {
 		if checkFilename(file) {
 			verbose("Checking %s…\n", file)
-			err = handleSingleFile(ctx, file)
-			if err != nil {
+			if err := handleSingleFile(ctx, file); err != nil {
 				log.Printf("error reading %s: %v", file, err)
 			}
 			ctx.files = append(ctx.files, file)
@@ -132,8 +134,7 @@ func main() {
 	}
 
 	// Do something with the results
-	err = doSendMail(ctx)
-	if err != nil {
+	if err := doSendMail(ctx); err != nil {
 		log.Fatalf("sending mail: %v", err)
 	}
 
