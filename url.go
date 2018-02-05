@@ -33,6 +33,11 @@ func getProxy(req *http.Request) (uri *url.URL, err error) {
 
 func setupTransport(ctx *Context, str string) (*http.Request, *http.Transport) {
 
+	// Try to catch weird typos
+	if !strings.HasPrefix(str, "ttp://") {
+		str = "h" + str
+	}
+
 	// Fix really invalid URLs
 	if !strings.HasPrefix(str, "http://") {
 		str = "http://" + str
