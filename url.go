@@ -88,6 +88,9 @@ var ErrHttpsSkip = errors.New("skipping https")
 
 func sanitize(str string) (string, error) {
 	myurl, err := url.Parse(str)
+	if err != nil {
+		return "", err
+	}
 	if myurl.Scheme == "https" {
 		return str, ErrHttpsSkip
 	}
