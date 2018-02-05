@@ -93,7 +93,7 @@ func handleURL(ctx *Context, str string) {
 	}
 
 	// Try to catch weird typos
-	if !strings.HasPrefix(str, "ttp://") {
+	if strings.HasPrefix(str, "ttp://") {
 		str = "h" + str
 	}
 
