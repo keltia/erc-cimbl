@@ -33,16 +33,6 @@ func getProxy(req *http.Request) (uri *url.URL, err error) {
 
 func setupTransport(ctx *Context, str string) (*http.Request, *http.Transport) {
 
-	// Try to catch weird typos
-	if !strings.HasPrefix(str, "ttp://") {
-		str = "h" + str
-	}
-
-	// Fix really invalid URLs
-	if !strings.HasPrefix(str, "http://") {
-		str = "http://" + str
-	}
-
 	/*
 	   Proxy code taken from https://github.com/LeoCBS/poc-proxy-https/blob/master/main.go
 	*/
@@ -101,6 +91,17 @@ func handleURL(ctx *Context, str string) {
 		skipped = append(skipped, str)
 		return
 	}
+
+	// Try to catch weird typos
+	if !strings.HasPrefix(str, "ttp://") {
+		str = "h" + str
+	}
+
+	// Fix really invalid URLs
+	if !strings.HasPrefix(str, "http://") {
+		str = "http://" + str
+	}
+
 	/*
 	   Setup connection including proxy stuff
 	*/
