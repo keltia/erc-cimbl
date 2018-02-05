@@ -3,10 +3,10 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -82,30 +82,35 @@ func doCheck(ctx *Context, req *http.Request) string {
 	default:
 		return ActionBlock
 	}
+}
 
+var ErrHttpsSkip = errors.New("skipping https")
+
+func sanitize(str string) (string, error) {
+	myurl, err := url.Parse(str)
+	if myurl.Scheme == "https" {
+		return str, ErrHttpsSkip
+	}
+
+	if myurl.Scheme != "http" {
+		myurl.Scheme = "http"
+	}
+	return myurl.String(), err
 }
 
 func handleURL(ctx *Context, str string) {
+
 	// https URLs will not be blocked, no MITM
-	if strings.HasPrefix(str, "https://") {
+	myurl, err := sanitize(str)
+	if err == ErrHttpsSkip {
 		skipped = append(skipped, str)
 		return
-	}
-
-	// Try to catch weird typos
-	if strings.HasPrefix(str, "ttp://") {
-		str = "h" + str
-	}
-
-	// Fix really invalid URLs
-	if !strings.HasPrefix(str, "http://") {
-		str = "http://" + str
 	}
 
 	/*
 	   Setup connection including proxy stuff
 	*/
-	req, transport := setupTransport(ctx, str)
+	req, transport := setupTransport(ctx, myurl)
 	if req == nil || transport == nil {
 		return
 	}
@@ -121,8 +126,8 @@ func handleURL(ctx *Context, str string) {
 	result := doCheck(ctx, req)
 	if result != "" {
 		if result == ActionBlock {
-			ctx.URLs[str] = result
+			ctx.URLs[myurl] = result
 		}
-		verbose("Checking %s: %s", str, result)
+		verbose("Checking %s: %s", myurl, result)
 	}
 }
