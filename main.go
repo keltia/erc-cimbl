@@ -2,12 +2,13 @@ package main
 
 import (
 	"flag"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
-	"io/ioutil"
 )
 
 var (
@@ -68,34 +69,34 @@ func createSandbox(tag string) (path string) {
 }
 
 func setup() *Context {
-    // No config file is not an error but you do not get to send mail
-    config, err := loadConfig()
-    if err != nil {
-        log.Println("no config file, mail is disabled.")
-        fDoMail = false
-    }
+	// No config file is not an error but you do not get to send mail
+	config, err := loadConfig()
+	if err != nil {
+		log.Println("no config file, mail is disabled.")
+		fDoMail = false
+	}
 
-    // No mail server configured but the rest is valid.
-    if config.Server == "" {
-        log.Println("no mail server, mail is disabled.")
-        fDoMail = false
-    } else {
-        verbose("Got mail server %s…", config.Server)
-    }
+	// No mail server configured but the rest is valid.
+	if config.Server == "" {
+		log.Println("no mail server, mail is disabled.")
+		fDoMail = false
+	} else {
+		verbose("Got mail server %s…", config.Server)
+	}
 
-    ctx := &Context{
-        config: config,
-        Paths:  map[string]bool{},
-        URLs:   map[string]string{},
-    }
+	ctx := &Context{
+		config: config,
+		Paths:  map[string]bool{},
+		URLs:   map[string]string{},
+	}
 
-    err = setupProxyAuth(ctx, dbrcFile)
-    if err != nil {
-        log.Println("No dbrc file, no proxy auth.")
-    } else {
-        verbose("Using %s as proxy…", os.Getenv("http_proxy"))
-    }
-    return ctx
+	err = setupProxyAuth(ctx, dbrcFile)
+	if err != nil {
+		log.Println("No dbrc file, no proxy auth.")
+	} else {
+		verbose("Using %s as proxy…", os.Getenv("http_proxy"))
+	}
+	return ctx
 }
 
 func main() {
@@ -121,7 +122,7 @@ func main() {
 			if err := handleSingleFile(ctx, file); err != nil {
 				log.Printf("error reading %s: %v", file, err)
 			}
-			ctx.files = append(ctx.files, file)
+			ctx.files = append(ctx.files, filepath.Base(file))
 		} else {
 			if strings.HasPrefix(file, "http:") {
 				if !fNoURLs {
