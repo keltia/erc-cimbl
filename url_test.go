@@ -52,6 +52,24 @@ func TestGetProxy(t *testing.T) {
 	assert.NoError(t, err, "no error")
 }
 
+func TestSanitize(t *testing.T) {
+	urls := []struct {
+		url string
+		res string
+		err error
+	}{
+		{"https://example.com", "https://example.com", ErrHttpsSkip},
+		{"http://example.com", "http://example.com", nil},
+		{"ttp://example.com", "http://example.com", nil},
+		{"://example.com", "http://example.com", nil},
+	}
+	for _, u := range urls {
+		n, err := sanitize(u.url)
+		assert.Equal(t, u.res, n)
+		assert.Equal(t, u.err, err)
+	}
+}
+
 func TestDoCheck(t *testing.T) {
 	var testSite string
 
