@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
+	"net"
 	"net/http"
 	"os"
 	"testing"
@@ -61,13 +62,30 @@ func TestSanitize(t *testing.T) {
 		{"https://example.com", "https://example.com", ErrHttpsSkip},
 		{"http://example.com", "http://example.com", nil},
 		{"ttp://example.com", "http://example.com", nil},
-		{"://example.com", "http://example.com", nil},
+		{"://example.com", "://example.com", ErrParseError},
+		{"http://[1.2.3.4]", "http://1.2.3.4", nil},
+		{"[1.2.3.4]", "http://1.2.3.4", nil},
 	}
 	for _, u := range urls {
+		t.Logf("url=%s", u.url)
 		n, err := sanitize(u.url)
 		assert.Equal(t, u.res, n)
 		assert.Equal(t, u.err, err)
 	}
+}
+
+func TestCheckForIP(t *testing.T) {
+	a := "1.2.3.4"
+	b := checkForIP(a)
+	c := net.ParseIP(a)
+	assert.NotNil(t, b)
+	assert.Equal(t, c, b)
+
+	a = "[1.2.3.4]"
+	d := checkForIP(a)
+	assert.NotNil(t, d)
+	assert.Equal(t, c, d)
+	assert.Equal(t, b, d)
 }
 
 func TestDoCheck(t *testing.T) {
