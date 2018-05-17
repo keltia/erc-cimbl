@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/keltia/proxy"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -9,14 +10,13 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"github.com/keltia/proxy"
 )
 
 var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.4.5"
+	MyVersion = "0.5.0"
 
 	fDebug   bool
 	fDoMail  bool
