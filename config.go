@@ -1,15 +1,11 @@
 package main
 
 import (
-	"bufio"
-	"encoding/base64"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 const (
@@ -52,61 +48,3 @@ func loadConfig() (c *Config, err error) {
 	return
 }
 
-func setupProxyAuth(ctx *Context, filename string) (err error) {
-	err = loadDbrc(filename)
-	if err != nil {
-		if fVerbose {
-			log.Printf("No dbrc file: %v", err)
-		}
-	} else {
-		// Do we have a proxy user/password?
-		if user != "" && password != "" {
-			auth := fmt.Sprintf("%s:%s", user, password)
-			ctx.proxyauth = "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
-
-			verbose("Proxy user %s found.", user)
-
-		}
-	}
-	return
-}
-
-func loadDbrc(file string) (err error) {
-	fh, err := os.Open(file)
-	if err != nil {
-		return fmt.Errorf("Error: can not find %s: %v", file, err)
-	}
-	defer fh.Close()
-
-	/*
-	   Format:
-	   <db>     <user>    <pass>   <type>
-	*/
-	scanner := bufio.NewScanner(fh)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "" {
-			break
-		}
-
-		// Replace all tabs by a single space
-		l := strings.Replace(line, "\t", " ", -1)
-		flds := strings.Split(l, " ")
-
-		// Check what we need
-		if flds[0] == proxyTag {
-			user = flds[1]
-			password = flds[2]
-			break
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("reading dbrc %s", file)
-	}
-
-	if user == "" {
-		return fmt.Errorf("no user/password for %s in %s", proxyTag, file)
-	}
-
-	return
-}

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"github.com/keltia/proxy"
 )
 
 var (
@@ -90,11 +91,13 @@ func setup() *Context {
 		URLs:   map[string]string{},
 	}
 
-	err = setupProxyAuth(ctx, dbrcFile)
+	proxyauth, err := proxy.SetupProxyAuth()
 	if err != nil {
-		log.Println("No dbrc file, no proxy auth.")
+		log.Println("No dbrc file, no proxy auth.: %v", err)
 	} else {
 		verbose("Using %s as proxy…", os.Getenv("http_proxy"))
+		debug("Got %s as proxyauth", proxyauth)
+		ctx.proxyauth = proxyauth
 	}
 	return ctx
 }
@@ -102,6 +105,10 @@ func setup() *Context {
 func main() {
 	// Parse CLI
 	flag.Parse()
+
+	if fDebug {
+		fVerbose = true
+	}
 
 	verbose("%s/%s", MyName, MyVersion)
 
