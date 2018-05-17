@@ -1,14 +1,13 @@
 package main
 
 import (
-	"crypto/tls"
 	"fmt"
 	"github.com/pkg/errors"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
+	"github.com/keltia/proxy"
 )
 
 const (
@@ -21,53 +20,10 @@ var (
 	proxyURL *url.URL
 )
 
-func getProxy(req *http.Request) (uri *url.URL, err error) {
-	uri, err = http.ProxyFromEnvironment(req)
-	if err != nil {
-		log.Printf("no proxy in environment")
-		uri = &url.URL{}
-	} else if uri == nil {
-		log.Println("No proxy configured or url excluded")
-	}
-	return
-}
-
-func setupTransport(ctx *Context, str string) (*http.Request, *http.Transport) {
-
-	/*
-	   Proxy code taken from https://github.com/LeoCBS/poc-proxy-https/blob/master/main.go
-	*/
-	myurl, err := url.Parse(str)
-	if err != nil {
-		log.Printf("error parsing %s: %v", str, err)
-		return nil, nil
-	}
-
-	req, err := http.NewRequest("HEAD", str, nil)
-	if err != nil {
-		log.Printf("error: req is nil: %v", err)
-		return nil, nil
-	}
-	req.Header.Set("Host", myurl.Host)
-	req.Header.Add("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
-
-	// Get proxy URL
-	proxyURL, _ = getProxy(req)
-	if ctx.proxyauth != "" {
-		req.Header.Set("Proxy-Authorization", ctx.proxyauth)
-	}
-
-	transport := &http.Transport{
-		Proxy:              http.ProxyURL(proxyURL),
-		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
-		ProxyConnectHeader: req.Header,
-	}
-
-	return req, transport
-}
-
 func doCheck(ctx *Context, req *http.Request) string {
 	//req.RequestURI = ""
+
+	req.Header.Set("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
 
 	resp, err := ctx.Client.Do(req)
 	if err != nil {
@@ -148,7 +104,7 @@ func handleURL(ctx *Context, str string) {
 	/*
 	   Setup connection including proxy stuff
 	*/
-	req, transport := setupTransport(ctx, myurl)
+	req, transport := proxy.SetupTransport(myurl)
 	if req == nil || transport == nil {
 		return
 	}

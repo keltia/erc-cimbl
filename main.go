@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/keltia/proxy"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,7 +16,7 @@ var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.4.5"
+	MyVersion = "0.5.0"
 
 	fDebug   bool
 	fDoMail  bool
@@ -90,11 +91,13 @@ func setup() *Context {
 		URLs:   map[string]string{},
 	}
 
-	err = setupProxyAuth(ctx, dbrcFile)
+	proxyauth, err := proxy.SetupProxyAuth()
 	if err != nil {
-		log.Println("No dbrc file, no proxy auth.")
+		log.Println("No dbrc file, no proxy auth.: %v", err)
 	} else {
 		verbose("Using %s as proxy…", os.Getenv("http_proxy"))
+		debug("Got %s as proxyauth", proxyauth)
+		ctx.proxyauth = proxyauth
 	}
 	return ctx
 }
@@ -102,6 +105,10 @@ func setup() *Context {
 func main() {
 	// Parse CLI
 	flag.Parse()
+
+	if fDebug {
+		fVerbose = true
+	}
 
 	verbose("%s/%s", MyName, MyVersion)
 

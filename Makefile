@@ -29,6 +29,9 @@ test:
 install: ${BIN}
 	go install ${OPTS}
 
+lint:
+	gometalinter .
+
 clean:
 	go clean -v
 

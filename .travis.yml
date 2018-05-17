@@ -19,6 +19,7 @@ install:
   - go get github.com/jarcoal/httpmock
   - go get github.com/maxim2266/csvplus
   - go get github.com/proglottis/gpgme
+  - go get github.com/keltia/proxy
 script:
   - make
   - make test
