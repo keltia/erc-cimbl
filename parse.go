@@ -42,12 +42,22 @@ We filter on "type", looking for "url" & "filename".
 func openFile(ctx *Context, file string) (fn string, err error) {
 	var myfile string
 
+	debug("file is %s", file)
 	_, err = os.Stat(file)
 	if err != nil {
 		return
 	}
 
-	myfile = file
+	dir := ctx.tempdir
+	verbose("Sandbox is %s", dir)
+
+	old, _ := os.Getwd()
+	// Go into the sandbox
+	err = os.Chdir(dir)
+	if err != nil {
+		log.Fatalf("unable to use tempdir %s: %v", dir, err)
+	}
+
 	// Decrypt if needed
 	if path.Ext(file) == ".asc" ||
 		path.Ext(file) == ".ASC" {
@@ -69,23 +79,14 @@ func openFile(ctx *Context, file string) (fn string, err error) {
 		myfile = openZipfile(ctx, myfile)
 	}
 	fn = myfile
+
+	// Get back
+	err = os.Chdir(old)
 	return
 }
 
 // decryptFiles returns the path name of the decrypted file
 func decryptFile(ctx *Context, file string) (string, error) {
-	dir := ctx.tempdir
-	verbose("Sandbox is %s", dir)
-
-	// Insure we got the full path
-	file, _ = filepath.Abs(file)
-
-	// Go into the sandbox
-	err := os.Chdir(dir)
-	if err != nil {
-		log.Fatalf("unable to use tempdir %s: %v", dir, err)
-	}
-
 	// Carefully open the box
 	fh, err := os.Open(file)
 	if err != nil {
@@ -105,7 +106,7 @@ func decryptFile(ctx *Context, file string) (string, error) {
 	ext := filepath.Ext(base)
 	zipname := strings.Replace(base, ext, "", 1)
 
-	plainfile := filepath.Join(dir, zipname)
+	plainfile := filepath.Join(ctx.tempdir, zipname)
 
 	verbose("Decrypting %s as %s", file, plainfile)
 
