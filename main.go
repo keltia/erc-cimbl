@@ -16,7 +16,7 @@ var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.5.0"
+	MyVersion = "0.5.1"
 
 	fDebug   bool
 	fDoMail  bool
@@ -93,7 +93,7 @@ func setup() *Context {
 
 	proxyauth, err := proxy.SetupProxyAuth()
 	if err != nil {
-		log.Println("No dbrc file, no proxy auth.: %v", err)
+		log.Printf("No dbrc file, no proxy auth.: %v", err)
 	} else {
 		verbose("Using %s as proxy…", os.Getenv("http_proxy"))
 		debug("Got %s as proxyauth", proxyauth)
