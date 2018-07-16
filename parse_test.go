@@ -46,11 +46,6 @@ func TestHandleCSV(t *testing.T) {
 		URLs:   map[string]string{},
 	}
 
-	err = setupProxyAuth(ctx, dbrcFile)
-	if err != nil {
-		t.Log("No dbrc file, no proxy auth.")
-	}
-
 	realPaths := map[string]bool{
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
@@ -101,11 +96,6 @@ func TestHandleCSVVerbose(t *testing.T) {
 		config: config,
 		Paths:  map[string]bool{},
 		URLs:   map[string]string{},
-	}
-
-	err = setupProxyAuth(ctx, dbrcFile)
-	if err != nil {
-		t.Log("No dbrc file, no proxy auth.")
 	}
 
 	realPaths := map[string]bool{

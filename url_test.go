@@ -2,10 +2,10 @@ package main
 
 import (
 	"github.com/jarcoal/httpmock"
+	"github.com/keltia/proxy"
 	"github.com/stretchr/testify/assert"
 	"net"
 	"net/http"
-	"os"
 	"testing"
 	"time"
 )
@@ -13,45 +13,6 @@ import (
 const (
 	TestSite = "http://pontonerywariva342.top/search.php"
 )
-
-func TestSetupTransport(t *testing.T) {
-	url := "foo.bar\\%%%%%%"
-	ctx := &Context{
-		URLs: map[string]string{},
-	}
-
-	r, tr := setupTransport(ctx, url)
-	assert.Nil(t, r, "should be nil")
-	assert.Nil(t, tr, "should be nil")
-}
-
-func TestGetProxy(t *testing.T) {
-	// Cleanup
-	for _, env := range []string{
-		"http_proxy",
-		"https_proxy",
-		"HTTP_PROXY",
-		"HTTPS_PROXY",
-	} {
-		os.Unsetenv(env)
-	}
-	ctx := &Context{
-		URLs: map[string]string{},
-	}
-
-	str := TestSite
-	req, transport := setupTransport(ctx, str)
-	assert.NotNil(t, req, "not nil")
-	assert.NotNil(t, transport, "not nil")
-
-	hp := os.Getenv("http_proxy")
-	assert.Empty(t, hp, "should be empty")
-
-	_, err := getProxy(req)
-	assert.Empty(t, ctx.proxyauth, "should be empty")
-	//assert.Nil(t, urii, "should be nil")
-	assert.NoError(t, err, "no error")
-}
 
 func TestSanitize(t *testing.T) {
 	urls := []struct {
@@ -96,16 +57,11 @@ func TestDoCheck(t *testing.T) {
 		URLs: map[string]string{},
 	}
 
-	err := setupProxyAuth(ctx, dbrcFile)
-	if err != nil {
-		t.Log("No dbrc file, no proxy auth.")
-	}
-
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
 	str := TestSite
-	req, transport := setupTransport(ctx, str)
+	req, transport := proxy.SetupTransport(str)
 	assert.NotNil(t, req, "not nil")
 	assert.NotNil(t, transport, "not nil")
 
