@@ -3,7 +3,8 @@
 # Copyright 2015 © by Ollivier Robert for the EEC
 #
 
-GOBIN=   ${GOPATH}/bin
+GO=		go
+GOBIN=  ${GOPATH}/bin
 
 SRCS= config.go mail.go main.go parse.go path.go url.go utils.go
 SRCSW= config_windows.go
@@ -18,22 +19,22 @@ EXE=	${PROG}.exe
 all: ${BIN}
 
 ${BIN}: ${SRCS} ${SRCSU}
-	go build ${OPTS}
+	${GO} build ${OPTS}
 
 ${EXE}: ${SRCS} ${SRCSW}
-	GOOS=windows go build ${OPTS}
+	GOOS=windows ${GO} build ${OPTS}
 
 test:
-	go test -v
+	${GO} test -v
 
 install: ${BIN}
-	go install ${OPTS}
+	${GO} install ${OPTS}
 
 lint:
 	gometalinter .
 
 clean:
-	go clean -v
+	${GO} clean -v
 
 push:
 	git push --all
