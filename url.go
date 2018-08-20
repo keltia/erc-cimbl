@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/keltia/proxy"
 	"github.com/pkg/errors"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
-	"github.com/keltia/proxy"
 )
 
 const (
@@ -47,6 +47,9 @@ var (
 )
 
 func checkForIP(str string) net.IP {
+	if str == "" {
+		return net.IP{}
+	}
 	l := len(str)
 	if str[0] == '[' {
 		if str[l-1] == ']' {
