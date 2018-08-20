@@ -47,6 +47,11 @@ func TestCheckForIP(t *testing.T) {
 	assert.NotNil(t, d)
 	assert.Equal(t, c, d)
 	assert.Equal(t, b, d)
+
+	a = ""
+	e := checkForIP(a)
+	assert.NotNil(t, e)
+	assert.Empty(t, e)
 }
 
 func TestDoCheck(t *testing.T) {
