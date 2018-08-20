@@ -24,7 +24,7 @@ ${BIN}: ${SRCS} ${SRCSU}
 ${EXE}: ${SRCS} ${SRCSW}
 	GOOS=windows ${GO} build ${OPTS}
 
-test:
+test: ${SRCS} ${SRCSU}
 	${GO} test -v
 
 install: ${BIN}
