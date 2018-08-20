@@ -21,5 +21,5 @@ install:
   - go get github.com/proglottis/gpgme
   - go get github.com/keltia/proxy
 script:
-  - make
-  - make test
+  - env GO111MODULE=on make
+  - env GO111MODULE=on make test
