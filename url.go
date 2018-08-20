@@ -82,7 +82,7 @@ func sanitize(str string) (out string, err error) {
 		if ip := checkForIP(myurl.Path); ip != nil {
 			myurl.Host = ip.String()
 			myurl.Path = ""
-			return myurl.String(), err
+			return myurl.String(), errors.Wrap(err, "empty host")
 		}
 		return str, ErrParseError
 	}
