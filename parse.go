@@ -2,14 +2,16 @@ package main
 
 import (
 	"archive/zip"
-	"github.com/maxim2266/csvplus"
-	"github.com/proglottis/gpgme"
 	"io"
 	"log"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/maxim2266/csvplus"
+	"github.com/pkg/errors"
+	"github.com/proglottis/gpgme"
 )
 
 /*
@@ -45,7 +47,7 @@ func openFile(ctx *Context, file string) (fn string, err error) {
 	debug("file is %s", file)
 	_, err = os.Stat(file)
 	if err != nil {
-		return
+		return "", errors.Wrap(err, "stat")
 	}
 
 	dir := ctx.tempdir
@@ -90,14 +92,14 @@ func decryptFile(ctx *Context, file string) (string, error) {
 	// Carefully open the box
 	fh, err := os.Open(file)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "decryptFile/Open")
 	}
 	defer fh.Close()
 
 	// Do the decryption thing
 	plain, err := gpgme.Decrypt(fh)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "Decrypt")
 	}
 	defer plain.Close()
 
@@ -112,13 +114,13 @@ func decryptFile(ctx *Context, file string) (string, error) {
 
 	dfh, err := os.Create(plainfile)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "decryptFile/Create")
 	}
 	defer dfh.Close()
 
 	_, err = io.Copy(dfh, plain)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "decryptFile/Copy")
 	}
 
 	return plainfile, nil
@@ -197,7 +199,7 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 	// Look at the file and whatever might be inside (and decrypt/unzip/…)
 	myfile, err = openFile(ctx, myfile)
 	if err != nil {
-		return
+		return errors.Wrap(err, "openFile")
 	}
 
 	allLines := csvplus.FromFile(myfile).SelectColumns("type", "value")
@@ -206,7 +208,7 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 			csvplus.Like(csvplus.Row{"type": "filename"}))).
 		ToRows()
 	if err != nil {
-		log.Printf("error getting rows from %s: %v", myfile, err)
+		return errors.Wrapf(err, "reading rows from %s", myfile)
 	}
 
 	for _, row := range rows {
