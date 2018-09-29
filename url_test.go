@@ -193,7 +193,7 @@ func TestHandleURLblocked(t *testing.T) {
 	defer gock.RestoreClient(ctx.Client)
 
 	handleURL(ctx, TestSite)
-	require.NotEmpty(t, ctx.URLs)
+	require.Empty(t, ctx.URLs)
 	assert.EqualValues(t, "", ctx.URLs[TestSite])
 }
 
