@@ -72,7 +72,6 @@ func TestDoCheck403(t *testing.T) {
 
 	gock.New(testSite.Host).
 		Head(testSite.Path).
-		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
 		Reply(403)
 
 	gock.InterceptClient(ctx.Client)
@@ -105,7 +104,6 @@ func TestDoCheck200(t *testing.T) {
 
 	gock.New(testSite.Host).
 		Head(testSite.Path).
-		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
 		Reply(200)
 
 	gock.InterceptClient(ctx.Client)
@@ -138,7 +136,6 @@ func TestDoCheck407(t *testing.T) {
 
 	gock.New(testSite.Host).
 		Head(testSite.Path).
-		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
 		Reply(407)
 
 	gock.InterceptClient(ctx.Client)
