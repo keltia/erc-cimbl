@@ -1,10 +1,16 @@
 package main
 
 import (
-	"github.com/jarcoal/httpmock"
-	"github.com/stretchr/testify/assert"
+	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
+	"time"
+
+	"github.com/h2non/gock"
+	"github.com/keltia/proxy"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestOpenFileBad(t *testing.T) {
@@ -34,11 +40,13 @@ func TestParseCSVNone(t *testing.T) {
 }
 
 func TestHandleCSV(t *testing.T) {
-	var testSite string
+	defer gock.Off()
 
+	baseDir = "test"
 	file := "test/CIMBL-0666-CERTS.csv"
 	config, err := loadConfig()
-	assert.NoError(t, err, "no error")
+	assert.NoError(t, err)
+	assert.NotNil(t, config)
 
 	ctx := &Context{
 		config: config,
@@ -53,45 +61,38 @@ func TestHandleCSV(t *testing.T) {
 		TestSite: ActionBlocked,
 	}
 
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
+	_, transport := proxy.SetupTransport(TestSite)
+	require.NotNil(t, transport)
 
-	if proxyURL != nil {
-		testSite = proxyURL.Host
-	} else {
-		testSite = TestSite
-	}
+	// Set up minimal client
+	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
 
-	// mock to add a new measurement
-	httpmock.RegisterResponder("HEAD", testSite,
-		func(req *http.Request) (*http.Response, error) {
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
 
-			if req.Method != "HEAD" {
-				return httpmock.NewStringResponse(400, "Bad method"), nil
-			}
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		Reply(403)
 
-			if req.RequestURI != TestSite {
-				return httpmock.NewStringResponse(400, "Bad URL"), nil
-			}
-
-			return httpmock.NewStringResponse(200, "To be blocked"), nil
-		},
-	)
+	gock.InterceptClient(ctx.Client)
+	defer gock.RestoreClient(ctx.Client)
 
 	err = handleSingleFile(ctx, file)
-	assert.NoError(t, err, "no error")
-	assert.Equal(t, realPaths, ctx.Paths, "should be equal")
-	assert.Equal(t, realURLs, ctx.URLs, "should be equal")
+	assert.NoError(t, err)
+	assert.Equal(t, realPaths, ctx.Paths)
+	assert.Equal(t, realURLs, ctx.URLs)
 }
 
 func TestHandleCSVVerbose(t *testing.T) {
-	var testSite string
+	defer gock.Off()
 
+	baseDir = "test"
 	file := "test/CIMBL-0666-CERTS.csv"
 	config, err := loadConfig()
-	assert.NoError(t, err, "no error")
+	assert.NoError(t, err)
 
 	fVerbose = true
+
 	ctx := &Context{
 		config: config,
 		Paths:  map[string]bool{},
@@ -104,30 +105,23 @@ func TestHandleCSVVerbose(t *testing.T) {
 	realURLs := map[string]string{
 		TestSite: "BLOCKED-EEC",
 	}
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
 
-	if proxyURL != nil {
-		testSite = proxyURL.Host
-	} else {
-		testSite = TestSite
-	}
+	_, transport := proxy.SetupTransport(TestSite)
+	require.NotNil(t, transport)
 
-	// mock to add a new measurement
-	httpmock.RegisterResponder("HEAD", testSite,
-		func(req *http.Request) (*http.Response, error) {
+	// Set up minimal client
+	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
 
-			if req.Method != "HEAD" {
-				return httpmock.NewStringResponse(400, "Bad method"), nil
-			}
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
 
-			if req.RequestURI != TestSite {
-				return httpmock.NewStringResponse(400, "Bad URL"), nil
-			}
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
+		Reply(403)
 
-			return httpmock.NewStringResponse(200, "To be blocked"), nil
-		},
-	)
+	gock.InterceptClient(ctx.Client)
+	defer gock.RestoreClient(ctx.Client)
 
 	err = handleSingleFile(ctx, file)
 	assert.NoError(t, err, "no error")
