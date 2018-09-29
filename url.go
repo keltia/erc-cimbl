@@ -103,8 +103,8 @@ func handleURL(ctx *Context, str string) {
 	/*
 	   Setup connection including proxy stuff
 	*/
-	req, transport := proxy.SetupTransport(myurl)
-	if req == nil || transport == nil {
+	_, transport := proxy.SetupTransport(myurl)
+	if transport == nil {
 		return
 	}
 
@@ -116,7 +116,17 @@ func handleURL(ctx *Context, str string) {
 	/*
 	   Do the thing, manage redirects, auth requests and stuff
 	*/
-	result := doCheck(ctx, req)
+	req, err := http.NewRequest("HEAD", myurl, nil)
+	if err != nil {
+		return
+	}
+	req.Header.Set("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
+
+	result, err := doCheck(ctx, req)
+	if err != nil {
+		log.Printf("doCheck/%v", err)
+		return
+	}
 	if result != "" {
 		if result == ActionBlock {
 			ctx.URLs[myurl] = result
