@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
+
 	"github.com/keltia/proxy"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -20,24 +22,21 @@ var (
 	proxyURL *url.URL
 )
 
-func doCheck(ctx *Context, req *http.Request) string {
-	//req.RequestURI = ""
-
-	req.Header.Set("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
+func doCheck(ctx *Context, req *http.Request) (string, error) {
 
 	resp, err := ctx.Client.Do(req)
 	if err != nil {
 		verbose("err: %s", err)
-		return ""
+		return "", errors.Wrap(err, "Do")
 	}
 
 	switch resp.StatusCode {
 	case 403:
-		return ActionBlocked
+		return ActionBlocked, nil
 	case 407:
-		return ActionAuth
+		return ActionAuth, nil
 	default:
-		return ActionBlock
+		return ActionBlock, nil
 	}
 }
 
