@@ -18,17 +18,19 @@ func TestOpenFileBad(t *testing.T) {
 	ctx := &Context{}
 	fn, err := openFile(ctx, file)
 
-	assert.Empty(t, fn, "empty")
-	assert.Error(t, err, "got error")
+	assert.Empty(t, fn)
+	assert.Error(t, err)
+	assert.Nil(t, fn)
 }
 
 func TestOpenFileGood(t *testing.T) {
 	file := "test/CIMBL-0666-CERTS.csv"
 	ctx := &Context{}
+
 	fn, err := openFile(ctx, file)
 
-	assert.NoError(t, err, "no error")
-	assert.NotEmpty(t, fn, "not empty")
+	assert.NoError(t, err)
+	assert.NotNil(t, fn)
 }
 
 func TestParseCSVNone(t *testing.T) {
@@ -36,7 +38,7 @@ func TestParseCSVNone(t *testing.T) {
 	ctx := &Context{}
 	err := handleSingleFile(ctx, file)
 
-	assert.Error(t, err, "should be in error")
+	assert.Error(t, err)
 }
 
 func TestHandleCSV(t *testing.T) {
