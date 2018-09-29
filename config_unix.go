@@ -14,9 +14,4 @@ var (
 	)
 
 	configName = "config.toml"
-
-	dbrcFile = filepath.Join(os.Getenv("HOME"), ".dbrc")
-
-	user     string
-	password string
 )
