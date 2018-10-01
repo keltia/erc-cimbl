@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/keltia/proxy"
-	"github.com/pkg/errors"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/keltia/proxy"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -20,24 +22,21 @@ var (
 	proxyURL *url.URL
 )
 
-func doCheck(ctx *Context, req *http.Request) string {
-	//req.RequestURI = ""
-
-	req.Header.Set("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
+func doCheck(ctx *Context, req *http.Request) (string, error) {
 
 	resp, err := ctx.Client.Do(req)
 	if err != nil {
 		verbose("err: %s", err)
-		return ""
+		return "", errors.Wrap(err, "Do")
 	}
 
 	switch resp.StatusCode {
 	case 403:
-		return ActionBlocked
+		return ActionBlocked, nil
 	case 407:
-		return ActionAuth
+		return ActionAuth, nil
 	default:
-		return ActionBlock
+		return ActionBlock, nil
 	}
 }
 
@@ -107,8 +106,8 @@ func handleURL(ctx *Context, str string) {
 	/*
 	   Setup connection including proxy stuff
 	*/
-	req, transport := proxy.SetupTransport(myurl)
-	if req == nil || transport == nil {
+	_, transport := proxy.SetupTransport(myurl)
+	if transport == nil {
 		return
 	}
 
@@ -120,7 +119,17 @@ func handleURL(ctx *Context, str string) {
 	/*
 	   Do the thing, manage redirects, auth requests and stuff
 	*/
-	result := doCheck(ctx, req)
+	req, err := http.NewRequest("HEAD", myurl, nil)
+	if err != nil {
+		return
+	}
+	req.Header.Set("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
+
+	result, err := doCheck(ctx, req)
+	if err != nil {
+		log.Printf("doCheck/%v", err)
+		return
+	}
 	if result != "" {
 		if result == ActionBlock {
 			ctx.URLs[myurl] = result

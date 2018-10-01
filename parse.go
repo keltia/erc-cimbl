@@ -2,14 +2,16 @@ package main
 
 import (
 	"archive/zip"
-	"github.com/maxim2266/csvplus"
-	"github.com/proglottis/gpgme"
 	"io"
 	"log"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/maxim2266/csvplus"
+	"github.com/pkg/errors"
+	"github.com/proglottis/gpgme"
 )
 
 /*
@@ -38,24 +40,16 @@ We filter on "type", looking for "url" & "filename".
 
 */
 
+// These functions assume they are in the sandbox
+
 // openFile looks at the file and give it to openZipfile() if needed
-func openFile(ctx *Context, file string) (fn string, err error) {
-	var myfile string
+func openFile(ctx *Context, file string) (r io.ReadCloser, err error) {
+	myfile := file
 
 	debug("file is %s", file)
 	_, err = os.Stat(file)
 	if err != nil {
-		return
-	}
-
-	dir := ctx.tempdir
-	verbose("Sandbox is %s", dir)
-
-	old, _ := os.Getwd()
-	// Go into the sandbox
-	err = os.Chdir(dir)
-	if err != nil {
-		log.Fatalf("unable to use tempdir %s: %v", dir, err)
+		return nil, errors.Wrap(err, "stat")
 	}
 
 	// Decrypt if needed
@@ -64,7 +58,7 @@ func openFile(ctx *Context, file string) (fn string, err error) {
 		verbose("found encrypted file %s", file)
 		myfile, err = decryptFile(ctx, file)
 		if err != nil {
-			log.Fatalf("error decrypting %s: %v", file, err)
+			return nil, errors.Wrapf(err, "decryptFile(%s)", file)
 		}
 	} else {
 		verbose("found plain file %s", file)
@@ -78,11 +72,7 @@ func openFile(ctx *Context, file string) (fn string, err error) {
 
 		myfile = openZipfile(ctx, myfile)
 	}
-	fn = myfile
-
-	// Get back
-	err = os.Chdir(old)
-	return
+	return os.Open(myfile)
 }
 
 // decryptFiles returns the path name of the decrypted file
@@ -90,14 +80,14 @@ func decryptFile(ctx *Context, file string) (string, error) {
 	// Carefully open the box
 	fh, err := os.Open(file)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "decryptFile/Open")
 	}
 	defer fh.Close()
 
 	// Do the decryption thing
 	plain, err := gpgme.Decrypt(fh)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "Decrypt")
 	}
 	defer plain.Close()
 
@@ -106,19 +96,19 @@ func decryptFile(ctx *Context, file string) (string, error) {
 	ext := filepath.Ext(base)
 	zipname := strings.Replace(base, ext, "", 1)
 
-	plainfile := filepath.Join(ctx.tempdir, zipname)
+	plainfile := filepath.Join(ctx.tempdir.Cwd(), zipname)
 
 	verbose("Decrypting %s as %s", file, plainfile)
 
 	dfh, err := os.Create(plainfile)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "decryptFile/Create")
 	}
 	defer dfh.Close()
 
 	_, err = io.Copy(dfh, plain)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "decryptFile/Copy")
 	}
 
 	return plainfile, nil
@@ -126,7 +116,7 @@ func decryptFile(ctx *Context, file string) (string, error) {
 
 // readCSV reads the first csv in the zip file and copy into a temp file
 func readCSV(ctx *Context, fn *zip.File) (file string) {
-	dir := ctx.tempdir
+	sandbox := ctx.tempdir
 	verbose("found %s", fn.Name)
 
 	// Open the CSV stream
@@ -135,33 +125,27 @@ func readCSV(ctx *Context, fn *zip.File) (file string) {
 		log.Fatalf("unable to extract %s", fn.Name)
 	}
 
+	myfile := filepath.Join(sandbox.Cwd(), fn.Name)
 	// Create our temp file
-	ours, err := os.Create(filepath.Join(dir, fn.Name))
+	ours, err := os.Create(myfile)
 	if err != nil {
-		log.Fatalf("unable to create %s in %s: %v", fn.Name, dir, err)
+		log.Fatalf("unable to create %s in %s: %v", fn.Name, sandbox, err)
 	}
 	defer ours.Close()
 
-	verbose("created our tempfile %s", filepath.Join(dir, fn.Name))
+	debug("created our tempfile %s", myfile)
 
 	// copy all the bits over
 	_, err = io.Copy(ours, fh)
 	if err != nil {
-		log.Fatalf("unable to write %s in %s: %v", fn.Name, dir, err)
+		log.Fatalf("unable to write %s in %s: %v", fn.Name, sandbox, err)
 	}
-	file = filepath.Join(dir, fn.Name)
+	file = filepath.Join(sandbox.Cwd(), fn.Name)
 	return
 }
 
 // openZipfile extracts the first csv file out of he given zip.
 func openZipfile(ctx *Context, file string) (fname string) {
-
-	dir := ctx.tempdir
-
-	// Go on
-	if err := os.Chdir(dir); err != nil {
-		log.Fatalf("unable to use tempdir %s: %v", dir, err)
-	}
 
 	zfh, err := zip.OpenReader(file)
 	if err != nil {
@@ -187,26 +171,19 @@ func openZipfile(ctx *Context, file string) (fname string) {
 
 // handleSingleFile creates a tempdir and dispatch csv/zip files to handler.
 func handleSingleFile(ctx *Context, file string) (err error) {
-	var myfile string
-
-	// We want the full path
-	if myfile, err = filepath.Abs(file); err != nil {
-		log.Fatalf("error checking %s: %v", file, err)
-	}
-
 	// Look at the file and whatever might be inside (and decrypt/unzip/…)
-	myfile, err = openFile(ctx, myfile)
+	r, err := openFile(ctx, file)
 	if err != nil {
-		return
+		return errors.Wrap(err, "openFile")
 	}
 
-	allLines := csvplus.FromFile(myfile).SelectColumns("type", "value")
+	allLines := csvplus.FromReader(r).SelectColumns("type", "value")
 	rows, err := csvplus.Take(allLines).
 		Filter(csvplus.Any(csvplus.Like(csvplus.Row{"type": "url"}),
 			csvplus.Like(csvplus.Row{"type": "filename"}))).
 		ToRows()
 	if err != nil {
-		log.Printf("error getting rows from %s: %v", myfile, err)
+		return errors.Wrapf(err, "reading from %s", file)
 	}
 
 	for _, row := range rows {
