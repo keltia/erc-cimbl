@@ -180,14 +180,18 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 	allLines := csvplus.FromReader(r).SelectColumns("type", "value")
 	rows, err := csvplus.Take(allLines).
 		Filter(csvplus.Any(csvplus.Like(csvplus.Row{"type": "url"}),
-			csvplus.Like(csvplus.Row{"type": "filename"}))).
+			csvplus.Like(csvplus.Row{"type": "filename"}),
+			csvplus.Like(csvplus.Row{"type": "filename|sha1"}))).
 		ToRows()
 	if err != nil {
 		return errors.Wrapf(err, "reading from %s", file)
 	}
 
 	for _, row := range rows {
-		switch row["type"] {
+		verbose("row=%v", row)
+		rt := strings.Split(row["type"], "|")[0]
+		verbose("rt=%s", rt)
+		switch rt {
 		case "filename":
 			if !fNoPaths {
 				handlePath(ctx, entryToPath(row["value"]))
