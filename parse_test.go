@@ -80,7 +80,7 @@ func TestHandleCSV(t *testing.T) {
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
 	realURLs := map[string]string{
-		TestSite: ActionBlocked,
+		TestSite: ActionBlock,
 	}
 
 	_, transport := proxy.SetupTransport(TestSite)
@@ -94,7 +94,7 @@ func TestHandleCSV(t *testing.T) {
 
 	gock.New(testSite.Host).
 		Head(testSite.Path).
-		Reply(403)
+		Reply(200)
 
 	gock.InterceptClient(ctx.Client)
 	defer gock.RestoreClient(ctx.Client)
@@ -125,7 +125,7 @@ func TestHandleCSVVerbose(t *testing.T) {
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
 	realURLs := map[string]string{
-		TestSite: "BLOCKED-EEC",
+		TestSite: ActionBlock,
 	}
 
 	_, transport := proxy.SetupTransport(TestSite)
@@ -140,7 +140,7 @@ func TestHandleCSVVerbose(t *testing.T) {
 	gock.New(testSite.Host).
 		Head(testSite.Path).
 		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
-		Reply(403)
+		Reply(200)
 
 	gock.InterceptClient(ctx.Client)
 	defer gock.RestoreClient(ctx.Client)
@@ -221,4 +221,29 @@ func TestHandleSingleFile(t *testing.T) {
 	assert.NotEmpty(t, ctx.URLs)
 	assert.Equal(t, realPaths, ctx.Paths, "should be equal")
 	assert.Equal(t, realURLs, ctx.URLs, "should be equal")
+}
+
+func TestHandleSingleFile_None(t *testing.T) {
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	fVerbose = true
+
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		config:  config,
+		Paths:   map[string]bool{},
+		URLs:    map[string]string{},
+		tempdir: snd,
+	}
+
+	file := "testdata/CIMBL-0667-CERTS.csv"
+	err = handleSingleFile(ctx, file)
+	assert.Error(t, err)
+	assert.Empty(t, ctx.Paths)
+	assert.Empty(t, ctx.URLs)
 }
