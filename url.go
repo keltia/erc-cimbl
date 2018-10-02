@@ -18,10 +18,6 @@ const (
 	ActionBlocked = "BLOCKED-EEC"
 )
 
-var (
-	proxyURL *url.URL
-)
-
 func doCheck(ctx *Context, req *http.Request) (string, error) {
 
 	resp, err := ctx.Client.Do(req)
