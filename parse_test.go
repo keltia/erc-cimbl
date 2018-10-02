@@ -26,7 +26,7 @@ func TestOpenFileBad(t *testing.T) {
 }
 
 func TestOpenFileGood(t *testing.T) {
-	file := "test/CIMBL-0666-CERTS.csv"
+	file := "testdata/CIMBL-0666-CERTS.csv"
 	ctx := &Context{}
 
 	fn, err := openFile(ctx, file)
@@ -36,7 +36,7 @@ func TestOpenFileGood(t *testing.T) {
 }
 
 func TestOpenZIPFileGood(t *testing.T) {
-	file := "test/CIMBL-0666-CERTS.zip"
+	file := "testdata/CIMBL-0666-CERTS.zip"
 
 	snd, err := sandbox.New("test")
 	require.NoError(t, err)
@@ -65,7 +65,7 @@ func TestHandleCSV(t *testing.T) {
 	defer gock.Off()
 
 	baseDir = "test"
-	file := "test/CIMBL-0666-CERTS.csv"
+	file := "testdata/CIMBL-0666-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err)
 	assert.NotNil(t, config)
@@ -109,7 +109,7 @@ func TestHandleCSVVerbose(t *testing.T) {
 	defer gock.Off()
 
 	baseDir = "test"
-	file := "test/CIMBL-0666-CERTS.csv"
+	file := "testdata/CIMBL-0666-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err)
 
@@ -167,7 +167,7 @@ func TestOpenZIPFile(t *testing.T) {
 		tempdir: snd,
 	}
 
-	file := "test/CIMBL-0666-CERTS.zip"
+	file := "testdata/CIMBL-0666-CERTS.zip"
 	fn := openZipfile(ctx, file)
 	assert.Equal(t, snd.Cwd()+"/CIMBL-0666-CERTS.csv", fn)
 }
@@ -214,7 +214,7 @@ func TestHandleSingleFile(t *testing.T) {
 	gock.InterceptClient(ctx.Client)
 	defer gock.RestoreClient(ctx.Client)
 
-	file := "test/CIMBL-0666-CERTS.csv"
+	file := "testdata/CIMBL-0666-CERTS.csv"
 	err = handleSingleFile(ctx, file)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, ctx.Paths)
