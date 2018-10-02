@@ -35,7 +35,7 @@ func TestAddURLsUnknown(t *testing.T) {
 }
 
 func TestDoSendMailNoMail(t *testing.T) {
-	baseDir = "test"
+	baseDir = "testdata"
 	configName = "config.toml"
 	fVerbose = false
 
@@ -51,7 +51,7 @@ func TestDoSendMailNoMail(t *testing.T) {
 }
 
 func TestDoSendMailWithMail(t *testing.T) {
-	baseDir = "test"
+	baseDir = "testdata"
 	configName = "config.toml"
 	fVerbose = false
 

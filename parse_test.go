@@ -64,7 +64,7 @@ func TestParseCSVNone(t *testing.T) {
 func TestHandleCSV(t *testing.T) {
 	defer gock.Off()
 
-	baseDir = "test"
+	baseDir = "testdata"
 	file := "testdata/CIMBL-0666-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err)
@@ -108,7 +108,7 @@ func TestHandleCSV(t *testing.T) {
 func TestHandleCSVVerbose(t *testing.T) {
 	defer gock.Off()
 
-	baseDir = "test"
+	baseDir = "testdata"
 	file := "testdata/CIMBL-0666-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err)
@@ -152,7 +152,7 @@ func TestHandleCSVVerbose(t *testing.T) {
 }
 
 func TestOpenZIPFile(t *testing.T) {
-	baseDir = "test"
+	baseDir = "testdata"
 	config, err := loadConfig()
 	assert.NoError(t, err)
 
@@ -173,7 +173,7 @@ func TestOpenZIPFile(t *testing.T) {
 }
 
 func TestHandleSingleFile(t *testing.T) {
-	baseDir = "test"
+	baseDir = "testdata"
 	config, err := loadConfig()
 	assert.NoError(t, err)
 
