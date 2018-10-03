@@ -170,6 +170,7 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 	return nil
 }
 
+// handleAllFiles processes a list of files
 func handleAllFiles(ctx *Context, files []string) error {
 	// For all files on the CLI
 	for _, file := range files {
