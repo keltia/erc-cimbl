@@ -10,6 +10,22 @@ import (
 	"github.com/proglottis/gpgme"
 )
 
+type Decrypter interface {
+	Decrypt(r io.Reader) (*gpgme.Data, error)
+}
+
+type Gpgme struct{}
+
+func (Gpgme) Decrypt(r io.Reader) (*gpgme.Data, error) {
+	return gpgme.Decrypt(r)
+}
+
+type NullGPG struct{}
+
+func (NullGPG) Decrypt(r io.Reader) (*gpgme.Data, error) {
+	return &gpgme.Data{}, nil
+}
+
 // decryptFiles returns the path name of the decrypted file
 func decryptFile(ctx *Context, file string) (string, error) {
 	// Carefully open the box
@@ -20,7 +36,7 @@ func decryptFile(ctx *Context, file string) (string, error) {
 	defer fh.Close()
 
 	// Do the decryption thing
-	plain, err := gpgme.Decrypt(fh)
+	plain, err := ctx.gpg.Decrypt(fh)
 	if err != nil {
 		return "", errors.Wrap(err, "Decrypt")
 	}
