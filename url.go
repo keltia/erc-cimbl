@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -90,13 +89,13 @@ func sanitize(str string) (out string, err error) {
 	return myurl.String(), err
 }
 
-func handleURL(ctx *Context, str string) {
+func handleURL(ctx *Context, str string) error {
 
 	// https URLs will not be blocked, no MITM
 	myurl, err := sanitize(str)
 	if err == ErrHttpsSkip {
 		skipped = append(skipped, str)
-		return
+		return nil
 	}
 
 	/*
@@ -104,7 +103,7 @@ func handleURL(ctx *Context, str string) {
 	*/
 	_, transport := proxy.SetupTransport(myurl)
 	if transport == nil {
-		return
+		return fmt.Errorf("SetupTransport")
 	}
 
 	// It is better to re-use than creating a new one each time
@@ -117,19 +116,17 @@ func handleURL(ctx *Context, str string) {
 	*/
 	req, err := http.NewRequest("HEAD", myurl, nil)
 	if err != nil {
-		return
+		return errors.Wrap(err, "NewRequest")
 	}
 	req.Header.Set("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
 
 	result, err := doCheck(ctx, req)
 	if err != nil {
-		log.Printf("doCheck/%v", err)
-		return
+		return errors.Wrap(err, "doCheck")
 	}
-	if result != "" {
-		if result == ActionBlock {
-			ctx.URLs[myurl] = result
-		}
-		verbose("Checking %s: %s", myurl, result)
+	if result == ActionBlock {
+		ctx.URLs[myurl] = result
 	}
+	verbose("Checking %s: %s", myurl, result)
+	return nil
 }
