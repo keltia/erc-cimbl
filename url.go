@@ -70,22 +70,19 @@ func sanitize(str string) (out string, err error) {
 		myurl.Scheme = "http"
 	}
 
-	verbose("myurl=%#v", myurl)
 	// If host is empty, we might have IP or [IP] or bare hostname
 	if myurl.Host == "" {
 		//
 		if ip := checkForIP(myurl.Path); ip != nil {
 			myurl.Host = ip.String()
 			myurl.Path = ""
-			return myurl.String(), errors.Wrap(err, "empty host")
 		} else {
 			// Path is actually Host/Path
 			u, _ := url.Parse(myurl.Path)
 			myurl.Host = u.Host
 			myurl.Path = u.Path
-			return myurl.String(), nil
 		}
-		return str, ErrParseError
+		return myurl.String(), nil
 	}
 
 	// check for [IP]
