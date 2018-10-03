@@ -178,6 +178,22 @@ func TestDoCheckError(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestDoCheck_Transport(t *testing.T) {
+	// Check values
+	ctx := &Context{
+		URLs: map[string]bool{},
+	}
+
+	// Set up minimal client
+	ctx.Client = &http.Client{Transport: nil, Timeout: 10 * time.Second}
+
+	req, err := http.NewRequest("HEAD", TestSite, nil)
+	require.NoError(t, err)
+
+	_, err = doCheck(ctx, req)
+	assert.Error(t, err)
+}
+
 func TestHandleURLhttps(t *testing.T) {
 	defer gock.Off()
 
