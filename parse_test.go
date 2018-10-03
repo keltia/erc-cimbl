@@ -173,6 +173,21 @@ func TestOpenZIPFile(t *testing.T) {
 	assert.Equal(t, snd.Cwd()+"/CIMBL-0666-CERTS.csv", fn)
 }
 
+func TestOpenZIPFile_None(t *testing.T) {
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	ctx := &Context{
+		config: config,
+	}
+
+	file := "/nonexistent"
+	fn, err := openZipfile(ctx, file)
+	assert.Error(t, err)
+	assert.Empty(t, fn)
+}
+
 func TestHandleSingleFile(t *testing.T) {
 	baseDir = "testdata"
 	config, err := loadConfig()
