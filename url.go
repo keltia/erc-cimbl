@@ -55,8 +55,8 @@ func checkForIP(str string) net.IP {
 
 func sanitize(str string) (out string, err error) {
 	// We do not try to see if there is an error because of some corner cases
-	myurl, _ := url.Parse(str)
-	if myurl == nil {
+	myurl, err := url.Parse(str)
+	if err != nil {
 		return str, ErrParseError
 	}
 
