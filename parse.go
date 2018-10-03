@@ -191,19 +191,21 @@ func handleAllFiles(ctx *Context, files []string) error {
 
 				if err = handleSingleFile(ctx, nfile); err != nil {
 					log.Printf("error reading %s: %v", nfile, err)
+					return err
 				}
 				ctx.files = append(ctx.files, filepath.Base(nfile))
-				return err
+				return nil
 			})
 			if err != nil {
-				log.Fatalf("got error %v for %s", err, file)
+				log.Printf("got error %v for %s", err, file)
 			}
 		} else {
 			if strings.HasPrefix(file, "http:") {
 				if !fNoURLs {
 					err := handleURL(ctx, file)
 					if err != nil {
-						log.Fatalf("error checking %s: %v", file, err)
+						log.Printf("error checking %s: %v", file, err)
+						continue
 					}
 				}
 			} else {
