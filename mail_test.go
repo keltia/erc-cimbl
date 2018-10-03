@@ -103,3 +103,9 @@ func TestDoSendMailWithMailDebug(t *testing.T) {
 	assert.NoError(t, err, "no error")
 	fDebug = false
 }
+
+func TestSMTPMailSender_SendMail(t *testing.T) {
+	m := &SMTPMailSender{}
+	err := m.SendMail("", "", nil, nil)
+	assert.Error(t, err)
+}
