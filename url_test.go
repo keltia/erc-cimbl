@@ -33,6 +33,7 @@ func TestSanitize(t *testing.T) {
 		{"http://[1.2.3.4]", "http://1.2.3.4", nil},
 		{"[1.2.3.4]", "http://1.2.3.4", nil},
 		{"103.15.234.152:80/index.php", "http://103.15.234.152:80/index.php", nil},
+		{":/--%2Fexample.com", "http://:/--%2Fexample.com", nil},
 	}
 	for _, u := range urls {
 		t.Logf("url=%s", u.url)

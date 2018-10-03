@@ -59,9 +59,6 @@ func sanitize(str string) (out string, err error) {
 	if err != nil {
 		str = "http://" + str
 		myurl, err = url.Parse(str)
-		if err != nil {
-			return str, ErrParseError
-		}
 	}
 
 	// We do not test https
