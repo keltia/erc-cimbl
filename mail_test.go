@@ -51,6 +51,22 @@ func TestDoSendMailNoMail(t *testing.T) {
 	assert.NoError(t, err, "no error")
 }
 
+func TestDoSendMailNoWork(t *testing.T) {
+	baseDir = "testdata"
+	configName = "config.toml"
+	fVerbose = false
+
+	config, err := loadConfig()
+	assert.NoError(t, err)
+	ctx := &Context{
+		config: config,
+		Paths:  map[string]bool{},
+	}
+
+	err = doSendMail(ctx)
+	assert.NoError(t, err, "no error")
+}
+
 func TestDoSendMailWithMail(t *testing.T) {
 	baseDir = "testdata"
 	configName = "config.toml"
@@ -67,4 +83,23 @@ func TestDoSendMailWithMail(t *testing.T) {
 
 	err = doSendMail(ctx)
 	assert.NoError(t, err, "no error")
+}
+
+func TestDoSendMailWithMailDebug(t *testing.T) {
+	baseDir = "testdata"
+	configName = "config.toml"
+	fDebug = true
+
+	config, err := loadConfig()
+	assert.NoError(t, err, "no error")
+	ctx := &Context{
+		config: config,
+		Paths:  map[string]bool{"foo.docx": true},
+		mail:   NullMailer{},
+	}
+	fDoMail = true
+
+	err = doSendMail(ctx)
+	assert.NoError(t, err, "no error")
+	fDebug = false
 }
