@@ -52,7 +52,7 @@ func (NullMailer) SendMail(server, from string, to []string, text []byte) error 
 From %s
 To %v
 Body
-%v `, server, from, to, text)
+%s `, server, from, to, string(text))
 	return nil
 }
 
