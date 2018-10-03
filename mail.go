@@ -35,6 +35,27 @@ Your friendly script - {{.MyName}}/{{.MyVersion}}
 	skipped = []string{}
 )
 
+type MailSender interface {
+	SendMail(server, from string, to []string, body []byte) error
+}
+
+type SMTPMailSender struct{}
+
+func (SMTPMailSender) SendMail(server, from string, to []string, text []byte) error {
+	return smtp.SendMail(server, nil, from, to, text)
+}
+
+type NullMailer struct{}
+
+func (NullMailer) SendMail(server, from string, to []string, text []byte) error {
+	log.Printf(`There should be a mail to %s:
+From %s
+To %v
+Body
+%v `, server, from, to, text)
+	return nil
+}
+
 type mailVars struct {
 	From      string
 	To        string
@@ -140,8 +161,12 @@ func sendMail(ctx *Context, text string) (err error) {
 
 	debug("from: %s - To: %v", from, to)
 
-	err = smtp.SendMail(ctx.config.Server, nil, from, to, []byte(text))
+	if fDebug {
+		verbose("null mailer")
+		ctx.mail = NullMailer{}
+	}
 
 	verbose("Mail sent to %v…", to)
-	return
+
+	return ctx.mail.SendMail(ctx.config.Server, from, to, []byte(text))
 }

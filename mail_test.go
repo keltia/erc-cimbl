@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateMail(t *testing.T) {
@@ -60,6 +61,7 @@ func TestDoSendMailWithMail(t *testing.T) {
 	ctx := &Context{
 		config: config,
 		Paths:  map[string]bool{"foo.docx": true},
+		mail:   NullMailer{},
 	}
 	fDoMail = true
 
