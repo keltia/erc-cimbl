@@ -52,6 +52,10 @@ func checkFilename(file string) (ok bool) {
 }
 
 func setup() *Context {
+	if fDebug {
+		fVerbose = true
+	}
+
 	// No config file is not an error but you do not get to send mail
 	config, err := loadConfig()
 	if err != nil {
@@ -91,9 +95,7 @@ func main() {
 	// Parse CLI
 	flag.Parse()
 
-	if fDebug {
-		fVerbose = true
-	}
+	ctx := setup()
 
 	verbose("%s/%s", MyName, MyVersion)
 
@@ -101,8 +103,6 @@ func main() {
 		log.Println("Nothing to do!")
 		os.Exit(0)
 	}
-
-	ctx := setup()
 
 	ctx.tempdir, err = sandbox.New(MyName)
 	if err != nil {
