@@ -53,6 +53,61 @@ func TestOpenZIPFileGood(t *testing.T) {
 	assert.IsType(t, (*os.File)(nil), fn)
 }
 
+func TestOpenZIPFileBad(t *testing.T) {
+	file := "testdata/CIMBL-0666-CERTS.zip"
+
+	require.NoError(t, os.Chmod(file, 000))
+
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		tempdir: snd,
+	}
+
+	fn, err := openFile(ctx, file)
+
+	assert.Error(t, err)
+	assert.Empty(t, fn)
+
+	require.NoError(t, os.Chmod(file, 0644))
+}
+
+func TestOpenASCFileBad(t *testing.T) {
+	file := "testdata/CIMBL-0666-CERTS.zip.asc"
+
+	require.NoError(t, os.Chmod(file, 000))
+
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		tempdir: snd,
+	}
+
+	fn, err := openFile(ctx, file)
+
+	assert.Error(t, err)
+	assert.Empty(t, fn)
+
+	require.NoError(t, os.Chmod(file, 0644))
+}
+
+func TestReadCSVNone(t *testing.T) {
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		tempdir: snd,
+	}
+
+	path := readCSV(ctx, nil)
+	assert.Empty(t, path)
+}
+
 func TestParseCSVNone(t *testing.T) {
 	file := "/noneexistent"
 	ctx := &Context{}
