@@ -63,6 +63,7 @@ func TestDoSendMailNoMail(t *testing.T) {
 func TestDoSendMailConfigError(t *testing.T) {
 	ctx := &Context{
 		config: nil,
+		Paths:  map[string]bool{"/dontcare": true},
 	}
 
 	err := doSendMail(ctx)
