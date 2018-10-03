@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -111,34 +110,9 @@ func main() {
 	}
 	defer ctx.tempdir.Cleanup()
 
-	// For all files on the CLI
-	for _, file := range flag.Args() {
-		if checkFilename(file) {
-			verbose("Checking %s…\n", file)
-
-			nfile, _ := filepath.Abs(file)
-			err := ctx.tempdir.Run(func() error {
-				if err := handleSingleFile(ctx, nfile); err != nil {
-					log.Printf("error reading %s: %v", nfile, err)
-				}
-				ctx.files = append(ctx.files, filepath.Base(nfile))
-				return err
-			})
-			if err != nil {
-				log.Fatalf("got error %v for %s", err, file)
-			}
-		} else {
-			if strings.HasPrefix(file, "http:") {
-				if !fNoURLs {
-					err := handleURL(ctx, file)
-					if err != nil {
-						log.Fatalf("error checking %s: %v", file, err)
-					}
-				}
-			} else {
-				verbose("Ignoring %s…", file)
-			}
-		}
+	err = handleAllFiles(ctx, flag.Args())
+	if err != nil {
+		log.Fatalf("error processing files: %v", err)
 	}
 
 	// Do something with the results
