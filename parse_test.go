@@ -339,6 +339,36 @@ func TestHandleAllFiles_Null(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestHandleAllFiles_SingleBad(t *testing.T) {
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		Paths:   map[string]bool{},
+		URLs:    map[string]bool{},
+		tempdir: snd,
+	}
+
+	err = handleAllFiles(ctx, []string{"testdata/CIMBL-0667-CERTS.csv"})
+	assert.NoError(t, err)
+}
+
+func TestHandleAllFiles_SingleBad2(t *testing.T) {
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		Paths:   map[string]bool{},
+		URLs:    map[string]bool{},
+		tempdir: snd,
+	}
+
+	err = handleAllFiles(ctx, []string{"http://localhost/foo.php"})
+	assert.NoError(t, err)
+}
+
 func TestHandleAllFiles_OneFile(t *testing.T) {
 	baseDir = "testdata"
 	config, err := loadConfig()
