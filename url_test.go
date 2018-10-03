@@ -158,6 +158,26 @@ func TestDoCheck407(t *testing.T) {
 	assert.Equal(t, ActionAuth, res)
 }
 
+func TestDoCheckError(t *testing.T) {
+	// Check values
+	ctx := &Context{
+		URLs: map[string]bool{},
+	}
+
+	_, transport := proxy.SetupTransport(TestSite)
+	require.NotNil(t, transport)
+
+	// Set up minimal client
+	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
+
+	req, err := http.NewRequest("HEAD", TestSite, nil)
+	require.NoError(t, err)
+
+	req.URL = nil
+	_, err = doCheck(ctx, req)
+	assert.Error(t, err)
+}
+
 func TestHandleURLhttps(t *testing.T) {
 	defer gock.Off()
 
