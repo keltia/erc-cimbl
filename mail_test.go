@@ -7,8 +7,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateMail(t *testing.T) {
+func TestCreateMailNilContext(t *testing.T) {
+	txt, err := createMail(nil)
+	assert.Error(t, err)
+	assert.Empty(t, txt)
+}
 
+func TestCreateMailNilConfig(t *testing.T) {
+	ctx := &Context{}
+	txt, err := createMail(ctx)
+	assert.Error(t, err)
+	assert.Empty(t, txt)
 }
 
 func TestAddPaths(t *testing.T) {
@@ -49,6 +58,15 @@ func TestDoSendMailNoMail(t *testing.T) {
 
 	err = doSendMail(ctx)
 	assert.NoError(t, err, "no error")
+}
+
+func TestDoSendMailConfigError(t *testing.T) {
+	ctx := &Context{
+		config: nil,
+	}
+
+	err := doSendMail(ctx)
+	assert.Error(t, err)
 }
 
 func TestDoSendMailNoWork(t *testing.T) {
