@@ -35,6 +35,7 @@ type Context struct {
 	Client    *http.Client
 	files     []string
 	proxyauth string
+	mail      MailSender
 }
 
 func init() {
@@ -71,6 +72,7 @@ func setup() *Context {
 		config: config,
 		Paths:  map[string]bool{},
 		URLs:   map[string]string{},
+		mail:   SMTPMailSender{},
 	}
 
 	proxyauth, err := proxy.SetupProxyAuth()
