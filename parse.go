@@ -69,7 +69,10 @@ func openFile(ctx *Context, file string) (r io.ReadCloser, err error) {
 
 		verbose("found zip file %s", myfile)
 
-		myfile = openZipfile(ctx, myfile)
+		myfile, err = openZipfile(ctx, myfile)
+		if err != nil {
+			return nil, errors.Wrap(err, "ENOZIP")
+		}
 	}
 	return os.Open(myfile)
 }
@@ -105,11 +108,11 @@ func readCSV(ctx *Context, fn *zip.File) (file string) {
 }
 
 // openZipfile extracts the first csv file out of he given zip.
-func openZipfile(ctx *Context, file string) (fname string) {
+func openZipfile(ctx *Context, file string) (string, error) {
 
 	zfh, err := zip.OpenReader(file)
 	if err != nil {
-		log.Fatalf("error opening %s: %v", file, err)
+		return "", errors.Wrapf(err, "error opening %s", file)
 	}
 	defer zfh.Close()
 
@@ -125,8 +128,7 @@ func openZipfile(ctx *Context, file string) (fname string) {
 			break
 		}
 	}
-	fname = file
-	return
+	return file, nil
 }
 
 // handleSingleFile creates a tempdir and dispatch csv/zip files to handler.

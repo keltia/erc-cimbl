@@ -168,7 +168,8 @@ func TestOpenZIPFile(t *testing.T) {
 	}
 
 	file := "testdata/CIMBL-0666-CERTS.zip"
-	fn := openZipfile(ctx, file)
+	fn, err := openZipfile(ctx, file)
+	assert.NoError(t, err)
 	assert.Equal(t, snd.Cwd()+"/CIMBL-0666-CERTS.csv", fn)
 }
 
