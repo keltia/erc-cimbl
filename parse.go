@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -80,8 +81,12 @@ func openFile(ctx *Context, file string) (r io.ReadCloser, err error) {
 // readCSV reads the first csv in the zip file and copy into a temp file
 func readCSV(ctx *Context, fn *zip.File) (file string) {
 	sandbox := ctx.tempdir
-	verbose("found %s", fn.Name)
 
+	if fn == nil {
+		return ""
+	}
+
+	verbose("found %s", fn.Name)
 	// Open the CSV stream
 	fh, err := fn.Open()
 	if err != nil {
@@ -127,6 +132,9 @@ func openZipfile(ctx *Context, file string) (string, error) {
 			file = readCSV(ctx, fn)
 			break
 		}
+	}
+	if file == "" {
+		return "", fmt.Errorf("no csv or unreadable")
 	}
 	return file, nil
 }
