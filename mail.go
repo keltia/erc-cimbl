@@ -114,10 +114,8 @@ func addURLs(ctx *Context) string {
 	if !fNoURLs {
 		if len(ctx.URLs) != 0 {
 			txt = fmt.Sprintf("%s", urlsTmpl)
-			for k, v := range ctx.URLs {
-				if v == ActionBlock {
-					txt = fmt.Sprintf("%s  %s\n", txt, k)
-				}
+			for k, _ := range ctx.URLs {
+				txt = fmt.Sprintf("%s  %s\n", txt, k)
 			}
 		}
 	}

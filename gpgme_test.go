@@ -35,7 +35,7 @@ func TestNullGPG_Decrypt(t *testing.T) {
 	ctx := &Context{
 		config:  config,
 		Paths:   map[string]bool{},
-		URLs:    map[string]string{},
+		URLs:    map[string]bool{},
 		tempdir: snd,
 		gpg:     NullGPG{},
 	}
@@ -64,7 +64,7 @@ func TestNullGPGError_Decrypt(t *testing.T) {
 	ctx := &Context{
 		config:  config,
 		Paths:   map[string]bool{},
-		URLs:    map[string]string{},
+		URLs:    map[string]bool{},
 		tempdir: snd,
 		gpg:     NullGPGError{},
 	}
@@ -94,7 +94,7 @@ func TestDecryptFileNull(t *testing.T) {
 	ctx := &Context{
 		config:  config,
 		Paths:   map[string]bool{},
-		URLs:    map[string]string{},
+		URLs:    map[string]bool{},
 		tempdir: snd,
 		gpg:     NullGPG{},
 	}
@@ -136,7 +136,7 @@ func TestDecryptFileNullError(t *testing.T) {
 	ctx := &Context{
 		config:  config,
 		Paths:   map[string]bool{},
-		URLs:    map[string]string{},
+		URLs:    map[string]bool{},
 		tempdir: snd,
 		gpg:     NullGPGError{},
 	}
@@ -178,7 +178,7 @@ func TestDecryptFileNone(t *testing.T) {
 	ctx := &Context{
 		config:  config,
 		Paths:   map[string]bool{},
-		URLs:    map[string]string{},
+		URLs:    map[string]bool{},
 		tempdir: snd,
 		gpg:     NullGPG{},
 	}
@@ -204,7 +204,7 @@ func TestGpgme_Decrypt(t *testing.T) {
 	ctx := &Context{
 		config:  config,
 		Paths:   map[string]bool{},
-		URLs:    map[string]string{},
+		URLs:    map[string]bool{},
 		tempdir: snd,
 		gpg:     Gpgme{},
 	}

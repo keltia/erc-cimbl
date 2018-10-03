@@ -67,7 +67,7 @@ func TestDoCheck403(t *testing.T) {
 
 	// Check values
 	ctx := &Context{
-		URLs: map[string]string{},
+		URLs: map[string]bool{},
 	}
 
 	_, transport := proxy.SetupTransport(TestSite)
@@ -99,7 +99,7 @@ func TestDoCheck200(t *testing.T) {
 
 	// Check values
 	ctx := &Context{
-		URLs: map[string]string{},
+		URLs: map[string]bool{},
 	}
 
 	_, transport := proxy.SetupTransport(TestSite)
@@ -131,7 +131,7 @@ func TestDoCheck407(t *testing.T) {
 
 	// Check values
 	ctx := &Context{
-		URLs: map[string]string{},
+		URLs: map[string]bool{},
 	}
 
 	_, transport := proxy.SetupTransport(TestSite)
@@ -165,7 +165,7 @@ func TestHandleURLhttps(t *testing.T) {
 
 	// Check values
 	ctx := &Context{
-		URLs: map[string]string{},
+		URLs: map[string]bool{},
 	}
 
 	err := handleURL(ctx, "https://example.com")
@@ -179,7 +179,7 @@ func TestHandleURLblocked(t *testing.T) {
 
 	// Check values
 	ctx := &Context{
-		URLs: map[string]string{},
+		URLs: map[string]bool{},
 	}
 
 	_, transport := proxy.SetupTransport(TestSite)
@@ -202,7 +202,9 @@ func TestHandleURLblocked(t *testing.T) {
 	err = handleURL(ctx, TestSite)
 	assert.NoError(t, err)
 	require.Empty(t, ctx.URLs)
-	assert.EqualValues(t, "", ctx.URLs[TestSite])
+
+	_, ok := ctx.URLs[TestSite]
+	assert.False(t, ok)
 }
 
 func TestHandleURLblock(t *testing.T) {
@@ -210,7 +212,7 @@ func TestHandleURLblock(t *testing.T) {
 
 	// Check values
 	ctx := &Context{
-		URLs: map[string]string{},
+		URLs: map[string]bool{},
 	}
 
 	_, transport := proxy.SetupTransport(TestSite)
@@ -233,5 +235,5 @@ func TestHandleURLblock(t *testing.T) {
 	err = handleURL(ctx, TestSite)
 	assert.NoError(t, err)
 	require.NotEmpty(t, ctx.URLs)
-	assert.EqualValues(t, ActionBlock, ctx.URLs[TestSite])
+	assert.True(t, ctx.URLs[TestSite])
 }

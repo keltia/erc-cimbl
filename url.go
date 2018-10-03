@@ -130,7 +130,7 @@ func handleURL(ctx *Context, str string) error {
 		return errors.Wrap(err, "doCheck")
 	}
 	if result == ActionBlock {
-		ctx.URLs[myurl] = result
+		ctx.URLs[myurl] = true
 	}
 	verbose("Checking %s: %s", myurl, result)
 	return nil

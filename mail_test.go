@@ -29,19 +29,12 @@ func TestAddPaths(t *testing.T) {
 }
 
 func TestAddURLsBlock(t *testing.T) {
-	ctx := &Context{URLs: map[string]string{"http://example.com/malware": "**BLOCK**"}}
+	ctx := &Context{URLs: map[string]bool{"http://example.com/malware": true}}
 
 	res := fmt.Sprintf("%s  %s\n", urlsTmpl, "http://example.com/malware")
 	str := addURLs(ctx)
 	assert.Equal(t, res, str, "should be equal")
 
-}
-
-func TestAddURLsUnknown(t *testing.T) {
-	ctx := &Context{URLs: map[string]string{"http://example.com/malware": "UNKNOWN"}}
-
-	str := addURLs(ctx)
-	assert.Equal(t, urlsTmpl, str, "should be equal")
 }
 
 func TestDoSendMailNoMail(t *testing.T) {

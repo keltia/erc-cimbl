@@ -73,14 +73,14 @@ func TestHandleCSV(t *testing.T) {
 	ctx := &Context{
 		config: config,
 		Paths:  map[string]bool{},
-		URLs:   map[string]string{},
+		URLs:   map[string]bool{},
 	}
 
 	realPaths := map[string]bool{
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
-	realURLs := map[string]string{
-		TestSite: ActionBlock,
+	realURLs := map[string]bool{
+		TestSite: true,
 	}
 
 	_, transport := proxy.SetupTransport(TestSite)
@@ -118,14 +118,14 @@ func TestHandleCSVVerbose(t *testing.T) {
 	ctx := &Context{
 		config: config,
 		Paths:  map[string]bool{},
-		URLs:   map[string]string{},
+		URLs:   map[string]bool{},
 	}
 
 	realPaths := map[string]bool{
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
-	realURLs := map[string]string{
-		TestSite: ActionBlock,
+	realURLs := map[string]bool{
+		TestSite: true,
 	}
 
 	_, transport := proxy.SetupTransport(TestSite)
@@ -198,8 +198,8 @@ func TestHandleSingleFile(t *testing.T) {
 	realPaths := map[string]bool{
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
-	realURLs := map[string]string{
-		TestSite: ActionBlock,
+	realURLs := map[string]bool{
+		TestSite: true,
 	}
 
 	snd, err := sandbox.New("test")
@@ -209,7 +209,7 @@ func TestHandleSingleFile(t *testing.T) {
 	ctx := &Context{
 		config:  config,
 		Paths:   map[string]bool{},
-		URLs:    map[string]string{},
+		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
@@ -253,7 +253,7 @@ func TestHandleSingleFile_None(t *testing.T) {
 	ctx := &Context{
 		config:  config,
 		Paths:   map[string]bool{},
-		URLs:    map[string]string{},
+		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
@@ -267,7 +267,7 @@ func TestHandleSingleFile_None(t *testing.T) {
 func TestHandleAllFiles_None(t *testing.T) {
 	ctx := &Context{
 		Paths: map[string]bool{},
-		URLs:  map[string]string{},
+		URLs:  map[string]bool{},
 	}
 
 	err := handleAllFiles(ctx, nil)
@@ -277,7 +277,7 @@ func TestHandleAllFiles_None(t *testing.T) {
 func TestHandleAllFiles_Null(t *testing.T) {
 	ctx := &Context{
 		Paths: map[string]bool{},
-		URLs:  map[string]string{},
+		URLs:  map[string]bool{},
 	}
 
 	err := handleAllFiles(ctx, []string{"/nonexistent"})
@@ -295,8 +295,8 @@ func TestHandleAllFiles_OneFile(t *testing.T) {
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
 
-	realURLs := map[string]string{
-		TestSite: ActionBlock,
+	realURLs := map[string]bool{
+		TestSite: true,
 	}
 
 	snd, err := sandbox.New("test")
@@ -306,7 +306,7 @@ func TestHandleAllFiles_OneFile(t *testing.T) {
 	ctx := &Context{
 		config:  config,
 		Paths:   map[string]bool{},
-		URLs:    map[string]string{},
+		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
@@ -344,8 +344,8 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 
 	fVerbose = true
 
-	realURLs := map[string]string{
-		TestSite: ActionBlock,
+	realURLs := map[string]bool{
+		TestSite: true,
 	}
 
 	snd, err := sandbox.New("test")
@@ -354,7 +354,7 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 
 	ctx := &Context{
 		config:  config,
-		URLs:    map[string]string{},
+		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 

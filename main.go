@@ -30,9 +30,9 @@ type Context struct {
 	config    *Config
 	tempdir   *sandbox.Dir
 	Paths     map[string]bool
-	URLs      map[string]string
-	Client    *http.Client
+	URLs      map[string]bool
 	files     []string
+	Client    *http.Client
 	proxyauth string
 	mail      MailSender
 	gpg       Decrypter
@@ -75,7 +75,7 @@ func setup() *Context {
 	ctx := &Context{
 		config: config,
 		Paths:  map[string]bool{},
-		URLs:   map[string]string{},
+		URLs:   map[string]bool{},
 		mail:   SMTPMailSender{},
 		gpg:    Gpgme{},
 	}
