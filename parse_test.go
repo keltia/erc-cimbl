@@ -247,3 +247,123 @@ func TestHandleSingleFile_None(t *testing.T) {
 	assert.Empty(t, ctx.Paths)
 	assert.Empty(t, ctx.URLs)
 }
+
+func TestHandleAllFiles_None(t *testing.T) {
+	ctx := &Context{
+		Paths: map[string]bool{},
+		URLs:  map[string]string{},
+	}
+
+	err := handleAllFiles(ctx, nil)
+	assert.NoError(t, err)
+}
+
+func TestHandleAllFiles_Null(t *testing.T) {
+	ctx := &Context{
+		Paths: map[string]bool{},
+		URLs:  map[string]string{},
+	}
+
+	err := handleAllFiles(ctx, []string{"/nonexistent"})
+	assert.NoError(t, err)
+}
+
+func TestHandleAllFiles_OneFile(t *testing.T) {
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	fVerbose = true
+
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
+
+	realURLs := map[string]string{
+		TestSite: ActionBlock,
+	}
+
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		config:  config,
+		Paths:   map[string]bool{},
+		URLs:    map[string]string{},
+		tempdir: snd,
+	}
+
+	_, transport := proxy.SetupTransport(TestSite)
+	require.NotNil(t, transport)
+
+	// Set up minimal client
+	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
+
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		Reply(200)
+
+	gock.InterceptClient(ctx.Client)
+	defer gock.RestoreClient(ctx.Client)
+
+	file := "testdata/CIMBL-0666-CERTS.csv"
+
+	err = handleAllFiles(ctx, []string{file})
+	assert.NoError(t, err)
+
+	assert.NotEmpty(t, ctx.Paths)
+	assert.NotEmpty(t, ctx.URLs)
+	assert.Equal(t, realPaths, ctx.Paths)
+	assert.Equal(t, realURLs, ctx.URLs)
+}
+
+func TestHandleAllFiles_OneURL(t *testing.T) {
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	fVerbose = true
+
+	realURLs := map[string]string{
+		TestSite: ActionBlock,
+	}
+
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		config:  config,
+		URLs:    map[string]string{},
+		tempdir: snd,
+	}
+
+	_, transport := proxy.SetupTransport(TestSite)
+	require.NotNil(t, transport)
+
+	// Set up minimal client
+	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
+
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		Reply(200)
+
+	gock.InterceptClient(ctx.Client)
+	defer gock.RestoreClient(ctx.Client)
+
+	file := TestSite
+
+	err = handleAllFiles(ctx, []string{file})
+	assert.NoError(t, err)
+
+	assert.Empty(t, ctx.Paths)
+	assert.NotEmpty(t, ctx.URLs)
+	assert.Equal(t, realURLs, ctx.URLs)
+}
