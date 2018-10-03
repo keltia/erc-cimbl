@@ -21,7 +21,7 @@ func doCheck(ctx *Context, req *http.Request) (string, error) {
 
 	resp, err := ctx.Client.Do(req)
 	if err != nil {
-		verbose("err: %s", err)
+		debug("err: %s", err)
 		return "", errors.Wrap(err, "Do")
 	}
 
