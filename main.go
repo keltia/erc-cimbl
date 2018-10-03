@@ -2,21 +2,21 @@ package main
 
 import (
 	"flag"
-	"github.com/keltia/proxy"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/keltia/proxy"
+	"github.com/keltia/sandbox"
 )
 
 var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.5.1"
+	MyVersion = "0.6.0"
 
 	fDebug   bool
 	fDoMail  bool
@@ -28,12 +28,14 @@ var (
 // Context is the way to share info across functions.
 type Context struct {
 	config    *Config
-	tempdir   string
+	tempdir   *sandbox.Dir
 	Paths     map[string]bool
-	URLs      map[string]string
-	Client    *http.Client
+	URLs      map[string]bool
 	files     []string
+	Client    *http.Client
 	proxyauth string
+	mail      MailSender
+	gpg       Decrypter
 }
 
 func init() {
@@ -50,36 +52,21 @@ func checkFilename(file string) (ok bool) {
 	return re.MatchString(file)
 }
 
-// cleanupTemp removes the temporary directory
-func cleanupTemp(dir string) {
-	err := os.RemoveAll(dir)
-	if err != nil {
-		log.Printf("cleanup failed for %s: %v", dir, err)
-	}
-}
-
-// createSandbox creates our our directory with TEMPDIR (wherever it is)
-func createSandbox(tag string) (path string) {
-
-	// Extract in safe location
-	dir, err := ioutil.TempDir("", tag)
-	if err != nil {
-		log.Fatalf("unable to create sandbox %s: %v", dir, err)
-	}
-	return dir
-}
-
 func setup() *Context {
+	if fDebug {
+		fVerbose = true
+	}
+
 	// No config file is not an error but you do not get to send mail
 	config, err := loadConfig()
 	if err != nil {
-		log.Println("no config file, mail is disabled.")
+		verbose("no config file, mail is disabled.")
 		fDoMail = false
 	}
 
 	// No mail server configured but the rest is valid.
 	if config.Server == "" {
-		log.Println("no mail server, mail is disabled.")
+		verbose("no mail server, mail is disabled.")
 		fDoMail = false
 	} else {
 		verbose("Got mail server %s…", config.Server)
@@ -88,12 +75,14 @@ func setup() *Context {
 	ctx := &Context{
 		config: config,
 		Paths:  map[string]bool{},
-		URLs:   map[string]string{},
+		URLs:   map[string]bool{},
+		mail:   SMTPMailSender{},
+		gpg:    Gpgme{},
 	}
 
 	proxyauth, err := proxy.SetupProxyAuth()
 	if err != nil {
-		log.Printf("No dbrc file, no proxy auth.: %v", err)
+		verbose("No proxy auth.: %v", err)
 	} else {
 		verbose("Using %s as proxy…", os.Getenv("http_proxy"))
 		debug("Got %s as proxyauth", proxyauth)
@@ -103,12 +92,12 @@ func setup() *Context {
 }
 
 func main() {
+	var err error
+
 	// Parse CLI
 	flag.Parse()
 
-	if fDebug {
-		fVerbose = true
-	}
+	ctx := setup()
 
 	verbose("%s/%s", MyName, MyVersion)
 
@@ -117,28 +106,15 @@ func main() {
 		os.Exit(0)
 	}
 
-	ctx := setup()
+	ctx.tempdir, err = sandbox.New(MyName)
+	if err != nil {
+		log.Fatalf("unable to create sandbox: %v", err)
+	}
+	defer ctx.tempdir.Cleanup()
 
-	ctx.tempdir = createSandbox(MyName)
-	defer cleanupTemp(ctx.tempdir)
-
-	// For all files on the CLI
-	for _, file := range flag.Args() {
-		if checkFilename(file) {
-			verbose("Checking %s…\n", file)
-			if err := handleSingleFile(ctx, file); err != nil {
-				log.Printf("error reading %s: %v", file, err)
-			}
-			ctx.files = append(ctx.files, filepath.Base(file))
-		} else {
-			if strings.HasPrefix(file, "http:") {
-				if !fNoURLs {
-					handleURL(ctx, file)
-				}
-			} else {
-				verbose("Ignoring %s…", file)
-			}
-		}
+	err = handleAllFiles(ctx, flag.Args())
+	if err != nil {
+		log.Fatalf("error processing files: %v", err)
 	}
 
 	// Do something with the results

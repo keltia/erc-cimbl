@@ -1,14 +1,15 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHandlePath(t *testing.T) {
 	ctx := &Context{
 		Paths: map[string]bool{},
-		URLs:  map[string]string{},
+		URLs:  map[string]bool{},
 	}
 	Plen := len(ctx.Paths)
 
@@ -26,7 +27,7 @@ func TestHandlePath(t *testing.T) {
 func TestHandlePathVerbose(t *testing.T) {
 	ctx := &Context{
 		Paths: map[string]bool{},
-		URLs:  map[string]string{},
+		URLs:  map[string]bool{},
 	}
 	Plen := len(ctx.Paths)
 	fVerbose = true

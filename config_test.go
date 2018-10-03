@@ -8,7 +8,7 @@ import (
 )
 
 func TestLoadConfigNone(t *testing.T) {
-	baseDir = "test"
+	baseDir = "testdata"
 	configName = "/nonexistant"
 	empty := &Config{}
 
@@ -18,7 +18,7 @@ func TestLoadConfigNone(t *testing.T) {
 }
 
 func TestLoadConfigBad(t *testing.T) {
-	baseDir = "test"
+	baseDir = "testdata"
 	configName = "bad.toml"
 
 	c, err := loadConfig()
@@ -27,7 +27,7 @@ func TestLoadConfigBad(t *testing.T) {
 }
 
 func TestLoadConfigPerms(t *testing.T) {
-	baseDir = "test"
+	baseDir = "testdata"
 	configName = "config.toml"
 
 	file := filepath.Join(baseDir, configName)
@@ -43,7 +43,7 @@ func TestLoadConfigPerms(t *testing.T) {
 }
 
 func TestLoadConfigGood(t *testing.T) {
-	baseDir = "test"
+	baseDir = "testdata"
 	configName = "config.toml"
 
 	c, err := loadConfig()
@@ -62,7 +62,7 @@ func TestLoadConfigGood(t *testing.T) {
 }
 
 func TestLoadConfigGoodVerbose(t *testing.T) {
-	baseDir = "test"
+	baseDir = "testdata"
 	configName = "config.toml"
 	fVerbose = true
 

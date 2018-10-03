@@ -2,12 +2,22 @@ package main
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateMail(t *testing.T) {
+func TestCreateMailNilContext(t *testing.T) {
+	txt, err := createMail(nil)
+	assert.Error(t, err)
+	assert.Empty(t, txt)
+}
 
+func TestCreateMailNilConfig(t *testing.T) {
+	ctx := &Context{}
+	txt, err := createMail(ctx)
+	assert.Error(t, err)
+	assert.Empty(t, txt)
 }
 
 func TestAddPaths(t *testing.T) {
@@ -19,7 +29,7 @@ func TestAddPaths(t *testing.T) {
 }
 
 func TestAddURLsBlock(t *testing.T) {
-	ctx := &Context{URLs: map[string]string{"http://example.com/malware": "**BLOCK**"}}
+	ctx := &Context{URLs: map[string]bool{"http://example.com/malware": true}}
 
 	res := fmt.Sprintf("%s  %s\n", urlsTmpl, "http://example.com/malware")
 	str := addURLs(ctx)
@@ -27,15 +37,8 @@ func TestAddURLsBlock(t *testing.T) {
 
 }
 
-func TestAddURLsUnknown(t *testing.T) {
-	ctx := &Context{URLs: map[string]string{"http://example.com/malware": "UNKNOWN"}}
-
-	str := addURLs(ctx)
-	assert.Equal(t, urlsTmpl, str, "should be equal")
-}
-
 func TestDoSendMailNoMail(t *testing.T) {
-	baseDir = "test"
+	baseDir = "testdata"
 	configName = "config.toml"
 	fVerbose = false
 
@@ -44,6 +47,32 @@ func TestDoSendMailNoMail(t *testing.T) {
 	ctx := &Context{
 		config: config,
 		Paths:  map[string]bool{"foo.docx": true},
+	}
+
+	err = doSendMail(ctx)
+	assert.NoError(t, err, "no error")
+}
+
+func TestDoSendMailConfigError(t *testing.T) {
+	ctx := &Context{
+		config: nil,
+		Paths:  map[string]bool{"/dontcare": true},
+	}
+
+	err := doSendMail(ctx)
+	assert.Error(t, err)
+}
+
+func TestDoSendMailNoWork(t *testing.T) {
+	baseDir = "testdata"
+	configName = "config.toml"
+	fVerbose = false
+
+	config, err := loadConfig()
+	assert.NoError(t, err)
+	ctx := &Context{
+		config: config,
+		Paths:  map[string]bool{},
 	}
 
 	err = doSendMail(ctx)
@@ -51,7 +80,7 @@ func TestDoSendMailNoMail(t *testing.T) {
 }
 
 func TestDoSendMailWithMail(t *testing.T) {
-	baseDir = "test"
+	baseDir = "testdata"
 	configName = "config.toml"
 	fVerbose = false
 
@@ -60,9 +89,35 @@ func TestDoSendMailWithMail(t *testing.T) {
 	ctx := &Context{
 		config: config,
 		Paths:  map[string]bool{"foo.docx": true},
+		mail:   NullMailer{},
 	}
 	fDoMail = true
 
 	err = doSendMail(ctx)
 	assert.NoError(t, err, "no error")
+}
+
+func TestDoSendMailWithMailDebug(t *testing.T) {
+	baseDir = "testdata"
+	configName = "config.toml"
+	fDebug = true
+
+	config, err := loadConfig()
+	assert.NoError(t, err, "no error")
+	ctx := &Context{
+		config: config,
+		Paths:  map[string]bool{"foo.docx": true},
+		mail:   NullMailer{},
+	}
+	fDoMail = true
+
+	err = doSendMail(ctx)
+	assert.NoError(t, err, "no error")
+	fDebug = false
+}
+
+func TestSMTPMailSender_SendMail(t *testing.T) {
+	m := &SMTPMailSender{}
+	err := m.SendMail("", "", nil, nil)
+	assert.Error(t, err)
 }

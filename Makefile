@@ -6,7 +6,7 @@
 GO=		go
 GOBIN=  ${GOPATH}/bin
 
-SRCS= config.go mail.go main.go parse.go path.go url.go utils.go
+SRCS= config.go gpgme.go mail.go main.go parse.go path.go url.go utils.go
 SRCSW= config_windows.go
 SRCSU= config_unix.go
 
@@ -24,7 +24,7 @@ ${BIN}: ${SRCS} ${SRCSU}
 ${EXE}: ${SRCS} ${SRCSW}
 	GOOS=windows ${GO} build ${OPTS}
 
-test:
+test: ${SRCS} ${SRCSU}
 	${GO} test -v
 
 install: ${BIN}

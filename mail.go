@@ -7,6 +7,8 @@ import (
 	"net/smtp"
 	"strings"
 	"text/template"
+
+	"github.com/pkg/errors"
 )
 
 var (
@@ -33,6 +35,27 @@ Your friendly script - {{.MyName}}/{{.MyVersion}}
 	skipped = []string{}
 )
 
+type MailSender interface {
+	SendMail(server, from string, to []string, body []byte) error
+}
+
+type SMTPMailSender struct{}
+
+func (SMTPMailSender) SendMail(server, from string, to []string, text []byte) error {
+	return smtp.SendMail(server, nil, from, to, text)
+}
+
+type NullMailer struct{}
+
+func (NullMailer) SendMail(server, from string, to []string, text []byte) error {
+	log.Printf(`There should be a mail to %s:
+From %s
+To %v
+Body
+%s `, server, from, to, string(text))
+	return nil
+}
+
 type mailVars struct {
 	From      string
 	To        string
@@ -48,6 +71,12 @@ type mailVars struct {
 func createMail(ctx *Context) (str string, err error) {
 	var txt bytes.Buffer
 
+	if ctx == nil {
+		return "", fmt.Errorf("null context")
+	}
+	if ctx.config == nil {
+		return "", fmt.Errorf("null config")
+	}
 	vars := mailVars{
 		From:      ctx.config.From,
 		To:        ctx.config.To,
@@ -56,7 +85,7 @@ func createMail(ctx *Context) (str string, err error) {
 		MyName:    MyName,
 		MyVersion: MyVersion,
 		Files:     strings.Join(ctx.files, ", "),
-		Paths:	   addPaths(ctx),
+		Paths:     addPaths(ctx),
 		URLs:      addURLs(ctx),
 	}
 
@@ -85,10 +114,8 @@ func addURLs(ctx *Context) string {
 	if !fNoURLs {
 		if len(ctx.URLs) != 0 {
 			txt = fmt.Sprintf("%s", urlsTmpl)
-			for k, v := range ctx.URLs {
-				if v == ActionBlock {
-					txt = fmt.Sprintf("%s  %s\n", txt, k)
-				}
+			for k, _ := range ctx.URLs {
+				txt = fmt.Sprintf("%s  %s\n", txt, k)
 			}
 		}
 	}
@@ -99,11 +126,12 @@ func doSendMail(ctx *Context) (err error) {
 	if len(ctx.Paths) != 0 || len(ctx.URLs) != 0 {
 		mailText, err := createMail(ctx)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "createMail")
 		}
 
 		// Really sendmail now
 		if fDoMail {
+			verbose("Sending the mail")
 			return sendMail(ctx, mailText)
 		}
 
@@ -111,19 +139,11 @@ func doSendMail(ctx *Context) (err error) {
 		fmt.Printf("From: %s\n", ctx.config.From)
 		fmt.Printf("Cc: %s\n", ctx.config.Cc)
 		fmt.Println(mailText)
-
-		return nil
+	} else {
+		log.Print("Nothing to do…")
 	}
 
-	// Send dummy mail if verbose
-	if fDoMail && fVerbose {
-		debug("A mail would have been sent here.")
-		txt, _ := createMail(ctx)
-		debug("mail content:\n%s", txt)
-	}
-	log.Print("Nothing to do…")
-
-	return
+	return nil
 }
 
 func sendMail(ctx *Context, text string) (err error) {
@@ -138,15 +158,19 @@ func sendMail(ctx *Context, text string) (err error) {
 	} else {
 		to = strings.Split(ctx.config.To, ",")
 		if ctx.config.Cc != "" {
-		    cc := strings.Split(ctx.config.Cc, ",")
-		    to = append(to, cc...)
-        }
+			cc := strings.Split(ctx.config.Cc, ",")
+			to = append(to, cc...)
+		}
 	}
 
 	debug("from: %s - To: %v", from, to)
 
-	err = smtp.SendMail(ctx.config.Server, nil, from, to, []byte(text))
+	if fDebug {
+		verbose("null mailer")
+		ctx.mail = NullMailer{}
+	}
 
 	verbose("Mail sent to %v…", to)
-	return
+
+	return ctx.mail.SendMail(ctx.config.Server, from, to, []byte(text))
 }

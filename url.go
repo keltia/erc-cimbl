@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
+
 	"github.com/keltia/proxy"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -16,28 +17,21 @@ const (
 	ActionBlocked = "BLOCKED-EEC"
 )
 
-var (
-	proxyURL *url.URL
-)
-
-func doCheck(ctx *Context, req *http.Request) string {
-	//req.RequestURI = ""
-
-	req.Header.Set("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
+func doCheck(ctx *Context, req *http.Request) (string, error) {
 
 	resp, err := ctx.Client.Do(req)
 	if err != nil {
-		verbose("err: %s", err)
-		return ""
+		debug("err: %s", err)
+		return "", errors.Wrap(err, "Do")
 	}
 
 	switch resp.StatusCode {
 	case 403:
-		return ActionBlocked
+		return ActionBlocked, nil
 	case 407:
-		return ActionAuth
+		return ActionAuth, nil
 	default:
-		return ActionBlock
+		return ActionBlock, nil
 	}
 }
 
@@ -47,6 +41,9 @@ var (
 )
 
 func checkForIP(str string) net.IP {
+	if str == "" {
+		return net.IP{}
+	}
 	l := len(str)
 	if str[0] == '[' {
 		if str[l-1] == ']' {
@@ -58,9 +55,10 @@ func checkForIP(str string) net.IP {
 
 func sanitize(str string) (out string, err error) {
 	// We do not try to see if there is an error because of some corner cases
-	myurl, _ := url.Parse(str)
-	if myurl == nil {
-		return str, ErrParseError
+	myurl, err := url.Parse(str)
+	if err != nil {
+		str = "http://" + str
+		myurl, err = url.Parse(str)
 	}
 
 	// We do not test https
@@ -73,15 +71,19 @@ func sanitize(str string) (out string, err error) {
 		myurl.Scheme = "http"
 	}
 
-	// If host is empty, we might have IP or [IP]
+	// If host is empty, we might have IP or [IP] or bare hostname
 	if myurl.Host == "" {
 		//
 		if ip := checkForIP(myurl.Path); ip != nil {
 			myurl.Host = ip.String()
 			myurl.Path = ""
-			return myurl.String(), err
+		} else {
+			// Path is actually Host/Path
+			u, _ := url.Parse(myurl.Path)
+			myurl.Host = u.Host
+			myurl.Path = u.Path
 		}
-		return str, ErrParseError
+		return myurl.String(), nil
 	}
 
 	// check for [IP]
@@ -92,21 +94,21 @@ func sanitize(str string) (out string, err error) {
 	return myurl.String(), err
 }
 
-func handleURL(ctx *Context, str string) {
+func handleURL(ctx *Context, str string) error {
 
 	// https URLs will not be blocked, no MITM
 	myurl, err := sanitize(str)
 	if err == ErrHttpsSkip {
 		skipped = append(skipped, str)
-		return
+		return nil
 	}
-
+	debug("url=%s", myurl)
 	/*
 	   Setup connection including proxy stuff
 	*/
-	req, transport := proxy.SetupTransport(myurl)
-	if req == nil || transport == nil {
-		return
+	_, transport := proxy.SetupTransport(myurl)
+	if transport == nil {
+		return fmt.Errorf("SetupTransport")
 	}
 
 	// It is better to re-use than creating a new one each time
@@ -117,11 +119,16 @@ func handleURL(ctx *Context, str string) {
 	/*
 	   Do the thing, manage redirects, auth requests and stuff
 	*/
-	result := doCheck(ctx, req)
-	if result != "" {
-		if result == ActionBlock {
-			ctx.URLs[myurl] = result
-		}
-		verbose("Checking %s: %s", myurl, result)
+	req, _ := http.NewRequest("HEAD", myurl, nil)
+	req.Header.Set("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
+
+	result, err := doCheck(ctx, req)
+	if err != nil {
+		return errors.Wrap(err, "doCheck")
 	}
+	if result == ActionBlock {
+		ctx.URLs[myurl] = true
+	}
+	verbose("Checking %s: %s", myurl, result)
+	return nil
 }
