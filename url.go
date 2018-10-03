@@ -119,10 +119,7 @@ func handleURL(ctx *Context, str string) error {
 	/*
 	   Do the thing, manage redirects, auth requests and stuff
 	*/
-	req, err := http.NewRequest("HEAD", myurl, nil)
-	if err != nil {
-		return errors.Wrap(err, "NewRequest")
-	}
+	req, _ := http.NewRequest("HEAD", myurl, nil)
 	req.Header.Set("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
 
 	result, err := doCheck(ctx, req)
