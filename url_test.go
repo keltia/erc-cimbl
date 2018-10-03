@@ -27,11 +27,12 @@ func TestSanitize(t *testing.T) {
 		{"https://example.com", "https://example.com", ErrHttpsSkip},
 		{"http://example.com", "http://example.com", nil},
 		{"ttp://example.com", "http://example.com", nil},
-		{"://example.com", "://example.com", ErrParseError},
+		{"://example.com", "http://://example.com", nil},
 		{"example.com", "http://example.com", nil},
 		{"example.com/foo.php", "http://example.com/foo.php", nil},
 		{"http://[1.2.3.4]", "http://1.2.3.4", nil},
 		{"[1.2.3.4]", "http://1.2.3.4", nil},
+		{"103.15.234.152:80/index.php", "http://103.15.234.152:80/index.php", nil},
 	}
 	for _, u := range urls {
 		t.Logf("url=%s", u.url)

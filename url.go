@@ -57,7 +57,11 @@ func sanitize(str string) (out string, err error) {
 	// We do not try to see if there is an error because of some corner cases
 	myurl, err := url.Parse(str)
 	if err != nil {
-		return str, ErrParseError
+		str = "http://" + str
+		myurl, err = url.Parse(str)
+		if err != nil {
+			return str, ErrParseError
+		}
 	}
 
 	// We do not test https
