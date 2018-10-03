@@ -294,6 +294,41 @@ func TestHandleSingleFile(t *testing.T) {
 	assert.Equal(t, realURLs, ctx.URLs, "should be equal")
 }
 
+func TestHandleSingleFile_Transport(t *testing.T) {
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	fVerbose = true
+
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
+	realURLs := map[string]bool{}
+
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		config:  config,
+		Paths:   map[string]bool{},
+		URLs:    map[string]bool{},
+		tempdir: snd,
+	}
+
+	// Set up minimal client
+	ctx.Client = &http.Client{Transport: nil, Timeout: 10 * time.Second}
+
+	file := "testdata/CIMBL-0666-CERTS.csv"
+	err = handleSingleFile(ctx, file)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, ctx.Paths)
+	assert.Empty(t, ctx.URLs)
+	assert.EqualValues(t, realPaths, ctx.Paths)
+	assert.EqualValues(t, realURLs, ctx.URLs)
+}
+
 func TestHandleSingleFile_None(t *testing.T) {
 	baseDir = "testdata"
 	config, err := loadConfig()
