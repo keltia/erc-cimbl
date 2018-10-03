@@ -11,7 +11,6 @@ import (
 
 	"github.com/maxim2266/csvplus"
 	"github.com/pkg/errors"
-	"github.com/proglottis/gpgme"
 )
 
 /*
@@ -73,45 +72,6 @@ func openFile(ctx *Context, file string) (r io.ReadCloser, err error) {
 		myfile = openZipfile(ctx, myfile)
 	}
 	return os.Open(myfile)
-}
-
-// decryptFiles returns the path name of the decrypted file
-func decryptFile(ctx *Context, file string) (string, error) {
-	// Carefully open the box
-	fh, err := os.Open(file)
-	if err != nil {
-		return "", errors.Wrap(err, "decryptFile/Open")
-	}
-	defer fh.Close()
-
-	// Do the decryption thing
-	plain, err := gpgme.Decrypt(fh)
-	if err != nil {
-		return "", errors.Wrap(err, "Decrypt")
-	}
-	defer plain.Close()
-
-	// Save "plain" text
-	base := filepath.Base(file)
-	ext := filepath.Ext(base)
-	zipname := strings.Replace(base, ext, "", 1)
-
-	plainfile := filepath.Join(ctx.tempdir.Cwd(), zipname)
-
-	verbose("Decrypting %s as %s", file, plainfile)
-
-	dfh, err := os.Create(plainfile)
-	if err != nil {
-		return "", errors.Wrap(err, "decryptFile/Create")
-	}
-	defer dfh.Close()
-
-	_, err = io.Copy(dfh, plain)
-	if err != nil {
-		return "", errors.Wrap(err, "decryptFile/Copy")
-	}
-
-	return plainfile, nil
 }
 
 // readCSV reads the first csv in the zip file and copy into a temp file
@@ -202,6 +162,41 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 				if err != nil {
 					log.Printf("error(%s): %s", row["value"], err.Error())
 				}
+			}
+		}
+	}
+	return nil
+}
+
+func handleAllFiles(ctx *Context, files []string) error {
+	// For all files on the CLI
+	for _, file := range files {
+		if checkFilename(file) {
+			verbose("Checking %s…\n", file)
+
+			nfile, _ := filepath.Abs(file)
+			err := ctx.tempdir.Run(func() error {
+				var err error
+
+				if err = handleSingleFile(ctx, nfile); err != nil {
+					log.Printf("error reading %s: %v", nfile, err)
+				}
+				ctx.files = append(ctx.files, filepath.Base(nfile))
+				return err
+			})
+			if err != nil {
+				log.Fatalf("got error %v for %s", err, file)
+			}
+		} else {
+			if strings.HasPrefix(file, "http:") {
+				if !fNoURLs {
+					err := handleURL(ctx, file)
+					if err != nil {
+						log.Fatalf("error checking %s: %v", file, err)
+					}
+				}
+			} else {
+				verbose("Ignoring %s…", file)
 			}
 		}
 	}
