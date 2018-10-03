@@ -128,7 +128,10 @@ func main() {
 		} else {
 			if strings.HasPrefix(file, "http:") {
 				if !fNoURLs {
-					handleURL(ctx, file)
+					err := handleURL(ctx, file)
+					if err != nil {
+						log.Fatalf("error checking %s: %v", file, err)
+					}
 				}
 			} else {
 				verbose("Ignoring %s…", file)
