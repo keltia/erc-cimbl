@@ -7,6 +7,8 @@ import (
 	"net/smtp"
 	"strings"
 	"text/template"
+
+	"github.com/pkg/errors"
 )
 
 var (
@@ -56,7 +58,7 @@ func createMail(ctx *Context) (str string, err error) {
 		MyName:    MyName,
 		MyVersion: MyVersion,
 		Files:     strings.Join(ctx.files, ", "),
-		Paths:	   addPaths(ctx),
+		Paths:     addPaths(ctx),
 		URLs:      addURLs(ctx),
 	}
 
@@ -99,11 +101,12 @@ func doSendMail(ctx *Context) (err error) {
 	if len(ctx.Paths) != 0 || len(ctx.URLs) != 0 {
 		mailText, err := createMail(ctx)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "createMail")
 		}
 
 		// Really sendmail now
 		if fDoMail {
+			verbose("Sending the mail")
 			return sendMail(ctx, mailText)
 		}
 
@@ -111,19 +114,11 @@ func doSendMail(ctx *Context) (err error) {
 		fmt.Printf("From: %s\n", ctx.config.From)
 		fmt.Printf("Cc: %s\n", ctx.config.Cc)
 		fmt.Println(mailText)
-
-		return nil
+	} else {
+		log.Print("Nothing to do…")
 	}
 
-	// Send dummy mail if verbose
-	if fDoMail && fVerbose {
-		debug("A mail would have been sent here.")
-		txt, _ := createMail(ctx)
-		debug("mail content:\n%s", txt)
-	}
-	log.Print("Nothing to do…")
-
-	return
+	return nil
 }
 
 func sendMail(ctx *Context, text string) (err error) {
@@ -138,9 +133,9 @@ func sendMail(ctx *Context, text string) (err error) {
 	} else {
 		to = strings.Split(ctx.config.To, ",")
 		if ctx.config.Cc != "" {
-		    cc := strings.Split(ctx.config.Cc, ",")
-		    to = append(to, cc...)
-        }
+			cc := strings.Split(ctx.config.Cc, ",")
+			to = append(to, cc...)
+		}
 	}
 
 	debug("from: %s - To: %v", from, to)
