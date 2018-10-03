@@ -28,6 +28,7 @@ func TestSanitize(t *testing.T) {
 		{"http://example.com", "http://example.com", nil},
 		{"ttp://example.com", "http://example.com", nil},
 		{"://example.com", "://example.com", ErrParseError},
+		{"example.com", "http://example.com", nil},
 		{"http://[1.2.3.4]", "http://1.2.3.4", nil},
 		{"[1.2.3.4]", "http://1.2.3.4", nil},
 	}
