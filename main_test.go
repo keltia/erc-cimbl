@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCheckFilename(t *testing.T) {
@@ -58,9 +59,29 @@ func TestSetupNoneDebug(t *testing.T) {
 	fDebug = false
 }
 
-func TestSetupProxy(t *testing.T) {
+func setvars(t *testing.T) {
+	// Insert our values
+	require.NoError(t, os.Setenv("HTTP_PROXY", "http://proxy:8080/"))
+	require.NoError(t, os.Setenv("HTTPS_PROXY", "http://proxy:8080/"))
+	require.NoError(t, os.Setenv("http_proxy", "http://proxy:8080/"))
+	require.NoError(t, os.Setenv("https_proxy", "http://proxy:8080/"))
+}
+
+func unsetvars(t *testing.T) {
+	// Remove our values
+	require.NoError(t, os.Unsetenv("HTTP_PROXY"))
+	require.NoError(t, os.Unsetenv("HTTPS_PROXY"))
+	require.NoError(t, os.Unsetenv("http_proxy"))
+	require.NoError(t, os.Unsetenv("https_proxy"))
+}
+
+func TestSetupProxyError(t *testing.T) {
+	setvars(t)
+
 	baseDir = "testdata"
-	os.Setenv("NETRC", filepath.Join(".", "test", "test-netrc"))
+	netrc := filepath.Join(".", "testdata", "test-netrc")
+	require.NoError(t, os.Chmod(netrc, 0600))
+	require.NoError(t, os.Setenv("NETRC", netrc))
 
 	ctx := setup()
 	assert.NotNil(t, ctx)
@@ -69,7 +90,27 @@ func TestSetupProxy(t *testing.T) {
 	assert.Empty(t, ctx.URLs)
 	assert.Empty(t, ctx.Paths)
 	assert.Nil(t, ctx.tempdir)
-	assert.NotNil(t, ctx.proxyauth)
+	assert.NotEmpty(t, ctx.proxyauth)
+	unsetvars(t)
+}
+
+func TestSetupProxyAuth(t *testing.T) {
+	setvars(t)
+
+	baseDir = "testdata"
+	netrc := filepath.Join(".", "testdata", "test-netrc")
+	require.NoError(t, os.Chmod(netrc, 0600))
+	require.NoError(t, os.Setenv("NETRC", netrc))
+
+	ctx := setup()
+	assert.NotNil(t, ctx)
+
+	assert.NotNil(t, ctx.config)
+	assert.Empty(t, ctx.URLs)
+	assert.Empty(t, ctx.Paths)
+	assert.Nil(t, ctx.tempdir)
+	assert.NotEmpty(t, ctx.proxyauth)
+	unsetvars(t)
 }
 
 func TestSetupServer(t *testing.T) {
