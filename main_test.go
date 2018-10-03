@@ -19,7 +19,7 @@ func TestCheckFilename(t *testing.T) {
 }
 
 func TestSetup(t *testing.T) {
-	baseDir = "test"
+	baseDir = "testdata"
 
 	ctx := setup()
 	assert.NotNil(t, ctx)
@@ -42,8 +42,24 @@ func TestSetupNone(t *testing.T) {
 	assert.Nil(t, ctx.tempdir)
 }
 
+func TestSetupNoneDebug(t *testing.T) {
+	baseDir = "testx"
+
+	fDebug = true
+	ctx := setup()
+	assert.NotNil(t, ctx)
+
+	assert.Empty(t, ctx.config)
+	assert.Empty(t, ctx.URLs)
+	assert.Empty(t, ctx.Paths)
+	assert.Nil(t, ctx.tempdir)
+	assert.True(t, fVerbose)
+
+	fDebug = false
+}
+
 func TestSetupProxy(t *testing.T) {
-	baseDir = "test"
+	baseDir = "testdata"
 	os.Setenv("NETRC", filepath.Join(".", "test", "test-netrc"))
 
 	ctx := setup()
@@ -54,4 +70,22 @@ func TestSetupProxy(t *testing.T) {
 	assert.Empty(t, ctx.Paths)
 	assert.Nil(t, ctx.tempdir)
 	assert.NotNil(t, ctx.proxyauth)
+}
+
+func TestSetupServer(t *testing.T) {
+	baseDir = "testdata"
+	configName = "config-smtp.toml"
+	os.Setenv("NETRC", filepath.Join(".", "test", "test-netrc"))
+
+	fDebug = true
+	ctx := setup()
+	assert.NotNil(t, ctx)
+
+	assert.NotNil(t, ctx.config)
+	assert.Empty(t, ctx.URLs)
+	assert.Empty(t, ctx.Paths)
+	assert.Nil(t, ctx.tempdir)
+	assert.NotNil(t, ctx.proxyauth)
+	assert.NotEmpty(t, ctx.config.Server)
+	fDebug = false
 }
