@@ -70,13 +70,18 @@ func sanitize(str string) (out string, err error) {
 		myurl.Scheme = "http"
 	}
 
-	// If host is empty, we might have IP or [IP]
+	verbose("myurl=%#v", myurl)
+	// If host is empty, we might have IP or [IP] or bare hostname
 	if myurl.Host == "" {
 		//
 		if ip := checkForIP(myurl.Path); ip != nil {
 			myurl.Host = ip.String()
 			myurl.Path = ""
 			return myurl.String(), errors.Wrap(err, "empty host")
+		} else {
+			myurl.Host = myurl.Path
+			myurl.Path = ""
+			return myurl.String(), nil
 		}
 		return str, ErrParseError
 	}
@@ -97,7 +102,7 @@ func handleURL(ctx *Context, str string) error {
 		skipped = append(skipped, str)
 		return nil
 	}
-
+	verbose("url=%s", myurl)
 	/*
 	   Setup connection including proxy stuff
 	*/
