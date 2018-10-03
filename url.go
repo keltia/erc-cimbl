@@ -101,7 +101,7 @@ func handleURL(ctx *Context, str string) error {
 		skipped = append(skipped, str)
 		return nil
 	}
-	verbose("url=%s", myurl)
+	debug("url=%s", myurl)
 	/*
 	   Setup connection including proxy stuff
 	*/

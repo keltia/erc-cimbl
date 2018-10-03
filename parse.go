@@ -188,9 +188,9 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 	}
 
 	for _, row := range rows {
-		verbose("row=%v", row)
+		debug("row=%v", row)
 		rt := strings.Split(row["type"], "|")[0]
-		verbose("rt=%s", rt)
+		debug("rt=%s", rt)
 		switch rt {
 		case "filename":
 			if !fNoPaths {
