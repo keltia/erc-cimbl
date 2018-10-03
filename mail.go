@@ -71,6 +71,12 @@ type mailVars struct {
 func createMail(ctx *Context) (str string, err error) {
 	var txt bytes.Buffer
 
+	if ctx == nil {
+		return "", fmt.Errorf("null context")
+	}
+	if ctx.config == nil {
+		return "", fmt.Errorf("null config")
+	}
 	vars := mailVars{
 		From:      ctx.config.From,
 		To:        ctx.config.To,
