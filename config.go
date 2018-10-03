@@ -2,14 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/BurntSushi/toml"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-)
 
-const (
-	proxyTag = "proxy"
+	"github.com/BurntSushi/toml"
 )
 
 // Config is the main configuration object
@@ -47,4 +44,3 @@ func loadConfig() (c *Config, err error) {
 	c = &cnf
 	return
 }
-
