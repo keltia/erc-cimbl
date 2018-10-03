@@ -198,7 +198,10 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 			}
 		case "url":
 			if !fNoURLs {
-				handleURL(ctx, row["value"])
+				err = handleURL(ctx, row["value"])
+				if err != nil {
+					log.Printf("error(%s): %s", row["value"], err.Error())
+				}
 			}
 		}
 	}
