@@ -79,8 +79,10 @@ func sanitize(str string) (out string, err error) {
 			myurl.Path = ""
 			return myurl.String(), errors.Wrap(err, "empty host")
 		} else {
-			myurl.Host = myurl.Path
-			myurl.Path = ""
+			// Path is actually Host/Path
+			u, _ := url.Parse(myurl.Path)
+			myurl.Host = u.Host
+			myurl.Path = u.Path
 			return myurl.String(), nil
 		}
 		return str, ErrParseError
