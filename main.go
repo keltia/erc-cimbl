@@ -35,6 +35,7 @@ type Context struct {
 	files     []string
 	proxyauth string
 	mail      MailSender
+	gpg       Decrypter
 }
 
 func init() {
@@ -76,6 +77,7 @@ func setup() *Context {
 		Paths:  map[string]bool{},
 		URLs:   map[string]string{},
 		mail:   SMTPMailSender{},
+		gpg:    Gpgme{},
 	}
 
 	proxyauth, err := proxy.SetupProxyAuth()
