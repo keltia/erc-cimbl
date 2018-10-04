@@ -115,7 +115,7 @@ func main() {
 	verbose("res=%v", res)
 
 	// Do something with the results
-	if err := doSendMail(ctx); err != nil {
+	if err := doSendMail(ctx, res); err != nil {
 		log.Fatalf("sending mail: %v", err)
 	}
 
