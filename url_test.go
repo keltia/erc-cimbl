@@ -66,9 +66,7 @@ func TestDoCheck403(t *testing.T) {
 	defer gock.Off()
 
 	// Check values
-	ctx := &Context{
-		URLs: map[string]bool{},
-	}
+	ctx := &Context{}
 
 	_, transport := proxy.SetupTransport(TestSite)
 	require.NotNil(t, transport)
@@ -98,9 +96,7 @@ func TestDoCheck200(t *testing.T) {
 	defer gock.Off()
 
 	// Check values
-	ctx := &Context{
-		URLs: map[string]bool{},
-	}
+	ctx := &Context{}
 
 	_, transport := proxy.SetupTransport(TestSite)
 	require.NotNil(t, transport)
@@ -130,9 +126,7 @@ func TestDoCheck407(t *testing.T) {
 	defer gock.Off()
 
 	// Check values
-	ctx := &Context{
-		URLs: map[string]bool{},
-	}
+	ctx := &Context{}
 
 	_, transport := proxy.SetupTransport(TestSite)
 	require.NotNil(t, transport)
@@ -160,9 +154,7 @@ func TestDoCheck407(t *testing.T) {
 
 func TestDoCheckError(t *testing.T) {
 	// Check values
-	ctx := &Context{
-		URLs: map[string]bool{},
-	}
+	ctx := &Context{}
 
 	_, transport := proxy.SetupTransport(TestSite)
 	require.NotNil(t, transport)
@@ -180,9 +172,7 @@ func TestDoCheckError(t *testing.T) {
 
 func TestDoCheck_Transport(t *testing.T) {
 	// Check values
-	ctx := &Context{
-		URLs: map[string]bool{},
-	}
+	ctx := &Context{}
 
 	// Set up minimal client
 	ctx.Client = &http.Client{Transport: nil, Timeout: 10 * time.Second}
@@ -200,9 +190,7 @@ func TestHandleURLhttps(t *testing.T) {
 	skipped = []string{}
 
 	// Check values
-	ctx := &Context{
-		URLs: map[string]bool{},
-	}
+	ctx := &Context{}
 
 	u, err := handleURL(ctx, "https://example.com")
 	assert.NoError(t, err)
@@ -214,9 +202,7 @@ func TestHandleURLblocked(t *testing.T) {
 	defer gock.Off()
 
 	// Check values
-	ctx := &Context{
-		URLs: map[string]bool{},
-	}
+	ctx := &Context{}
 
 	_, transport := proxy.SetupTransport(TestSite)
 	require.NotNil(t, transport)
@@ -238,18 +224,13 @@ func TestHandleURLblocked(t *testing.T) {
 	u, err := handleURL(ctx, TestSite)
 	assert.NoError(t, err)
 	require.Empty(t, u)
-
-	_, ok := ctx.URLs[TestSite]
-	assert.False(t, ok)
 }
 
 func TestHandleURLblock(t *testing.T) {
 	defer gock.Off()
 
 	// Check values
-	ctx := &Context{
-		URLs: map[string]bool{},
-	}
+	ctx := &Context{}
 
 	_, transport := proxy.SetupTransport(TestSite)
 	require.NotNil(t, transport)

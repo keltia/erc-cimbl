@@ -128,8 +128,6 @@ func TestHandleCSV(t *testing.T) {
 
 	ctx := &Context{
 		config: config,
-		Paths:  map[string]bool{},
-		URLs:   map[string]bool{},
 	}
 
 	realPaths := map[string]bool{
@@ -173,8 +171,6 @@ func TestHandleCSVVerbose(t *testing.T) {
 
 	ctx := &Context{
 		config: config,
-		Paths:  map[string]bool{},
-		URLs:   map[string]bool{},
 	}
 
 	realPaths := map[string]bool{
@@ -264,8 +260,6 @@ func TestHandleSingleFile(t *testing.T) {
 
 	ctx := &Context{
 		config:  config,
-		Paths:   map[string]bool{},
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
@@ -313,8 +307,6 @@ func TestHandleSingleFile_Transport(t *testing.T) {
 
 	ctx := &Context{
 		config:  config,
-		Paths:   map[string]bool{},
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
@@ -355,10 +347,7 @@ func TestHandleSingleFile_None(t *testing.T) {
 }
 
 func TestHandleAllFiles_None(t *testing.T) {
-	ctx := &Context{
-		Paths: map[string]bool{},
-		URLs:  map[string]bool{},
-	}
+	ctx := &Context{}
 
 	res, err := handleAllFiles(ctx, nil)
 	assert.NoError(t, err)
@@ -366,10 +355,7 @@ func TestHandleAllFiles_None(t *testing.T) {
 }
 
 func TestHandleAllFiles_Null(t *testing.T) {
-	ctx := &Context{
-		Paths: map[string]bool{},
-		URLs:  map[string]bool{},
-	}
+	ctx := &Context{}
 
 	res, err := handleAllFiles(ctx, []string{"/nonexistent"})
 	assert.NoError(t, err)
@@ -382,8 +368,6 @@ func TestHandleAllFiles_SingleBad(t *testing.T) {
 	defer snd.Cleanup()
 
 	ctx := &Context{
-		Paths:   map[string]bool{},
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
@@ -398,8 +382,6 @@ func TestHandleAllFiles_SingleBad2(t *testing.T) {
 	defer snd.Cleanup()
 
 	ctx := &Context{
-		Paths:   map[string]bool{},
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
@@ -429,8 +411,6 @@ func TestHandleAllFiles_OneFile(t *testing.T) {
 
 	ctx := &Context{
 		config:  config,
-		Paths:   map[string]bool{},
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
@@ -478,7 +458,6 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 
 	ctx := &Context{
 		config:  config,
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
