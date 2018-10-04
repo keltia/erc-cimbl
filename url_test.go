@@ -204,9 +204,9 @@ func TestHandleURLhttps(t *testing.T) {
 		URLs: map[string]bool{},
 	}
 
-	err := handleURL(ctx, "https://example.com")
+	u, err := handleURL(ctx, "https://example.com")
 	assert.NoError(t, err)
-	assert.Empty(t, ctx.URLs)
+	assert.Empty(t, u)
 	assert.EqualValues(t, []string{"https://example.com"}, skipped)
 }
 
@@ -235,9 +235,9 @@ func TestHandleURLblocked(t *testing.T) {
 	gock.InterceptClient(ctx.Client)
 	defer gock.RestoreClient(ctx.Client)
 
-	err = handleURL(ctx, TestSite)
+	u, err := handleURL(ctx, TestSite)
 	assert.NoError(t, err)
-	require.Empty(t, ctx.URLs)
+	require.Empty(t, u)
 
 	_, ok := ctx.URLs[TestSite]
 	assert.False(t, ok)
@@ -268,8 +268,8 @@ func TestHandleURLblock(t *testing.T) {
 	gock.InterceptClient(ctx.Client)
 	defer gock.RestoreClient(ctx.Client)
 
-	err = handleURL(ctx, TestSite)
+	u, err := handleURL(ctx, TestSite)
 	assert.NoError(t, err)
-	require.NotEmpty(t, ctx.URLs)
-	assert.True(t, ctx.URLs[TestSite])
+	require.NotEmpty(t, u)
+	assert.Equal(t, u, TestSite)
 }
