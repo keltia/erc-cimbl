@@ -140,11 +140,13 @@ func openZipfile(ctx *Context, file string) (string, error) {
 }
 
 // handleSingleFile creates a tempdir and dispatch csv/zip files to handler.
-func handleSingleFile(ctx *Context, file string) (err error) {
+func handleSingleFile(ctx *Context, file string) (*Results, error) {
+	res := NewResults()
+
 	// Look at the file and whatever might be inside (and decrypt/unzip/…)
 	r, err := openFile(ctx, file)
 	if err != nil {
-		return errors.Wrap(err, "openFile")
+		return res, errors.Wrap(err, "openFile")
 	}
 
 	allLines := csvplus.FromReader(r).SelectColumns("type", "value")
@@ -154,7 +156,7 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 			csvplus.Like(csvplus.Row{"type": "filename|sha1"}))).
 		ToRows()
 	if err != nil {
-		return errors.Wrapf(err, "reading from %s", file)
+		return res, errors.Wrapf(err, "reading from %s", file)
 	}
 
 	for _, row := range rows {
@@ -164,23 +166,30 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 		switch rt {
 		case "filename":
 			if !fNoPaths {
-				handlePath(ctx, entryToPath(row["value"]))
+				p := handlePath(ctx, entryToPath(row["value"]))
+				if p != "" {
+					res.Add("path", p)
+				}
 			}
 		case "url":
 			if !fNoURLs {
-				err = handleURL(ctx, row["value"])
+				u, err := handleURL(ctx, row["value"])
 				if err != nil {
 					log.Printf("error(%s): %s", row["value"], err.Error())
+					continue
 				}
+				res.Add("url", u)
+
 			}
 		}
 	}
-	return nil
+	return res, nil
 }
 
 // handleAllFiles processes a list of files
-func handleAllFiles(ctx *Context, files []string) error {
+func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 	// For all files on the CLI
+	res := NewResults()
 	for _, file := range files {
 		if checkFilename(file) {
 			verbose("Checking %s…\n", file)
@@ -189,29 +198,33 @@ func handleAllFiles(ctx *Context, files []string) error {
 			err := ctx.tempdir.Run(func() error {
 				var err error
 
-				if err = handleSingleFile(ctx, nfile); err != nil {
+				r, err := handleSingleFile(ctx, nfile)
+				if err != nil {
 					log.Printf("error reading %s: %v", nfile, err)
 					return err
 				}
+				res.Merge(r)
 				ctx.files = append(ctx.files, filepath.Base(nfile))
 				return nil
 			})
 			if err != nil {
 				log.Printf("got error %v for %s", err, file)
+				continue
 			}
 		} else {
 			if strings.HasPrefix(file, "http:") {
 				if !fNoURLs {
-					err := handleURL(ctx, file)
+					u, err := handleURL(ctx, file)
 					if err != nil {
 						log.Printf("error checking %s: %v", file, err)
 						continue
 					}
+					res.Add("url", u)
 				}
 			} else {
 				verbose("Ignoring %s…", file)
 			}
 		}
 	}
-	return nil
+	return res, nil
 }

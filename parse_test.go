@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -111,7 +112,7 @@ func TestReadCSVNone(t *testing.T) {
 func TestParseCSVNone(t *testing.T) {
 	file := "/noneexistent"
 	ctx := &Context{}
-	err := handleSingleFile(ctx, file)
+	_, err := handleSingleFile(ctx, file)
 
 	assert.Error(t, err)
 }
@@ -154,10 +155,10 @@ func TestHandleCSV(t *testing.T) {
 	gock.InterceptClient(ctx.Client)
 	defer gock.RestoreClient(ctx.Client)
 
-	err = handleSingleFile(ctx, file)
+	res, err := handleSingleFile(ctx, file)
 	assert.NoError(t, err)
-	assert.Equal(t, realPaths, ctx.Paths)
-	assert.Equal(t, realURLs, ctx.URLs)
+	assert.Equal(t, realPaths, res.Paths)
+	assert.Equal(t, realURLs, res.URLs)
 }
 
 func TestHandleCSVVerbose(t *testing.T) {
@@ -200,10 +201,10 @@ func TestHandleCSVVerbose(t *testing.T) {
 	gock.InterceptClient(ctx.Client)
 	defer gock.RestoreClient(ctx.Client)
 
-	err = handleSingleFile(ctx, file)
+	res, err := handleSingleFile(ctx, file)
 	assert.NoError(t, err, "no error")
-	assert.Equal(t, realPaths, ctx.Paths, "should be equal")
-	assert.Equal(t, realURLs, ctx.URLs, "should be equal")
+	assert.Equal(t, realPaths, res.Paths)
+	assert.Equal(t, realURLs, res.URLs)
 }
 
 func TestOpenZIPFile(t *testing.T) {
@@ -286,12 +287,12 @@ func TestHandleSingleFile(t *testing.T) {
 	defer gock.RestoreClient(ctx.Client)
 
 	file := "testdata/CIMBL-0666-CERTS.csv"
-	err = handleSingleFile(ctx, file)
+	res, err := handleSingleFile(ctx, file)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, ctx.Paths)
-	assert.NotEmpty(t, ctx.URLs)
-	assert.Equal(t, realPaths, ctx.Paths, "should be equal")
-	assert.Equal(t, realURLs, ctx.URLs, "should be equal")
+	assert.NotEmpty(t, res.Paths)
+	assert.NotEmpty(t, res.URLs)
+	assert.Equal(t, realPaths, res.Paths)
+	assert.Equal(t, realURLs, res.URLs)
 }
 
 func TestHandleSingleFile_Transport(t *testing.T) {
@@ -321,12 +322,12 @@ func TestHandleSingleFile_Transport(t *testing.T) {
 	ctx.Client = &http.Client{Transport: nil, Timeout: 10 * time.Second}
 
 	file := "testdata/CIMBL-0666-CERTS.csv"
-	err = handleSingleFile(ctx, file)
+	res, err := handleSingleFile(ctx, file)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, ctx.Paths)
-	assert.Empty(t, ctx.URLs)
-	assert.EqualValues(t, realPaths, ctx.Paths)
-	assert.EqualValues(t, realURLs, ctx.URLs)
+	assert.NotEmpty(t, res.Paths)
+	assert.Empty(t, res.URLs)
+	assert.EqualValues(t, realPaths, res.Paths)
+	assert.EqualValues(t, realURLs, res.URLs)
 }
 
 func TestHandleSingleFile_None(t *testing.T) {
@@ -342,16 +343,15 @@ func TestHandleSingleFile_None(t *testing.T) {
 
 	ctx := &Context{
 		config:  config,
-		Paths:   map[string]bool{},
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
-	file := "testdata/CIMBL-0667-CERTS.csv"
-	err = handleSingleFile(ctx, file)
+	file, _ := filepath.Abs("testdata/CIMBL-0667-CERTS.csv")
+	res, err := handleSingleFile(ctx, file)
 	assert.Error(t, err)
-	assert.Empty(t, ctx.Paths)
-	assert.Empty(t, ctx.URLs)
+	require.NotNil(t, res)
+	assert.Empty(t, res.Paths)
+	assert.Empty(t, res.URLs)
 }
 
 func TestHandleAllFiles_None(t *testing.T) {
@@ -360,8 +360,9 @@ func TestHandleAllFiles_None(t *testing.T) {
 		URLs:  map[string]bool{},
 	}
 
-	err := handleAllFiles(ctx, nil)
+	res, err := handleAllFiles(ctx, nil)
 	assert.NoError(t, err)
+	assert.Empty(t, res.URLs)
 }
 
 func TestHandleAllFiles_Null(t *testing.T) {
@@ -370,8 +371,9 @@ func TestHandleAllFiles_Null(t *testing.T) {
 		URLs:  map[string]bool{},
 	}
 
-	err := handleAllFiles(ctx, []string{"/nonexistent"})
+	res, err := handleAllFiles(ctx, []string{"/nonexistent"})
 	assert.NoError(t, err)
+	assert.Empty(t, res.URLs)
 }
 
 func TestHandleAllFiles_SingleBad(t *testing.T) {
@@ -385,8 +387,9 @@ func TestHandleAllFiles_SingleBad(t *testing.T) {
 		tempdir: snd,
 	}
 
-	err = handleAllFiles(ctx, []string{"testdata/CIMBL-0667-CERTS.csv"})
+	res, err := handleAllFiles(ctx, []string{"testdata/CIMBL-0667-CERTS.csv"})
 	assert.NoError(t, err)
+	assert.Empty(t, res.URLs)
 }
 
 func TestHandleAllFiles_SingleBad2(t *testing.T) {
@@ -400,8 +403,9 @@ func TestHandleAllFiles_SingleBad2(t *testing.T) {
 		tempdir: snd,
 	}
 
-	err = handleAllFiles(ctx, []string{"http://localhost/foo.php"})
+	res, err := handleAllFiles(ctx, []string{"http://localhost/foo.php"})
 	assert.NoError(t, err)
+	assert.Empty(t, res.URLs)
 }
 
 func TestHandleAllFiles_OneFile(t *testing.T) {
@@ -448,13 +452,13 @@ func TestHandleAllFiles_OneFile(t *testing.T) {
 
 	file := "testdata/CIMBL-0666-CERTS.csv"
 
-	err = handleAllFiles(ctx, []string{file})
+	res, err := handleAllFiles(ctx, []string{file})
 	assert.NoError(t, err)
 
-	assert.NotEmpty(t, ctx.Paths)
-	assert.NotEmpty(t, ctx.URLs)
-	assert.Equal(t, realPaths, ctx.Paths)
-	assert.Equal(t, realURLs, ctx.URLs)
+	assert.NotEmpty(t, res.Paths)
+	assert.NotEmpty(t, res.URLs)
+	assert.EqualValues(t, realPaths, res.Paths)
+	assert.EqualValues(t, realURLs, res.URLs)
 }
 
 func TestHandleAllFiles_OneURL(t *testing.T) {
@@ -496,10 +500,10 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 
 	file := TestSite
 
-	err = handleAllFiles(ctx, []string{file})
+	res, err := handleAllFiles(ctx, []string{file})
 	assert.NoError(t, err)
 
-	assert.Empty(t, ctx.Paths)
-	assert.NotEmpty(t, ctx.URLs)
-	assert.Equal(t, realURLs, ctx.URLs)
+	assert.Empty(t, res.Paths)
+	assert.NotEmpty(t, res.URLs)
+	assert.EqualValues(t, realURLs, res.URLs)
 }
