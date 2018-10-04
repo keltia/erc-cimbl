@@ -68,7 +68,7 @@ type mailVars struct {
 	Files     string
 }
 
-func createMail(ctx *Context) (str string, err error) {
+func createMail(ctx *Context, res *Results) (str string, err error) {
 	var txt bytes.Buffer
 
 	if ctx == nil {
@@ -85,8 +85,8 @@ func createMail(ctx *Context) (str string, err error) {
 		MyName:    MyName,
 		MyVersion: MyVersion,
 		Files:     strings.Join(ctx.files, ", "),
-		Paths:     addPaths(ctx),
-		URLs:      addURLs(ctx),
+		Paths:     addPaths(res),
+		URLs:      addURLs(res),
 	}
 
 	t := template.Must(template.New("mail").Parse(mailTmpl))
@@ -122,9 +122,9 @@ func addURLs(res *Results) string {
 	return txt
 }
 
-func doSendMail(ctx *Context) (err error) {
-	if len(ctx.Paths) != 0 || len(ctx.URLs) != 0 {
-		mailText, err := createMail(ctx)
+func doSendMail(ctx *Context, res *Results) (err error) {
+	if len(res.Paths) != 0 || len(res.URLs) != 0 {
+		mailText, err := createMail(ctx, res)
 		if err != nil {
 			return errors.Wrap(err, "createMail")
 		}
