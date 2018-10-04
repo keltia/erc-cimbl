@@ -112,10 +112,11 @@ func main() {
 	}
 	defer ctx.tempdir.Cleanup()
 
-	err = handleAllFiles(ctx, flag.Args())
+	res, err := handleAllFiles(ctx, flag.Args())
 	if err != nil {
 		log.Fatalf("error processing files: %v", err)
 	}
+	verbose("res=%v", res)
 
 	// Do something with the results
 	if err := doSendMail(ctx); err != nil {
