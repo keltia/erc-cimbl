@@ -21,18 +21,18 @@ func TestCreateMailNilConfig(t *testing.T) {
 }
 
 func TestAddPaths(t *testing.T) {
-	ctx := &Context{Paths: map[string]bool{"foo.docx": true}}
+	results := &Results{Paths: map[string]bool{"foo.docx": true}}
 
 	res := fmt.Sprintf("%s  %s\n", pathsTmpl, "foo.docx")
-	str := addPaths(ctx)
+	str := addPaths(results)
 	assert.Equal(t, res, str, "should be equal")
 }
 
 func TestAddURLsBlock(t *testing.T) {
-	ctx := &Context{URLs: map[string]bool{"http://example.com/malware": true}}
+	results := &Results{URLs: map[string]bool{"http://example.com/malware": true}}
 
 	res := fmt.Sprintf("%s  %s\n", urlsTmpl, "http://example.com/malware")
-	str := addURLs(ctx)
+	str := addURLs(results)
 	assert.Equal(t, res, str, "should be equal")
 
 }

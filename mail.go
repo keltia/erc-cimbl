@@ -94,13 +94,13 @@ func createMail(ctx *Context) (str string, err error) {
 	return txt.String(), err
 }
 
-func addPaths(ctx *Context) string {
+func addPaths(res *Results) string {
 	var txt string
 
 	if !fNoPaths {
-		if len(ctx.Paths) != 0 {
+		if len(res.Paths) != 0 {
 			txt = fmt.Sprintf("%s", pathsTmpl)
-			for k := range ctx.Paths {
+			for k := range res.Paths {
 				txt = fmt.Sprintf("%s  %s\n", txt, k)
 			}
 		}
@@ -108,13 +108,13 @@ func addPaths(ctx *Context) string {
 	return txt
 }
 
-func addURLs(ctx *Context) string {
+func addURLs(res *Results) string {
 	var txt string
 
 	if !fNoURLs {
-		if len(ctx.URLs) != 0 {
+		if len(res.URLs) != 0 {
 			txt = fmt.Sprintf("%s", urlsTmpl)
-			for k, _ := range ctx.URLs {
+			for k, _ := range res.URLs {
 				txt = fmt.Sprintf("%s  %s\n", txt, k)
 			}
 		}
