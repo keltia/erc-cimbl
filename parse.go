@@ -79,25 +79,25 @@ func openFile(ctx *Context, file string) (r io.ReadCloser, err error) {
 }
 
 // readCSV reads the first csv in the zip file and copy into a temp file
-func readCSV(ctx *Context, fn *zip.File) (file string) {
+func readCSV(ctx *Context, fn *zip.File) (string, error) {
 	sandbox := ctx.tempdir
 
 	if fn == nil {
-		return ""
+		return "", fmt.Errorf("nil fn")
 	}
 
 	verbose("found %s", fn.Name)
 	// Open the CSV stream
 	fh, err := fn.Open()
 	if err != nil {
-		log.Fatalf("unable to extract %s", fn.Name)
+		return "", errors.Wrapf(err, "unable to extract %s", fn.Name)
 	}
 
 	myfile := filepath.Join(sandbox.Cwd(), fn.Name)
 	// Create our temp file
 	ours, err := os.Create(myfile)
 	if err != nil {
-		log.Fatalf("unable to create %s in %s: %v", fn.Name, sandbox, err)
+		return "", errors.Wrapf(err, "unable to create %s in %s", fn.Name, sandbox)
 	}
 	defer ours.Close()
 
@@ -106,10 +106,9 @@ func readCSV(ctx *Context, fn *zip.File) (file string) {
 	// copy all the bits over
 	_, err = io.Copy(ours, fh)
 	if err != nil {
-		log.Fatalf("unable to write %s in %s: %v", fn.Name, sandbox, err)
+		return "", errors.Wrapf(err, "unable to write %s in %s", fn.Name, sandbox)
 	}
-	file = filepath.Join(sandbox.Cwd(), fn.Name)
-	return
+	return filepath.Join(sandbox.Cwd(), fn.Name), nil
 }
 
 // openZipfile extracts the first csv file out of he given zip.
@@ -129,12 +128,12 @@ func openZipfile(ctx *Context, file string) (string, error) {
 		if path.Ext(fn.Name) == ".csv" ||
 			path.Ext(fn.Name) == ".CSV" {
 
-			file = readCSV(ctx, fn)
+			file, err = readCSV(ctx, fn)
 			break
 		}
 	}
-	if file == "" {
-		return "", fmt.Errorf("no csv or unreadable")
+	if err != nil {
+		return "", errors.Wrap(err, "no csv or unreadable")
 	}
 	return file, nil
 }

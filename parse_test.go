@@ -105,7 +105,8 @@ func TestReadCSVNone(t *testing.T) {
 		tempdir: snd,
 	}
 
-	path := readCSV(ctx, nil)
+	path, err := readCSV(ctx, nil)
+	assert.Error(t, err)
 	assert.Empty(t, path)
 }
 
