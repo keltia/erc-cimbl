@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/zip"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -107,6 +108,25 @@ func TestReadCSVNone(t *testing.T) {
 
 	path, err := readCSV(ctx, nil)
 	assert.Error(t, err)
+	assert.Empty(t, path)
+}
+
+func TestReadCSV_Bad(t *testing.T) {
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		tempdir: snd,
+	}
+
+	fh := zip.FileHeader{Name: "foo"}
+	zip := &zip.File{
+		FileHeader: fh,
+	}
+	path := ""
+	assert.Panics(t, func() { path, err = readCSV(ctx, zip) })
+	//path, err := readCSV(ctx, zip)
 	assert.Empty(t, path)
 }
 
@@ -236,6 +256,37 @@ func TestOpenZIPFile_None(t *testing.T) {
 	}
 
 	file := "/nonexistent"
+	fn, err := openZipfile(ctx, file)
+	assert.Error(t, err)
+	assert.Empty(t, fn)
+}
+
+func TestOpenZIPFile_NoCSV(t *testing.T) {
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	ctx := &Context{
+		config: config,
+	}
+
+	file := "testdata/CIMBL-0668-CERTS.zip"
+	fn, err := openZipfile(ctx, file)
+	assert.Error(t, err)
+	assert.Empty(t, fn)
+}
+
+func TestOpenZIPFile_BadCSV(t *testing.T) {
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	ctx := &Context{
+		config: config,
+	}
+
+	file := "testdata/CIMBL-0668-CERTS.zip"
+	ctx.tempdir = &sandbox.Dir{}
 	fn, err := openZipfile(ctx, file)
 	assert.Error(t, err)
 	assert.Empty(t, fn)
