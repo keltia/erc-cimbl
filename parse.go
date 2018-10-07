@@ -113,6 +113,7 @@ func readCSV(ctx *Context, fn *zip.File) (string, error) {
 
 // openZipfile extracts the first csv file out of he given zip.
 func openZipfile(ctx *Context, file string) (string, error) {
+	found := false
 
 	zfh, err := zip.OpenReader(file)
 	if err != nil {
@@ -129,11 +130,15 @@ func openZipfile(ctx *Context, file string) (string, error) {
 			path.Ext(fn.Name) == ".CSV" {
 
 			file, err = readCSV(ctx, fn)
+			found = true
 			break
 		}
 	}
+	if !found {
+		return "", fmt.Errorf("no csv found")
+	}
 	if err != nil {
-		return "", errors.Wrap(err, "no csv or unreadable")
+		return "", errors.Wrap(err, "csv unreadable")
 	}
 	return file, nil
 }
