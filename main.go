@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/keltia/archive"
 	"github.com/keltia/proxy"
 	"github.com/keltia/sandbox"
 )
@@ -16,7 +17,7 @@ var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.6.0"
+	MyVersion = "0.7.0"
 
 	fDebug   bool
 	fDoMail  bool
@@ -33,7 +34,6 @@ type Context struct {
 	Client    *http.Client
 	proxyauth string
 	mail      MailSender
-	gpg       Decrypter
 }
 
 func init() {
@@ -73,7 +73,6 @@ func setup() *Context {
 	ctx := &Context{
 		config: config,
 		mail:   SMTPMailSender{},
-		gpg:    Gpgme{},
 	}
 
 	proxyauth, err := proxy.SetupProxyAuth()
@@ -95,7 +94,7 @@ func main() {
 
 	ctx := setup()
 
-	verbose("%s/%s", MyName, MyVersion)
+	verbose("%s/%s Archive/%s", MyName, MyVersion, archive.Version())
 
 	if (fNoURLs && fNoPaths) || flag.NArg() == 0 {
 		log.Println("Nothing to do!")
