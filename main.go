@@ -33,7 +33,6 @@ type Context struct {
 	Client    *http.Client
 	proxyauth string
 	mail      MailSender
-	gpg       Decrypter
 }
 
 func init() {
@@ -73,7 +72,6 @@ func setup() *Context {
 	ctx := &Context{
 		config: config,
 		mail:   SMTPMailSender{},
-		gpg:    Gpgme{},
 	}
 
 	proxyauth, err := proxy.SetupProxyAuth()
