@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/keltia/archive"
 	"github.com/keltia/proxy"
 	"github.com/keltia/sandbox"
 )
@@ -93,7 +94,7 @@ func main() {
 
 	ctx := setup()
 
-	verbose("%s/%s", MyName, MyVersion)
+	verbose("%s/%s Archive/%s", MyName, MyVersion, archive.Version())
 
 	if (fNoURLs && fNoPaths) || flag.NArg() == 0 {
 		log.Println("Nothing to do!")
