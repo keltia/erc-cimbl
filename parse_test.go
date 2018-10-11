@@ -1,11 +1,10 @@
 package main
 
 import (
-	"archive/zip"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -16,119 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestOpenFileBad(t *testing.T) {
-	file := "foo.bar"
-	ctx := &Context{}
-	fn, err := openFile(ctx, file)
-
-	assert.Empty(t, fn)
-	assert.Error(t, err)
-	assert.Nil(t, fn)
-}
-
-func TestOpenFileGood(t *testing.T) {
-	file := "testdata/CIMBL-0666-CERTS.csv"
-	ctx := &Context{}
-
-	fn, err := openFile(ctx, file)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, fn)
-}
-
-func TestOpenZIPFileGood(t *testing.T) {
-	file := "testdata/CIMBL-0666-CERTS.zip"
-
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
-
-	ctx := &Context{
-		tempdir: snd,
-	}
-
-	fn, err := openFile(ctx, file)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, fn)
-	assert.IsType(t, (*os.File)(nil), fn)
-}
-
-func TestOpenZIPFileBad(t *testing.T) {
-	file := "testdata/CIMBL-0666-CERTS.zip"
-
-	require.NoError(t, os.Chmod(file, 000))
-
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
-
-	ctx := &Context{
-		tempdir: snd,
-	}
-
-	fn, err := openFile(ctx, file)
-
-	assert.Error(t, err)
-	assert.Empty(t, fn)
-
-	require.NoError(t, os.Chmod(file, 0644))
-}
-
-func TestOpenASCFileBad(t *testing.T) {
-	file := "testdata/CIMBL-0666-CERTS.zip.asc"
-
-	require.NoError(t, os.Chmod(file, 000))
-
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
-
-	ctx := &Context{
-		tempdir: snd,
-	}
-
-	fn, err := openFile(ctx, file)
-
-	assert.Error(t, err)
-	assert.Empty(t, fn)
-
-	require.NoError(t, os.Chmod(file, 0644))
-}
-
-func TestReadCSVNone(t *testing.T) {
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
-
-	ctx := &Context{
-		tempdir: snd,
-	}
-
-	path, err := readCSV(ctx, nil)
-	assert.Error(t, err)
-	assert.Empty(t, path)
-}
-
-func TestReadCSV_Bad(t *testing.T) {
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
-
-	ctx := &Context{
-		tempdir: snd,
-	}
-
-	fh := zip.FileHeader{Name: "foo"}
-	zip := &zip.File{
-		FileHeader: fh,
-	}
-	path := ""
-	assert.Panics(t, func() { path, err = readCSV(ctx, zip) })
-	//path, err := readCSV(ctx, zip)
-	assert.Empty(t, path)
-}
 
 func TestParseCSVNone(t *testing.T) {
 	file := "/noneexistent"
@@ -151,6 +37,7 @@ func TestHandleCSV(t *testing.T) {
 		config: config,
 	}
 
+	fDebug = true
 	realPaths := map[string]bool{
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
@@ -178,6 +65,7 @@ func TestHandleCSV(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, realPaths, res.Paths)
 	assert.Equal(t, realURLs, res.URLs)
+	fDebug = false
 }
 
 func TestHandleCSVVerbose(t *testing.T) {
@@ -224,72 +112,45 @@ func TestHandleCSVVerbose(t *testing.T) {
 	assert.Equal(t, realURLs, res.URLs)
 }
 
-func TestOpenZIPFile(t *testing.T) {
-	baseDir = "testdata"
-	config, err := loadConfig()
-	assert.NoError(t, err)
+func TestExtractZipFrom_None(t *testing.T) {
+	file := "/noneexistent"
+	base, err := extractZipFrom(file)
+	assert.Error(t, err)
+	assert.Empty(t, base)
+}
 
-	fVerbose = true
+func TestExtractZipFrom(t *testing.T) {
+	file := "/noneexistent"
+	base, err := extractZipFrom(file)
+	assert.Error(t, err)
+	assert.Empty(t, base)
+}
 
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
+func TestReadFile_None(t *testing.T) {
+	file := "nonexistent.txt"
+	buf, err := readFile(file)
+	assert.Error(t, err)
+	assert.Empty(t, buf)
+}
 
-	ctx := &Context{
-		config:  config,
-		tempdir: snd,
-	}
+func TestReadFile_NoCSV(t *testing.T) {
+	file := "testdata/CIMBL-0668-CERTS.zip"
+	buf, err := readFile(file)
+	assert.Error(t, err)
+	assert.Empty(t, buf)
+}
 
+func TestReadFile_Good(t *testing.T) {
 	file := "testdata/CIMBL-0666-CERTS.zip"
-	fn, err := openZipfile(ctx, file)
+	buf, err := readFile(file)
 	assert.NoError(t, err)
-	assert.Equal(t, snd.Cwd()+"/CIMBL-0666-CERTS.csv", fn)
-}
+	assert.NotEmpty(t, buf)
 
-func TestOpenZIPFile_None(t *testing.T) {
-	baseDir = "testdata"
-	config, err := loadConfig()
-	assert.NoError(t, err)
+	b, err := ioutil.ReadFile("testdata/CIMBL-0666-CERTS.csv")
+	require.NoError(t, err)
+	require.NotEmpty(t, b)
 
-	ctx := &Context{
-		config: config,
-	}
-
-	file := "/nonexistent"
-	fn, err := openZipfile(ctx, file)
-	assert.Error(t, err)
-	assert.Empty(t, fn)
-}
-
-func TestOpenZIPFile_NoCSV(t *testing.T) {
-	baseDir = "testdata"
-	config, err := loadConfig()
-	assert.NoError(t, err)
-
-	ctx := &Context{
-		config: config,
-	}
-
-	file := "testdata/CIMBL-0668-CERTS.zip"
-	fn, err := openZipfile(ctx, file)
-	assert.Error(t, err)
-	assert.Empty(t, fn)
-}
-
-func TestOpenZIPFile_BadCSV(t *testing.T) {
-	baseDir = "testdata"
-	config, err := loadConfig()
-	assert.NoError(t, err)
-
-	ctx := &Context{
-		config: config,
-	}
-
-	file := "testdata/CIMBL-0668-CERTS.zip"
-	ctx.tempdir = &sandbox.Dir{}
-	fn, err := openZipfile(ctx, file)
-	assert.Error(t, err)
-	assert.Empty(t, fn)
+	assert.Equal(t, string(b), buf.String())
 }
 
 func TestHandleSingleFile(t *testing.T) {

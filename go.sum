@@ -5,6 +5,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/h2non/gock v1.0.10 h1:EzHYzKKSLN4xk0w193uAy3tp8I3+L1jmaI2Mjg4lCgU=
 github.com/h2non/gock v1.0.10/go.mod h1:CZMcB0Lg5IWnr9bF79pPMg9WeV6WumxQiUJ1UvdO1iE=
+github.com/keltia/archive v0.3.2 h1:goh3Ybwc/+zDD57jwJLrL0BtKI77IABioUDV/G2J5lc=
+github.com/keltia/archive v0.3.2/go.mod h1:lJ2xU+qrA0pWDqAZHIecwj22mmDKwpc+zy8oA3VAAhw=
 github.com/keltia/proxy v0.9.1 h1:fxbpJ5Gn8C+HBhO2JyvJZHIUYkOT0uoYYpREc5OhSVg=
 github.com/keltia/proxy v0.9.1/go.mod h1:nOa+W/1aVASsgmftatmV095z6kbIPLrB8/xWwF2deGI=
 github.com/keltia/sandbox v0.9.2 h1:1ThVN4WzAGCcQa4NRu9DaqFsVj5thZzF7tqtBfr+mHE=
