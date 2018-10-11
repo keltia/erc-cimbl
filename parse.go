@@ -14,32 +14,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-/*
-Fields in the CSV file:
-
-observable_uuid,
-kill_chain,
-type,
-time_start,
-time_end,
-value,
-to_ids,
-blacklist,
-malware_research,
-vuln_mgt,
-indicator_uuid,
-indicator_detect_time,
-indicator_threat_type,
-indicator_threat_level,
-indicator_targeted_domain,
-indicator_start_time,
-indicator_end_time,
-indicator_title
-
-We filter on "type", looking for "url" & "filename".
-
-*/
-
 // These functions assume they are in the sandbox
 
 // openFile looks at the file and give it to openZipfile() if needed
@@ -137,6 +111,32 @@ func openZipfile(ctx *Context, file string) (string, error) {
 	}
 	return file, nil
 }
+
+/*
+Fields in the CSV file:
+
+observable_uuid,
+kill_chain,
+type,
+time_start,
+time_end,
+value,
+to_ids,
+blacklist,
+malware_research,
+vuln_mgt,
+indicator_uuid,
+indicator_detect_time,
+indicator_threat_type,
+indicator_threat_level,
+indicator_targeted_domain,
+indicator_start_time,
+indicator_end_time,
+indicator_title
+
+We filter on "type", looking for "url" & "filename".
+
+*/
 
 // handleSingleFile creates a tempdir and dispatch csv/zip files to handler.
 func handleSingleFile(ctx *Context, file string) (*Results, error) {
