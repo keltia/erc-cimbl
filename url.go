@@ -94,13 +94,13 @@ func sanitize(str string) (out string, err error) {
 	return myurl.String(), err
 }
 
-func handleURL(ctx *Context, str string) error {
+func handleURL(ctx *Context, str string) (string, error) {
 
 	// https URLs will not be blocked, no MITM
 	myurl, err := sanitize(str)
 	if err == ErrHttpsSkip {
 		skipped = append(skipped, str)
-		return nil
+		return "", nil
 	}
 	debug("url=%s", myurl)
 	/*
@@ -108,7 +108,7 @@ func handleURL(ctx *Context, str string) error {
 	*/
 	_, transport := proxy.SetupTransport(myurl)
 	if transport == nil {
-		return fmt.Errorf("SetupTransport")
+		return "", fmt.Errorf("SetupTransport")
 	}
 
 	// It is better to re-use than creating a new one each time
@@ -124,11 +124,11 @@ func handleURL(ctx *Context, str string) error {
 
 	result, err := doCheck(ctx, req)
 	if err != nil {
-		return errors.Wrap(err, "doCheck")
-	}
-	if result == ActionBlock {
-		ctx.URLs[myurl] = true
+		return "", errors.Wrap(err, "doCheck")
 	}
 	verbose("Checking %s: %s", myurl, result)
-	return nil
+	if result == ActionBlock {
+		return myurl, nil
+	}
+	return "", nil
 }

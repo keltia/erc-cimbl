@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -15,103 +16,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestOpenFileBad(t *testing.T) {
-	file := "foo.bar"
-	ctx := &Context{}
-	fn, err := openFile(ctx, file)
-
-	assert.Empty(t, fn)
-	assert.Error(t, err)
-	assert.Nil(t, fn)
-}
-
-func TestOpenFileGood(t *testing.T) {
-	file := "testdata/CIMBL-0666-CERTS.csv"
-	ctx := &Context{}
-
-	fn, err := openFile(ctx, file)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, fn)
-}
-
-func TestOpenZIPFileGood(t *testing.T) {
-	file := "testdata/CIMBL-0666-CERTS.zip"
-
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
-
-	ctx := &Context{
-		tempdir: snd,
-	}
-
-	fn, err := openFile(ctx, file)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, fn)
-	assert.IsType(t, (*os.File)(nil), fn)
-}
-
-func TestOpenZIPFileBad(t *testing.T) {
-	file := "testdata/CIMBL-0666-CERTS.zip"
-
-	require.NoError(t, os.Chmod(file, 000))
-
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
-
-	ctx := &Context{
-		tempdir: snd,
-	}
-
-	fn, err := openFile(ctx, file)
-
-	assert.Error(t, err)
-	assert.Empty(t, fn)
-
-	require.NoError(t, os.Chmod(file, 0644))
-}
-
-func TestOpenASCFileBad(t *testing.T) {
-	file := "testdata/CIMBL-0666-CERTS.zip.asc"
-
-	require.NoError(t, os.Chmod(file, 000))
-
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
-
-	ctx := &Context{
-		tempdir: snd,
-	}
-
-	fn, err := openFile(ctx, file)
-
-	assert.Error(t, err)
-	assert.Empty(t, fn)
-
-	require.NoError(t, os.Chmod(file, 0644))
-}
-
-func TestReadCSVNone(t *testing.T) {
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
-
-	ctx := &Context{
-		tempdir: snd,
-	}
-
-	path := readCSV(ctx, nil)
-	assert.Empty(t, path)
-}
-
 func TestParseCSVNone(t *testing.T) {
 	file := "/noneexistent"
 	ctx := &Context{}
-	err := handleSingleFile(ctx, file)
+	_, err := handleSingleFile(ctx, file)
 
 	assert.Error(t, err)
 }
@@ -127,10 +35,9 @@ func TestHandleCSV(t *testing.T) {
 
 	ctx := &Context{
 		config: config,
-		Paths:  map[string]bool{},
-		URLs:   map[string]bool{},
 	}
 
+	fDebug = true
 	realPaths := map[string]bool{
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
@@ -154,10 +61,11 @@ func TestHandleCSV(t *testing.T) {
 	gock.InterceptClient(ctx.Client)
 	defer gock.RestoreClient(ctx.Client)
 
-	err = handleSingleFile(ctx, file)
+	res, err := handleSingleFile(ctx, file)
 	assert.NoError(t, err)
-	assert.Equal(t, realPaths, ctx.Paths)
-	assert.Equal(t, realURLs, ctx.URLs)
+	assert.Equal(t, realPaths, res.Paths)
+	assert.Equal(t, realURLs, res.URLs)
+	fDebug = false
 }
 
 func TestHandleCSVVerbose(t *testing.T) {
@@ -172,8 +80,6 @@ func TestHandleCSVVerbose(t *testing.T) {
 
 	ctx := &Context{
 		config: config,
-		Paths:  map[string]bool{},
-		URLs:   map[string]bool{},
 	}
 
 	realPaths := map[string]bool{
@@ -200,47 +106,51 @@ func TestHandleCSVVerbose(t *testing.T) {
 	gock.InterceptClient(ctx.Client)
 	defer gock.RestoreClient(ctx.Client)
 
-	err = handleSingleFile(ctx, file)
+	res, err := handleSingleFile(ctx, file)
 	assert.NoError(t, err, "no error")
-	assert.Equal(t, realPaths, ctx.Paths, "should be equal")
-	assert.Equal(t, realURLs, ctx.URLs, "should be equal")
+	assert.Equal(t, realPaths, res.Paths)
+	assert.Equal(t, realURLs, res.URLs)
 }
 
-func TestOpenZIPFile(t *testing.T) {
-	baseDir = "testdata"
-	config, err := loadConfig()
-	assert.NoError(t, err)
-
-	fVerbose = true
-
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
-
-	ctx := &Context{
-		config:  config,
-		tempdir: snd,
-	}
-
-	file := "testdata/CIMBL-0666-CERTS.zip"
-	fn, err := openZipfile(ctx, file)
-	assert.NoError(t, err)
-	assert.Equal(t, snd.Cwd()+"/CIMBL-0666-CERTS.csv", fn)
-}
-
-func TestOpenZIPFile_None(t *testing.T) {
-	baseDir = "testdata"
-	config, err := loadConfig()
-	assert.NoError(t, err)
-
-	ctx := &Context{
-		config: config,
-	}
-
-	file := "/nonexistent"
-	fn, err := openZipfile(ctx, file)
+func TestExtractZipFrom_None(t *testing.T) {
+	file := "/noneexistent"
+	base, err := extractZipFrom(file)
 	assert.Error(t, err)
-	assert.Empty(t, fn)
+	assert.Empty(t, base)
+}
+
+func TestExtractZipFrom(t *testing.T) {
+	file := "/noneexistent"
+	base, err := extractZipFrom(file)
+	assert.Error(t, err)
+	assert.Empty(t, base)
+}
+
+func TestReadFile_None(t *testing.T) {
+	file := "nonexistent.txt"
+	buf, err := readFile(file)
+	assert.Error(t, err)
+	assert.Empty(t, buf)
+}
+
+func TestReadFile_NoCSV(t *testing.T) {
+	file := "testdata/CIMBL-0668-CERTS.zip"
+	buf, err := readFile(file)
+	assert.Error(t, err)
+	assert.Empty(t, buf)
+}
+
+func TestReadFile_Good(t *testing.T) {
+	file := "testdata/CIMBL-0666-CERTS.zip"
+	buf, err := readFile(file)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, buf)
+
+	b, err := ioutil.ReadFile("testdata/CIMBL-0666-CERTS.csv")
+	require.NoError(t, err)
+	require.NotEmpty(t, b)
+
+	assert.Equal(t, string(b), buf.String())
 }
 
 func TestHandleSingleFile(t *testing.T) {
@@ -263,8 +173,6 @@ func TestHandleSingleFile(t *testing.T) {
 
 	ctx := &Context{
 		config:  config,
-		Paths:   map[string]bool{},
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
@@ -286,12 +194,12 @@ func TestHandleSingleFile(t *testing.T) {
 	defer gock.RestoreClient(ctx.Client)
 
 	file := "testdata/CIMBL-0666-CERTS.csv"
-	err = handleSingleFile(ctx, file)
+	res, err := handleSingleFile(ctx, file)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, ctx.Paths)
-	assert.NotEmpty(t, ctx.URLs)
-	assert.Equal(t, realPaths, ctx.Paths, "should be equal")
-	assert.Equal(t, realURLs, ctx.URLs, "should be equal")
+	assert.NotEmpty(t, res.Paths)
+	assert.NotEmpty(t, res.URLs)
+	assert.Equal(t, realPaths, res.Paths)
+	assert.Equal(t, realURLs, res.URLs)
 }
 
 func TestHandleSingleFile_Transport(t *testing.T) {
@@ -312,8 +220,6 @@ func TestHandleSingleFile_Transport(t *testing.T) {
 
 	ctx := &Context{
 		config:  config,
-		Paths:   map[string]bool{},
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
@@ -321,12 +227,12 @@ func TestHandleSingleFile_Transport(t *testing.T) {
 	ctx.Client = &http.Client{Transport: nil, Timeout: 10 * time.Second}
 
 	file := "testdata/CIMBL-0666-CERTS.csv"
-	err = handleSingleFile(ctx, file)
+	res, err := handleSingleFile(ctx, file)
 	assert.NoError(t, err)
-	assert.NotEmpty(t, ctx.Paths)
-	assert.Empty(t, ctx.URLs)
-	assert.EqualValues(t, realPaths, ctx.Paths)
-	assert.EqualValues(t, realURLs, ctx.URLs)
+	assert.NotEmpty(t, res.Paths)
+	assert.Empty(t, res.URLs)
+	assert.EqualValues(t, realPaths, res.Paths)
+	assert.EqualValues(t, realURLs, res.URLs)
 }
 
 func TestHandleSingleFile_None(t *testing.T) {
@@ -342,36 +248,31 @@ func TestHandleSingleFile_None(t *testing.T) {
 
 	ctx := &Context{
 		config:  config,
-		Paths:   map[string]bool{},
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
-	file := "testdata/CIMBL-0667-CERTS.csv"
-	err = handleSingleFile(ctx, file)
+	file, _ := filepath.Abs("testdata/CIMBL-0667-CERTS.csv")
+	res, err := handleSingleFile(ctx, file)
 	assert.Error(t, err)
-	assert.Empty(t, ctx.Paths)
-	assert.Empty(t, ctx.URLs)
+	require.NotNil(t, res)
+	assert.Empty(t, res.Paths)
+	assert.Empty(t, res.URLs)
 }
 
 func TestHandleAllFiles_None(t *testing.T) {
-	ctx := &Context{
-		Paths: map[string]bool{},
-		URLs:  map[string]bool{},
-	}
+	ctx := &Context{}
 
-	err := handleAllFiles(ctx, nil)
+	res, err := handleAllFiles(ctx, nil)
 	assert.NoError(t, err)
+	assert.Empty(t, res.URLs)
 }
 
 func TestHandleAllFiles_Null(t *testing.T) {
-	ctx := &Context{
-		Paths: map[string]bool{},
-		URLs:  map[string]bool{},
-	}
+	ctx := &Context{}
 
-	err := handleAllFiles(ctx, []string{"/nonexistent"})
+	res, err := handleAllFiles(ctx, []string{"/nonexistent"})
 	assert.NoError(t, err)
+	assert.Empty(t, res.URLs)
 }
 
 func TestHandleAllFiles_SingleBad(t *testing.T) {
@@ -380,13 +281,12 @@ func TestHandleAllFiles_SingleBad(t *testing.T) {
 	defer snd.Cleanup()
 
 	ctx := &Context{
-		Paths:   map[string]bool{},
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
-	err = handleAllFiles(ctx, []string{"testdata/CIMBL-0667-CERTS.csv"})
+	res, err := handleAllFiles(ctx, []string{"testdata/CIMBL-0667-CERTS.csv"})
 	assert.NoError(t, err)
+	assert.Empty(t, res.URLs)
 }
 
 func TestHandleAllFiles_SingleBad2(t *testing.T) {
@@ -395,13 +295,12 @@ func TestHandleAllFiles_SingleBad2(t *testing.T) {
 	defer snd.Cleanup()
 
 	ctx := &Context{
-		Paths:   map[string]bool{},
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
-	err = handleAllFiles(ctx, []string{"http://localhost/foo.php"})
+	res, err := handleAllFiles(ctx, []string{"http://localhost/foo.php"})
 	assert.NoError(t, err)
+	assert.Empty(t, res.URLs)
 }
 
 func TestHandleAllFiles_OneFile(t *testing.T) {
@@ -425,8 +324,6 @@ func TestHandleAllFiles_OneFile(t *testing.T) {
 
 	ctx := &Context{
 		config:  config,
-		Paths:   map[string]bool{},
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
@@ -448,13 +345,13 @@ func TestHandleAllFiles_OneFile(t *testing.T) {
 
 	file := "testdata/CIMBL-0666-CERTS.csv"
 
-	err = handleAllFiles(ctx, []string{file})
+	res, err := handleAllFiles(ctx, []string{file})
 	assert.NoError(t, err)
 
-	assert.NotEmpty(t, ctx.Paths)
-	assert.NotEmpty(t, ctx.URLs)
-	assert.Equal(t, realPaths, ctx.Paths)
-	assert.Equal(t, realURLs, ctx.URLs)
+	assert.NotEmpty(t, res.Paths)
+	assert.NotEmpty(t, res.URLs)
+	assert.EqualValues(t, realPaths, res.Paths)
+	assert.EqualValues(t, realURLs, res.URLs)
 }
 
 func TestHandleAllFiles_OneURL(t *testing.T) {
@@ -474,7 +371,6 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 
 	ctx := &Context{
 		config:  config,
-		URLs:    map[string]bool{},
 		tempdir: snd,
 	}
 
@@ -496,10 +392,10 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 
 	file := TestSite
 
-	err = handleAllFiles(ctx, []string{file})
+	res, err := handleAllFiles(ctx, []string{file})
 	assert.NoError(t, err)
 
-	assert.Empty(t, ctx.Paths)
-	assert.NotEmpty(t, ctx.URLs)
-	assert.Equal(t, realURLs, ctx.URLs)
+	assert.Empty(t, res.Paths)
+	assert.NotEmpty(t, res.URLs)
+	assert.EqualValues(t, realURLs, res.URLs)
 }

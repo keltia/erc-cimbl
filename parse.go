@@ -1,18 +1,83 @@
 package main
 
 import (
-	"archive/zip"
-	"fmt"
-	"io"
+	"bytes"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/keltia/archive"
 	"github.com/maxim2266/csvplus"
 	"github.com/pkg/errors"
 )
+
+// These functions assume they are in the sandbox
+
+// Given an asc/gpg file, create a temp file with uncrypted content
+// Assumes it is inside a sandbox
+func extractZipFrom(file string) (string, error) {
+	debug("reading %s", file)
+
+	// Process the file (gpg encrypted zip file)
+	a, err := archive.New(file)
+	if err != nil {
+		return "", errors.Wrap(err, "archive/new(asc)")
+	}
+
+	unc, err := a.Extract(".zip")
+	if err != nil {
+		return "", errors.Wrap(err, "extract")
+	}
+
+	base := filepath.Base(file)
+
+	debug("creating %s.zip", base+".zip")
+
+	// Create a temp file
+	zipfh, err := os.Create(base + ".zip")
+	if err != nil {
+		return "", errors.Wrap(err, "create/temp")
+	}
+
+	n, err := zipfh.Write(unc)
+	if err != nil {
+		return "", errors.Wrap(err, "buffer/write")
+	}
+
+	if n != len(unc) {
+		return "", errors.Wrap(err, "short read")
+	}
+	err = zipfh.Close()
+	return base + ".zip", err
+}
+
+func readFile(base string) (*bytes.Buffer, error) {
+	var buf bytes.Buffer
+
+	debug("openzip %s", base)
+
+	// Here buf is the decrypted arc or plain file
+	arc, err := archive.New(base)
+	if err != nil {
+		return nil, errors.Wrap(err, "archive/new")
+	}
+
+	unc, err := arc.Extract(".csv")
+	if err != nil {
+		return nil, errors.Wrap(err, "extract(csv)")
+	}
+
+	n, err := buf.Write(unc)
+	if err != nil {
+		return nil, errors.Wrap(err, "buffer/write")
+	}
+
+	if n != buf.Len() {
+		return nil, errors.Wrap(err, "short read")
+	}
+	return &buf, nil
+}
 
 /*
 Fields in the CSV file:
@@ -40,121 +105,46 @@ We filter on "type", looking for "url" & "filename".
 
 */
 
-// These functions assume they are in the sandbox
-
-// openFile looks at the file and give it to openZipfile() if needed
-func openFile(ctx *Context, file string) (r io.ReadCloser, err error) {
-	myfile := file
-
-	debug("file is %s", file)
-	_, err = os.Stat(file)
-	if err != nil {
-		return nil, errors.Wrap(err, "stat")
-	}
-
-	// Decrypt if needed
-	if path.Ext(file) == ".asc" ||
-		path.Ext(file) == ".ASC" {
-		verbose("found encrypted file %s", file)
-		myfile, err = decryptFile(ctx, file)
-		if err != nil {
-			return nil, errors.Wrapf(err, "decryptFile(%s)", file)
-		}
-	} else {
-		verbose("found plain file %s", file)
-	}
-
-	// Next pass, check for zip file
-	if path.Ext(myfile) == ".zip" ||
-		path.Ext(myfile) == ".ZIP" {
-
-		verbose("found zip file %s", myfile)
-
-		myfile, err = openZipfile(ctx, myfile)
-		if err != nil {
-			return nil, errors.Wrap(err, "ENOZIP")
-		}
-	}
-	return os.Open(myfile)
-}
-
-// readCSV reads the first csv in the zip file and copy into a temp file
-func readCSV(ctx *Context, fn *zip.File) (file string) {
-	sandbox := ctx.tempdir
-
-	if fn == nil {
-		return ""
-	}
-
-	verbose("found %s", fn.Name)
-	// Open the CSV stream
-	fh, err := fn.Open()
-	if err != nil {
-		log.Fatalf("unable to extract %s", fn.Name)
-	}
-
-	myfile := filepath.Join(sandbox.Cwd(), fn.Name)
-	// Create our temp file
-	ours, err := os.Create(myfile)
-	if err != nil {
-		log.Fatalf("unable to create %s in %s: %v", fn.Name, sandbox, err)
-	}
-	defer ours.Close()
-
-	debug("created our tempfile %s", myfile)
-
-	// copy all the bits over
-	_, err = io.Copy(ours, fh)
-	if err != nil {
-		log.Fatalf("unable to write %s in %s: %v", fn.Name, sandbox, err)
-	}
-	file = filepath.Join(sandbox.Cwd(), fn.Name)
-	return
-}
-
-// openZipfile extracts the first csv file out of he given zip.
-func openZipfile(ctx *Context, file string) (string, error) {
-
-	zfh, err := zip.OpenReader(file)
-	if err != nil {
-		return "", errors.Wrapf(err, "error opening %s", file)
-	}
-	defer zfh.Close()
-
-	verbose("exploring %s", file)
-
-	for _, fn := range zfh.File {
-		verbose("looking at %s", fn.Name)
-
-		if path.Ext(fn.Name) == ".csv" ||
-			path.Ext(fn.Name) == ".CSV" {
-
-			file = readCSV(ctx, fn)
-			break
-		}
-	}
-	if file == "" {
-		return "", fmt.Errorf("no csv or unreadable")
-	}
-	return file, nil
-}
-
 // handleSingleFile creates a tempdir and dispatch csv/zip files to handler.
-func handleSingleFile(ctx *Context, file string) (err error) {
-	// Look at the file and whatever might be inside (and decrypt/unzip/…)
-	r, err := openFile(ctx, file)
-	if err != nil {
-		return errors.Wrap(err, "openFile")
+func handleSingleFile(ctx *Context, file string) (*Results, error) {
+	var (
+		base string
+		err  error
+	)
+
+	if _, err := os.Stat(file); err != nil {
+		return &Results{}, errors.Wrapf(err, "unknown file %s", file)
 	}
 
-	allLines := csvplus.FromReader(r).SelectColumns("type", "value")
+	res := NewResults()
+
+	ext := strings.ToLower(filepath.Ext(file))
+	base = file
+
+	// Special case for .zip.asc
+	if ext == ".asc" {
+		rbase, err := extractZipFrom(file)
+		if err != nil {
+			return &Results{}, errors.Wrap(err, "extractzip")
+		}
+		base, err = filepath.Abs(rbase)
+		if err != nil {
+			return &Results{}, errors.Wrap(err, "basename")
+		}
+	}
+
+	debug("opening %s", base)
+
+	buf, err := readFile(base)
+
+	allLines := csvplus.FromReader(buf).SelectColumns("type", "value")
 	rows, err := csvplus.Take(allLines).
 		Filter(csvplus.Any(csvplus.Like(csvplus.Row{"type": "url"}),
 			csvplus.Like(csvplus.Row{"type": "filename"}),
 			csvplus.Like(csvplus.Row{"type": "filename|sha1"}))).
 		ToRows()
 	if err != nil {
-		return errors.Wrapf(err, "reading from %s", file)
+		return res, errors.Wrapf(err, "reading from %s", file)
 	}
 
 	for _, row := range rows {
@@ -164,23 +154,30 @@ func handleSingleFile(ctx *Context, file string) (err error) {
 		switch rt {
 		case "filename":
 			if !fNoPaths {
-				handlePath(ctx, entryToPath(row["value"]))
+				p := handlePath(ctx, entryToPath(row["value"]))
+				if p != "" {
+					res.Add("path", p)
+				}
 			}
 		case "url":
 			if !fNoURLs {
-				err = handleURL(ctx, row["value"])
+				u, err := handleURL(ctx, row["value"])
 				if err != nil {
 					log.Printf("error(%s): %s", row["value"], err.Error())
+					continue
 				}
+				res.Add("url", u)
+
 			}
 		}
 	}
-	return nil
+	return res, nil
 }
 
 // handleAllFiles processes a list of files
-func handleAllFiles(ctx *Context, files []string) error {
+func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 	// For all files on the CLI
+	res := NewResults()
 	for _, file := range files {
 		if checkFilename(file) {
 			verbose("Checking %s…\n", file)
@@ -189,29 +186,33 @@ func handleAllFiles(ctx *Context, files []string) error {
 			err := ctx.tempdir.Run(func() error {
 				var err error
 
-				if err = handleSingleFile(ctx, nfile); err != nil {
+				r, err := handleSingleFile(ctx, nfile)
+				if err != nil {
 					log.Printf("error reading %s: %v", nfile, err)
 					return err
 				}
+				res.Merge(r)
 				ctx.files = append(ctx.files, filepath.Base(nfile))
 				return nil
 			})
 			if err != nil {
 				log.Printf("got error %v for %s", err, file)
+				continue
 			}
 		} else {
 			if strings.HasPrefix(file, "http:") {
 				if !fNoURLs {
-					err := handleURL(ctx, file)
+					u, err := handleURL(ctx, file)
 					if err != nil {
 						log.Printf("error checking %s: %v", file, err)
 						continue
 					}
+					res.Add("url", u)
 				}
 			} else {
 				verbose("Ignoring %s…", file)
 			}
 		}
 	}
-	return nil
+	return res, nil
 }

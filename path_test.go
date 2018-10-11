@@ -7,40 +7,29 @@ import (
 )
 
 func TestHandlePath(t *testing.T) {
-	ctx := &Context{
-		Paths: map[string]bool{},
-		URLs:  map[string]bool{},
-	}
-	Plen := len(ctx.Paths)
+	ctx := &Context{}
 
 	path1 := "foo.exe"
-	handlePath(ctx, path1)
-	assert.EqualValues(t, Plen, len(ctx.Paths), "same value")
+	r := handlePath(ctx, path1)
+	assert.Empty(t, r)
 
 	path2 := "foo.docx"
-	handlePath(ctx, path2)
-	assert.EqualValues(t, 1, len(ctx.Paths), "plus one")
-	assert.EqualValues(t, Plen+1, len(ctx.Paths), "plus one")
-	assert.EqualValues(t, true, ctx.Paths[path2], "inserted")
+	r = handlePath(ctx, path2)
+	assert.NotEmpty(t, r)
 }
 
 func TestHandlePathVerbose(t *testing.T) {
-	ctx := &Context{
-		Paths: map[string]bool{},
-		URLs:  map[string]bool{},
-	}
-	Plen := len(ctx.Paths)
+	ctx := &Context{}
 	fVerbose = true
 
 	path1 := "foo.exe"
-	handlePath(ctx, path1)
-	assert.EqualValues(t, Plen, len(ctx.Paths), "same value")
+	r := handlePath(ctx, path1)
+	assert.Empty(t, r)
 
 	path2 := "foo.docx"
-	handlePath(ctx, path2)
-	assert.EqualValues(t, 1, len(ctx.Paths), "plus one")
-	assert.EqualValues(t, Plen+1, len(ctx.Paths), "plus one")
-	assert.EqualValues(t, true, ctx.Paths[path2], "inserted")
+	r = handlePath(ctx, path2)
+	assert.NotEmpty(t, r)
+	fVerbose = false
 }
 
 func TestEntryToPath(t *testing.T) {

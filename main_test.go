@@ -26,8 +26,6 @@ func TestSetup(t *testing.T) {
 	assert.NotNil(t, ctx)
 
 	assert.NotNil(t, ctx.config)
-	assert.Empty(t, ctx.URLs)
-	assert.Empty(t, ctx.Paths)
 	assert.Nil(t, ctx.tempdir)
 }
 
@@ -38,8 +36,6 @@ func TestSetupNone(t *testing.T) {
 	assert.NotNil(t, ctx)
 
 	assert.Empty(t, ctx.config)
-	assert.Empty(t, ctx.URLs)
-	assert.Empty(t, ctx.Paths)
 	assert.Nil(t, ctx.tempdir)
 }
 
@@ -51,8 +47,6 @@ func TestSetupNoneDebug(t *testing.T) {
 	assert.NotNil(t, ctx)
 
 	assert.Empty(t, ctx.config)
-	assert.Empty(t, ctx.URLs)
-	assert.Empty(t, ctx.Paths)
 	assert.Nil(t, ctx.tempdir)
 	assert.True(t, fVerbose)
 
@@ -87,8 +81,6 @@ func TestSetupProxyError(t *testing.T) {
 	assert.NotNil(t, ctx)
 
 	assert.NotNil(t, ctx.config)
-	assert.Empty(t, ctx.URLs)
-	assert.Empty(t, ctx.Paths)
 	assert.Nil(t, ctx.tempdir)
 	assert.NotEmpty(t, ctx.proxyauth)
 	unsetvars(t)
@@ -106,8 +98,6 @@ func TestSetupProxyAuth(t *testing.T) {
 	assert.NotNil(t, ctx)
 
 	assert.NotNil(t, ctx.config)
-	assert.Empty(t, ctx.URLs)
-	assert.Empty(t, ctx.Paths)
 	assert.Nil(t, ctx.tempdir)
 	assert.NotEmpty(t, ctx.proxyauth)
 	unsetvars(t)
@@ -123,8 +113,6 @@ func TestSetupServer(t *testing.T) {
 	assert.NotNil(t, ctx)
 
 	assert.NotNil(t, ctx.config)
-	assert.Empty(t, ctx.URLs)
-	assert.Empty(t, ctx.Paths)
 	assert.Nil(t, ctx.tempdir)
 	assert.NotNil(t, ctx.proxyauth)
 	assert.NotEmpty(t, ctx.config.Server)

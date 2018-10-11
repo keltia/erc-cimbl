@@ -68,7 +68,7 @@ type mailVars struct {
 	Files     string
 }
 
-func createMail(ctx *Context) (str string, err error) {
+func createMail(ctx *Context, res *Results) (str string, err error) {
 	var txt bytes.Buffer
 
 	if ctx == nil {
@@ -85,8 +85,8 @@ func createMail(ctx *Context) (str string, err error) {
 		MyName:    MyName,
 		MyVersion: MyVersion,
 		Files:     strings.Join(ctx.files, ", "),
-		Paths:     addPaths(ctx),
-		URLs:      addURLs(ctx),
+		Paths:     addPaths(res),
+		URLs:      addURLs(res),
 	}
 
 	t := template.Must(template.New("mail").Parse(mailTmpl))
@@ -94,13 +94,13 @@ func createMail(ctx *Context) (str string, err error) {
 	return txt.String(), err
 }
 
-func addPaths(ctx *Context) string {
+func addPaths(res *Results) string {
 	var txt string
 
 	if !fNoPaths {
-		if len(ctx.Paths) != 0 {
+		if len(res.Paths) != 0 {
 			txt = fmt.Sprintf("%s", pathsTmpl)
-			for k := range ctx.Paths {
+			for k := range res.Paths {
 				txt = fmt.Sprintf("%s  %s\n", txt, k)
 			}
 		}
@@ -108,13 +108,13 @@ func addPaths(ctx *Context) string {
 	return txt
 }
 
-func addURLs(ctx *Context) string {
+func addURLs(res *Results) string {
 	var txt string
 
 	if !fNoURLs {
-		if len(ctx.URLs) != 0 {
+		if len(res.URLs) != 0 {
 			txt = fmt.Sprintf("%s", urlsTmpl)
-			for k, _ := range ctx.URLs {
+			for k, _ := range res.URLs {
 				txt = fmt.Sprintf("%s  %s\n", txt, k)
 			}
 		}
@@ -122,9 +122,9 @@ func addURLs(ctx *Context) string {
 	return txt
 }
 
-func doSendMail(ctx *Context) (err error) {
-	if len(ctx.Paths) != 0 || len(ctx.URLs) != 0 {
-		mailText, err := createMail(ctx)
+func doSendMail(ctx *Context, res *Results) (err error) {
+	if len(res.Paths) != 0 || len(res.URLs) != 0 {
+		mailText, err := createMail(ctx, res)
 		if err != nil {
 			return errors.Wrap(err, "createMail")
 		}
