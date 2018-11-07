@@ -50,6 +50,12 @@ func checkFilename(file string) (ok bool) {
 	return re.MatchString(file)
 }
 
+func checkOpenPGP(file string) bool {
+	re := regexp.MustCompile(`(?i:OpenPGP.*\.asc)`)
+
+	return re.MatchString(file)
+}
+
 func setup() *Context {
 	if fDebug {
 		fVerbose = true
