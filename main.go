@@ -27,10 +27,11 @@ var (
 
 // Context is the way to share info across functions.
 type Context struct {
+	Client *http.Client
+
 	config    *Config
 	tempdir   *sandbox.Dir
 	files     []string
-	Client    *http.Client
 	proxyauth string
 	mail      MailSender
 }
