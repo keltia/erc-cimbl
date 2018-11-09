@@ -85,7 +85,8 @@ func setup() *Context {
 	if err != nil {
 		verbose("No proxy auth.: %v", err)
 	} else {
-		verbose("Using %s as proxy…", os.Getenv("http_proxy"))
+		verbose("Found http_proxy variable")
+		debug("Using %s as proxy…", os.Getenv("http_proxy"))
 		debug("Got %s as proxyauth", proxyauth)
 		ctx.proxyauth = proxyauth
 	}
