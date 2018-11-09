@@ -116,13 +116,11 @@ func handleSingleFile(ctx *Context, file string) (*Results, error) {
 		return &Results{}, errors.Wrapf(err, "unknown file %s", file)
 	}
 
-	res := NewResults()
-
 	ext := strings.ToLower(filepath.Ext(file))
 	base = file
 
 	// Special case for .zip.asc
-	if ext == ".asc" {
+	if ext == ".zip.asc" {
 		rbase, err := extractZipFrom(file)
 		if err != nil {
 			return &Results{}, errors.Wrap(err, "extractzip")
@@ -136,8 +134,18 @@ func handleSingleFile(ctx *Context, file string) (*Results, error) {
 	debug("opening %s", base)
 
 	buf, err := readFile(base)
+	if err != nil {
+		return &Results{}, errors.Wrap(err, "single/readfile")
+	}
 
-	allLines := csvplus.FromReader(buf).SelectColumns("type", "value")
+	return handleCSV(ctx, buf)
+}
+
+// handleCSV decodes the CSV file
+func handleCSV(ctx *Context, r io.Reader) (*Results, error) {
+	res := NewResults()
+
+	allLines := csvplus.FromReader(r).SelectColumns("type", "value")
 	rows, err := csvplus.Take(allLines).
 		Filter(csvplus.Any(csvplus.Like(csvplus.Row{"type": "url"}),
 			csvplus.Like(csvplus.Row{"type": "filename"}),
