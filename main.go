@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/keltia/archive"
@@ -42,18 +41,6 @@ func init() {
 	flag.BoolVar(&fNoPaths, "P", false, "Do not check filenames")
 	flag.BoolVar(&fNoURLs, "U", false, "Do not check URLs")
 	flag.BoolVar(&fVerbose, "v", false, "Verbose mode")
-}
-
-func checkFilename(file string) (ok bool) {
-	re := regexp.MustCompile(`(?i:CIMBL-\d+-CERTS\.(csv|zip)(\.asc|))`)
-
-	return re.MatchString(file)
-}
-
-func checkOpenPGP(file string) bool {
-	re := regexp.MustCompile(`(?i:OpenPGP.*\.asc)`)
-
-	return re.MatchString(file)
 }
 
 func setup() *Context {
