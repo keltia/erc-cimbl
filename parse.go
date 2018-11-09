@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -208,17 +209,40 @@ func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 				continue
 			}
 		} else {
-			if strings.HasPrefix(file, "http:") {
-				if !fNoURLs {
-					u, err := handleURL(ctx, file)
+			// Do we have an incomplete mail attachement disguised into a OpenPGP message?
+			if checkOpenPGP(file) {
+				verbose("New encrypted multipart format %s…\n", file)
+
+				nfile, _ := filepath.Abs(file)
+				err := ctx.tempdir.Run(func() error {
+					var err error
+
+					r, err := handleMultipart(ctx, nfile)
 					if err != nil {
-						log.Printf("error checking %s: %v", file, err)
-						continue
+						log.Printf("error reading %s: %v", nfile, err)
+						return err
 					}
-					res.Add("url", u)
+					res.Merge(r)
+					ctx.files = append(ctx.files, filepath.Base(nfile))
+					return nil
+				})
+				if err != nil {
+					log.Printf("got error %v for %s", err, file)
+					continue
 				}
 			} else {
-				verbose("Ignoring %s…", file)
+				if strings.HasPrefix(file, "http:") {
+					if !fNoURLs {
+						u, err := handleURL(ctx, file)
+						if err != nil {
+							log.Printf("error checking %s: %v", file, err)
+							continue
+						}
+						res.Add("url", u)
+					}
+				} else {
+					verbose("Ignoring %s…", file)
+				}
 			}
 		}
 	}
