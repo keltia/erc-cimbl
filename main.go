@@ -78,6 +78,13 @@ func setup() *Context {
 		debug("Got %s as proxyauth", proxyauth)
 		ctx.proxyauth = proxyauth
 	}
+
+	// Create our sendbox
+	ctx.tempdir, err = sandbox.New(MyName)
+	if err != nil {
+		log.Fatalf("unable to create sandbox: %v", err)
+	}
+
 	return ctx
 }
 
@@ -88,6 +95,7 @@ func main() {
 	flag.Parse()
 
 	ctx := setup()
+	defer ctx.tempdir.Cleanup()
 
 	verbose("%s/%s Archive/%s Proxy/%s Sandbox/%s",
 		MyName, MyVersion, archive.Version(), proxy.Version(), sandbox.Version())
@@ -96,12 +104,6 @@ func main() {
 		log.Println("Nothing to do!")
 		return
 	}
-
-	ctx.tempdir, err = sandbox.New(MyName)
-	if err != nil {
-		log.Fatalf("unable to create sandbox: %v", err)
-	}
-	defer ctx.tempdir.Cleanup()
 
 	res, err := handleAllFiles(ctx, flag.Args())
 	if err != nil {
