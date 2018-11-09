@@ -152,7 +152,7 @@ func handleCSV(ctx *Context, r io.Reader) (*Results, error) {
 			csvplus.Like(csvplus.Row{"type": "filename|sha1"}))).
 		ToRows()
 	if err != nil {
-		return res, errors.Wrapf(err, "reading from %s", file)
+		return res, errors.Wrapf(err, "reading csv")
 	}
 
 	for _, row := range rows {
