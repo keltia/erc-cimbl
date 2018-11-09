@@ -15,3 +15,23 @@ func TestCheckFilename(t *testing.T) {
 	res = checkFilename(file)
 	assert.True(t, res, "should be true")
 }
+
+func TestCheckOpenPGP(t *testing.T) {
+	file := "foo.bar"
+	res := checkOpenPGP(file)
+	assert.False(t, res)
+
+	file = "OpenPGP Encrypted File.asc"
+	res = checkOpenPGP(file)
+	assert.True(t, res)
+}
+
+func TestCheckMultipart(t *testing.T) {
+	file := "foo.bar"
+	res := checkMultipart(file)
+	assert.False(t, res)
+
+	file = "OpenPGP Encrypted File"
+	res = checkMultipart(file)
+	assert.True(t, res)
+}

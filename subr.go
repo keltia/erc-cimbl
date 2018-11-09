@@ -15,3 +15,9 @@ func checkOpenPGP(file string) bool {
 
 	return re.MatchString(file)
 }
+
+func checkMultipart(file string) bool {
+	re := regexp.MustCompile(`(?i:OpenPGP.*file$)`)
+
+	return re.MatchString(file)
+}
