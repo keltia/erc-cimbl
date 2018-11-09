@@ -88,7 +88,7 @@ func main() {
 
 	ctx := setup()
 
-	verbose("%s/%s Archive/%s", MyName, MyVersion, archive.Version())
+	verbose("%s/%s Archive/%s Proxy/%s", MyName, MyVersion, archive.Version(), proxy.Version())
 
 	if (fNoURLs && fNoPaths) || flag.NArg() == 0 {
 		log.Println("Nothing to do!")
