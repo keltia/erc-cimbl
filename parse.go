@@ -179,7 +179,7 @@ func handleCSV(ctx *Context, r io.Reader) (*Results, error) {
 			}
 		}
 	}
-	return res, nil
+	return res, err
 }
 
 // handleAllFiles processes a list of files
