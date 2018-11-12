@@ -50,6 +50,12 @@ func checkFilename(file string) (ok bool) {
 	return re.MatchString(file)
 }
 
+func checkOpenPGP(file string) bool {
+	re := regexp.MustCompile(`(?i:OpenPGP.*\.asc)`)
+
+	return re.MatchString(file)
+}
+
 func setup() *Context {
 	if fDebug {
 		fVerbose = true
@@ -79,7 +85,8 @@ func setup() *Context {
 	if err != nil {
 		verbose("No proxy auth.: %v", err)
 	} else {
-		verbose("Using %s as proxy…", os.Getenv("http_proxy"))
+		verbose("Found http_proxy variable")
+		debug("Using %s as proxy…", os.Getenv("http_proxy"))
 		debug("Got %s as proxyauth", proxyauth)
 		ctx.proxyauth = proxyauth
 	}
