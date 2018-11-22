@@ -8,6 +8,7 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/mail"
+	"time"
 
 	"github.com/keltia/archive"
 	"github.com/pkg/errors"
@@ -38,6 +39,19 @@ multipart/mixed
   - text/csv
   - text/xml
 */
+
+const body = `From nobody@cert.europa.eu %s
+From: nobody@cert.europa.eu
+Subject: Fake mail
+Content-Type: multipart/mixed; boundary="fake-mail-just-for-cert-eu"
+
+--fake-mail-just-for-cert-eu
+
+%s
+--fake-mail-just-for-cert-eu--
+
+`
+
 func handleMultipart(ctx *Context, file string) (*Results, error) {
 	debug("handle/multipart")
 	content, err := decryptMultipart(ctx, file)
@@ -85,7 +99,13 @@ func handleMultipart(ctx *Context, file string) (*Results, error) {
 func handleMixed(ctx *Context, pp []byte) ([]byte, error) {
 	debug("handle/mixed")
 
-	buf := bytes.NewReader(pp)
+	today := time.Now().Format(time.RFC822Z)
+
+	// Fake headers to make it look like a mail
+	mybody := fmt.Sprintf(body, today, string(pp))
+
+	debug("mybody=%s\n", mybody)
+	buf := bytes.NewReader([]byte(mybody))
 
 	debug("mixed/readmessage")
 	msg, err := mail.ReadMessage(buf)
@@ -106,9 +126,10 @@ func handleMixed(ctx *Context, pp []byte) ([]byte, error) {
 		return nil, fmt.Errorf("bad content-type %s", ct)
 	}
 
+	debug("body=%")
 	rp := multipart.NewReader(msg.Body, bnd)
 
-	debug("got new multipart")
+	debug("got new multipart rp=%#v", rp)
 	for {
 		p, err := rp.NextPart()
 		if err == io.EOF {
