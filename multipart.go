@@ -126,7 +126,6 @@ func handleMixed(ctx *Context, pp []byte) ([]byte, error) {
 		return nil, fmt.Errorf("bad content-type %s", ct)
 	}
 
-	debug("body=%")
 	rp := multipart.NewReader(msg.Body, bnd)
 
 	debug("got new multipart rp=%#v", rp)
