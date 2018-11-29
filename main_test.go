@@ -9,16 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCheckFilename(t *testing.T) {
-	file := "foo.bar"
-	res := checkFilename(file)
-	assert.False(t, res, "should be false")
-
-	file = "CIMBL-0666-CERTS.csv"
-	res = checkFilename(file)
-	assert.True(t, res, "should be true")
-}
-
 func TestSetup(t *testing.T) {
 	baseDir = "testdata"
 
@@ -26,7 +16,7 @@ func TestSetup(t *testing.T) {
 	assert.NotNil(t, ctx)
 
 	assert.NotNil(t, ctx.config)
-	assert.Nil(t, ctx.tempdir)
+	assert.NotNil(t, ctx.tempdir)
 }
 
 func TestSetupNone(t *testing.T) {
@@ -36,7 +26,7 @@ func TestSetupNone(t *testing.T) {
 	assert.NotNil(t, ctx)
 
 	assert.Empty(t, ctx.config)
-	assert.Nil(t, ctx.tempdir)
+	assert.NotNil(t, ctx.tempdir)
 }
 
 func TestSetupNoneDebug(t *testing.T) {
@@ -47,7 +37,7 @@ func TestSetupNoneDebug(t *testing.T) {
 	assert.NotNil(t, ctx)
 
 	assert.Empty(t, ctx.config)
-	assert.Nil(t, ctx.tempdir)
+	assert.NotNil(t, ctx.tempdir)
 	assert.True(t, fVerbose)
 
 	fDebug = false
@@ -81,7 +71,7 @@ func TestSetupProxyError(t *testing.T) {
 	assert.NotNil(t, ctx)
 
 	assert.NotNil(t, ctx.config)
-	assert.Nil(t, ctx.tempdir)
+	assert.NotNil(t, ctx.tempdir)
 	assert.NotEmpty(t, ctx.proxyauth)
 	unsetvars(t)
 }
@@ -98,7 +88,7 @@ func TestSetupProxyAuth(t *testing.T) {
 	assert.NotNil(t, ctx)
 
 	assert.NotNil(t, ctx.config)
-	assert.Nil(t, ctx.tempdir)
+	assert.NotNil(t, ctx.tempdir)
 	assert.NotEmpty(t, ctx.proxyauth)
 	unsetvars(t)
 }
@@ -113,7 +103,7 @@ func TestSetupServer(t *testing.T) {
 	assert.NotNil(t, ctx)
 
 	assert.NotNil(t, ctx.config)
-	assert.Nil(t, ctx.tempdir)
+	assert.NotNil(t, ctx.tempdir)
 	assert.NotNil(t, ctx.proxyauth)
 	assert.NotEmpty(t, ctx.config.Server)
 	fDebug = false

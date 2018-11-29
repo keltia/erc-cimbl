@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -116,13 +117,10 @@ func handleSingleFile(ctx *Context, file string) (*Results, error) {
 		return &Results{}, errors.Wrapf(err, "unknown file %s", file)
 	}
 
-	res := NewResults()
-
-	ext := strings.ToLower(filepath.Ext(file))
 	base = file
 
 	// Special case for .zip.asc
-	if ext == ".asc" {
+	if strings.HasSuffix(base, ".zip.asc") {
 		rbase, err := extractZipFrom(file)
 		if err != nil {
 			return &Results{}, errors.Wrap(err, "extractzip")
@@ -136,15 +134,25 @@ func handleSingleFile(ctx *Context, file string) (*Results, error) {
 	debug("opening %s", base)
 
 	buf, err := readFile(base)
+	if err != nil {
+		return &Results{}, errors.Wrap(err, "single/readfile")
+	}
 
-	allLines := csvplus.FromReader(buf).SelectColumns("type", "value")
+	return handleCSV(ctx, buf)
+}
+
+// handleCSV decodes the CSV file
+func handleCSV(ctx *Context, r io.Reader) (*Results, error) {
+	res := NewResults()
+
+	allLines := csvplus.FromReader(r).SelectColumns("type", "value")
 	rows, err := csvplus.Take(allLines).
 		Filter(csvplus.Any(csvplus.Like(csvplus.Row{"type": "url"}),
 			csvplus.Like(csvplus.Row{"type": "filename"}),
 			csvplus.Like(csvplus.Row{"type": "filename|sha1"}))).
 		ToRows()
 	if err != nil {
-		return res, errors.Wrapf(err, "reading from %s", file)
+		return res, errors.Wrapf(err, "reading csv")
 	}
 
 	for _, row := range rows {
@@ -171,7 +179,7 @@ func handleSingleFile(ctx *Context, file string) (*Results, error) {
 			}
 		}
 	}
-	return res, nil
+	return res, err
 }
 
 // handleAllFiles processes a list of files
@@ -200,17 +208,40 @@ func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 				continue
 			}
 		} else {
-			if strings.HasPrefix(file, "http:") {
-				if !fNoURLs {
-					u, err := handleURL(ctx, file)
+			// Do we have an incomplete mail attachement disguised into a OpenPGP message?
+			if checkOpenPGP(file) {
+				verbose("New encrypted multipart format %s…\n", file)
+
+				nfile, _ := filepath.Abs(file)
+				err := ctx.tempdir.Run(func() error {
+					var err error
+
+					r, err := handleMultipart(ctx, nfile)
 					if err != nil {
-						log.Printf("error checking %s: %v", file, err)
-						continue
+						log.Printf("error reading %s: %v", nfile, err)
+						return err
 					}
-					res.Add("url", u)
+					res.Merge(r)
+					ctx.files = append(ctx.files, filepath.Base(nfile))
+					return nil
+				})
+				if err != nil {
+					log.Printf("got error %v for %s", err, file)
+					continue
 				}
 			} else {
-				verbose("Ignoring %s…", file)
+				if strings.HasPrefix(file, "http:") {
+					if !fNoURLs {
+						u, err := handleURL(ctx, file)
+						if err != nil {
+							log.Printf("error checking %s: %v", file, err)
+							continue
+						}
+						res.Add("url", u)
+					}
+				} else {
+					verbose("Ignoring %s…", file)
+				}
 			}
 		}
 	}

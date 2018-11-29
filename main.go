@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/keltia/archive"
@@ -17,7 +16,7 @@ var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.7.0"
+	MyVersion = "0.7.1"
 
 	fDebug   bool
 	fDoMail  bool
@@ -28,10 +27,11 @@ var (
 
 // Context is the way to share info across functions.
 type Context struct {
+	Client *http.Client
+
 	config    *Config
 	tempdir   *sandbox.Dir
 	files     []string
-	Client    *http.Client
 	proxyauth string
 	mail      MailSender
 }
@@ -42,12 +42,6 @@ func init() {
 	flag.BoolVar(&fNoPaths, "P", false, "Do not check filenames")
 	flag.BoolVar(&fNoURLs, "U", false, "Do not check URLs")
 	flag.BoolVar(&fVerbose, "v", false, "Verbose mode")
-}
-
-func checkFilename(file string) (ok bool) {
-	re := regexp.MustCompile(`(?i:CIMBL-\d+-CERTS\.(csv|zip)(\.asc|))`)
-
-	return re.MatchString(file)
 }
 
 func setup() *Context {
@@ -79,10 +73,18 @@ func setup() *Context {
 	if err != nil {
 		verbose("No proxy auth.: %v", err)
 	} else {
-		verbose("Using %s as proxy…", os.Getenv("http_proxy"))
+		verbose("Found http_proxy variable")
+		debug("Using %s as proxy…", os.Getenv("http_proxy"))
 		debug("Got %s as proxyauth", proxyauth)
 		ctx.proxyauth = proxyauth
 	}
+
+	// Create our sendbox
+	ctx.tempdir, err = sandbox.New(MyName)
+	if err != nil {
+		log.Fatalf("unable to create sandbox: %v", err)
+	}
+
 	return ctx
 }
 
@@ -93,19 +95,15 @@ func main() {
 	flag.Parse()
 
 	ctx := setup()
+	defer ctx.tempdir.Cleanup()
 
-	verbose("%s/%s Archive/%s", MyName, MyVersion, archive.Version())
+	verbose("%s/%s Archive/%s Proxy/%s Sandbox/%s",
+		MyName, MyVersion, archive.Version(), proxy.Version(), sandbox.Version())
 
 	if (fNoURLs && fNoPaths) || flag.NArg() == 0 {
 		log.Println("Nothing to do!")
-		os.Exit(0)
+		return
 	}
-
-	ctx.tempdir, err = sandbox.New(MyName)
-	if err != nil {
-		log.Fatalf("unable to create sandbox: %v", err)
-	}
-	defer ctx.tempdir.Cleanup()
 
 	res, err := handleAllFiles(ctx, flag.Args())
 	if err != nil {
