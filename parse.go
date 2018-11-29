@@ -117,11 +117,10 @@ func handleSingleFile(ctx *Context, file string) (*Results, error) {
 		return &Results{}, errors.Wrapf(err, "unknown file %s", file)
 	}
 
-	ext := strings.ToLower(filepath.Ext(file))
 	base = file
 
 	// Special case for .zip.asc
-	if ext == ".zip.asc" {
+	if strings.HasSuffix(base, ".zip.asc") {
 		rbase, err := extractZipFrom(file)
 		if err != nil {
 			return &Results{}, errors.Wrap(err, "extractzip")
