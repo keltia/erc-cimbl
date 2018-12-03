@@ -120,7 +120,7 @@ func handleSingleFile(ctx *Context, file string) (*Results, error) {
 	base = file
 
 	// Special case for .zip.asc
-	if strings.HasSuffix(base, ".zip.asc") {
+	if strings.HasSuffix(base, ".zip.asc") || strings.HasSuffix(base, ".zip.gpg") {
 		rbase, err := extractZipFrom(file)
 		if err != nil {
 			return &Results{}, errors.Wrap(err, "extractzip")
