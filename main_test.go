@@ -12,8 +12,9 @@ import (
 func TestSetup(t *testing.T) {
 	baseDir = "testdata"
 
-	ctx := setup()
+	ctx, err := setup()
 	assert.NotNil(t, ctx)
+	assert.NoError(t, err)
 
 	assert.NotNil(t, ctx.config)
 	assert.NotNil(t, ctx.tempdir)
@@ -22,8 +23,9 @@ func TestSetup(t *testing.T) {
 func TestSetupNone(t *testing.T) {
 	baseDir = "testx"
 
-	ctx := setup()
+	ctx, err := setup()
 	assert.NotNil(t, ctx)
+	assert.NoError(t, err)
 
 	assert.Empty(t, ctx.config)
 	assert.NotNil(t, ctx.tempdir)
@@ -33,12 +35,32 @@ func TestSetupNoneDebug(t *testing.T) {
 	baseDir = "testx"
 
 	fDebug = true
-	ctx := setup()
+	ctx, err := setup()
 	assert.NotNil(t, ctx)
+	assert.NoError(t, err)
 
 	assert.Empty(t, ctx.config)
 	assert.NotNil(t, ctx.tempdir)
 	assert.True(t, fVerbose)
+
+	fDebug = false
+}
+
+func TestSetupNoneDebugSandboxInvalid(t *testing.T) {
+	baseDir = "testdata"
+
+	prev := os.Getenv("TMPDIR")
+	if prev == "" {
+		prev = "/tmp"
+	}
+	require.NoError(t, os.Setenv("TMPDIR", "/nonexistent"))
+
+	fDebug = true
+	ctx, err := setup()
+	assert.Nil(t, ctx)
+	assert.Error(t, err)
+
+	require.NoError(t, os.Setenv("TMPDIR", prev))
 
 	fDebug = false
 }
@@ -67,8 +89,9 @@ func TestSetupProxyError(t *testing.T) {
 	require.NoError(t, os.Chmod(netrc, 0600))
 	require.NoError(t, os.Setenv("NETRC", netrc))
 
-	ctx := setup()
+	ctx, err := setup()
 	assert.NotNil(t, ctx)
+	assert.NoError(t, err)
 
 	assert.NotNil(t, ctx.config)
 	assert.NotNil(t, ctx.tempdir)
@@ -84,8 +107,9 @@ func TestSetupProxyAuth(t *testing.T) {
 	require.NoError(t, os.Chmod(netrc, 0600))
 	require.NoError(t, os.Setenv("NETRC", netrc))
 
-	ctx := setup()
+	ctx, err := setup()
 	assert.NotNil(t, ctx)
+	assert.NoError(t, err)
 
 	assert.NotNil(t, ctx.config)
 	assert.NotNil(t, ctx.tempdir)
@@ -99,12 +123,18 @@ func TestSetupServer(t *testing.T) {
 	os.Setenv("NETRC", filepath.Join(".", "test", "test-netrc"))
 
 	fDebug = true
-	ctx := setup()
+	ctx, err := setup()
 	assert.NotNil(t, ctx)
+	assert.NoError(t, err)
 
 	assert.NotNil(t, ctx.config)
 	assert.NotNil(t, ctx.tempdir)
 	assert.NotNil(t, ctx.proxyauth)
 	assert.NotEmpty(t, ctx.config.Server)
 	fDebug = false
+}
+
+func TestRealMain_Noarg(t *testing.T) {
+	err := realmain([]string{})
+	assert.NoError(t, err)
 }
