@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -36,7 +37,17 @@ type Context struct {
 	mail      MailSender
 }
 
+// Usage string override.
+var Usage = func() {
+	fmt.Fprintf(os.Stderr, "%s/%s (Archive/%s Proxy/%s Sandbox/%s)\n\n",
+		MyName, MyVersion, archive.Version(), proxy.Version(), sandbox.Version())
+
+	flag.PrintDefaults()
+}
+
 func init() {
+	flag.Usage = Usage
+
 	flag.BoolVar(&fDebug, "D", false, "Debug mode")
 	flag.BoolVar(&fDoMail, "M", false, "Send mail")
 	flag.BoolVar(&fNoPaths, "P", false, "Do not check filenames")
