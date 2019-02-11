@@ -138,3 +138,7 @@ func TestRealMain_Noarg(t *testing.T) {
 	err := realmain([]string{})
 	assert.NoError(t, err)
 }
+
+func TestUsage(t *testing.T) {
+	Usage()
+}
