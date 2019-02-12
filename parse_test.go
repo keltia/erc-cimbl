@@ -126,6 +126,53 @@ func TestExtractZipFrom(t *testing.T) {
 	assert.Empty(t, base)
 }
 
+func TestExtractZipEmpty(t *testing.T) {
+	file := "testdata/empty.zip"
+	base, err := extractZipFrom(file)
+	assert.Error(t, err)
+	assert.Empty(t, base)
+}
+
+func TestExtractZipOne(t *testing.T) {
+	file := "testdata/one.zip"
+	base, err := extractZipFrom(file)
+	assert.Error(t, err)
+	assert.Empty(t, base)
+}
+
+func TestExtractZipZipin(t *testing.T) {
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		config:  config,
+		tempdir: snd,
+	}
+
+	var base string
+
+	file, err := filepath.Abs("testdata/zipin.zip")
+	require.NoError(t, err)
+
+	err = snd.Run(func() error {
+		var err error
+
+		base, err = extractZipFrom(file)
+		assert.NotEmpty(t, base)
+		return err
+	})
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, base)
+	assert.Equal(t, "zipin.zip.zip", base)
+	assert.FileExists(t, filepath.Join(ctx.tempdir.Cwd(), "zipin.zip.zip"))
+}
+
 func TestReadFile_None(t *testing.T) {
 	file := "nonexistent.txt"
 	buf, err := readFile(file)
@@ -257,6 +304,31 @@ func TestHandleSingleFile_None(t *testing.T) {
 	require.NotNil(t, res)
 	assert.Empty(t, res.Paths)
 	assert.Empty(t, res.URLs)
+}
+
+func TestHandleSingleFile_Zip(t *testing.T) {
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	fDebug = true
+
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		config:  config,
+		tempdir: snd,
+	}
+
+	file, _ := filepath.Abs("testdata/CIMBL-0666-CERTS.zip.asc")
+	res, err := handleSingleFile(ctx, file)
+	assert.Error(t, err)
+	require.NotNil(t, res)
+	assert.Empty(t, res.Paths)
+	assert.Empty(t, res.URLs)
+	fDebug = false
 }
 
 func TestHandleAllFiles_None(t *testing.T) {
