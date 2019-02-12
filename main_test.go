@@ -139,6 +139,36 @@ func TestRealMain_Noarg(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestRealMain_Badtemp(t *testing.T) {
+	old := os.Getenv("TMPDIR")
+	require.NoError(t, os.Setenv("TMPDIR", "/nonexistent"))
+
+	err := realmain([]string{})
+	assert.Error(t, err)
+
+	require.NoError(t, os.Setenv("TMPDIR", old))
+}
+
+func TestRealMain_Onebadarg(t *testing.T) {
+	err := realmain([]string{"/foo.bar"})
+	assert.NoError(t, err)
+}
+
+func TestRealMain_Onearg_Empty(t *testing.T) {
+	err := realmain([]string{"testdata/CIMBL-0667-CERTS.csv"})
+	assert.NoError(t, err)
+}
+
+func TestRealMain_Onearg_Good(t *testing.T) {
+	err := realmain([]string{"testdata/CIMBL-0666-CERTS.csv"})
+	assert.NoError(t, err)
+}
+
+func TestRealMain_Onearg_GoodZip(t *testing.T) {
+	err := realmain([]string{"testdata/CIMBL-0666-CERTS.zip"})
+	assert.NoError(t, err)
+}
+
 func TestUsage(t *testing.T) {
 	Usage()
 }
