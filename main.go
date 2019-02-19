@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,13 +11,14 @@ import (
 	"github.com/keltia/archive"
 	"github.com/keltia/proxy"
 	"github.com/keltia/sandbox"
+	"github.com/pkg/errors"
 )
 
 var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.7.1"
+	MyVersion = "0.8.0"
 
 	fDebug   bool
 	fDoMail  bool
@@ -36,7 +38,17 @@ type Context struct {
 	mail      MailSender
 }
 
+// Usage string override.
+var Usage = func() {
+	fmt.Fprintf(os.Stderr, "%s/%s (Archive/%s Proxy/%s Sandbox/%s)\n\n",
+		MyName, MyVersion, archive.Version(), proxy.Version(), sandbox.Version())
+
+	flag.PrintDefaults()
+}
+
 func init() {
+	flag.Usage = Usage
+
 	flag.BoolVar(&fDebug, "D", false, "Debug mode")
 	flag.BoolVar(&fDoMail, "M", false, "Send mail")
 	flag.BoolVar(&fNoPaths, "P", false, "Do not check filenames")
@@ -44,10 +56,13 @@ func init() {
 	flag.BoolVar(&fVerbose, "v", false, "Verbose mode")
 }
 
-func setup() *Context {
+func setup() (*Context, error) {
 	if fDebug {
 		fVerbose = true
 	}
+
+	verbose("%s/%s Archive/%s Proxy/%s Sandbox/%s",
+		MyName, MyVersion, archive.Version(), proxy.Version(), sandbox.Version())
 
 	// No config file is not an error but you do not get to send mail
 	config, err := loadConfig()
@@ -82,41 +97,49 @@ func setup() *Context {
 	// Create our sendbox
 	ctx.tempdir, err = sandbox.New(MyName)
 	if err != nil {
-		log.Fatalf("unable to create sandbox: %v", err)
+		return nil, errors.Wrap(err, "setup")
 	}
 
-	return ctx
+	return ctx, nil
 }
 
-func main() {
-	var err error
+func realmain(args []string) error {
+	ctx, err := setup()
+	if err != nil {
+		return errors.Wrap(err, "realmain")
+	}
 
-	// Parse CLI
-	flag.Parse()
-
-	ctx := setup()
 	defer ctx.tempdir.Cleanup()
 
-	verbose("%s/%s Archive/%s Proxy/%s Sandbox/%s",
-		MyName, MyVersion, archive.Version(), proxy.Version(), sandbox.Version())
-
-	if (fNoURLs && fNoPaths) || flag.NArg() == 0 {
+	if (fNoURLs && fNoPaths) || len(args) == 0 {
 		log.Println("Nothing to do!")
-		return
+		return nil
 	}
 
-	res, err := handleAllFiles(ctx, flag.Args())
+	res, err := handleAllFiles(ctx, args)
 	if err != nil {
-		log.Fatalf("error processing files: %v", err)
+		return errors.Wrap(err, "error processing files")
 	}
+
 	verbose("res=%v", res)
 
 	// Do something with the results
 	if err := doSendMail(ctx, res); err != nil {
-		log.Fatalf("sending mail: %v", err)
+		return errors.Wrap(err, "sending mail")
 	}
 
 	if len(skipped) != 0 {
 		log.Printf("\nSkipped URLs:\n%s", strings.Join(skipped, "\n"))
+	}
+
+	return nil
+}
+
+func main() {
+	// Parse CLI
+	flag.Parse()
+
+	if err := realmain(flag.Args()); err != nil {
+		log.Fatalf("Error %v\n", err)
 	}
 }
