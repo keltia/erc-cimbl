@@ -3,17 +3,39 @@ package main
 import (
 	"testing"
 
+	"github.com/keltia/sandbox"
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCheckFilename(t *testing.T) {
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	fVerbose = true
+
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		config:  config,
+		tempdir: snd,
+	}
+
 	file := "foo.bar"
-	res := checkFilename(file)
-	assert.False(t, res, "should be false")
+	res := checkFilename(ctx, file)
+	assert.False(t, res)
 
 	file = "CIMBL-0666-CERTS.csv"
-	res = checkFilename(file)
-	assert.True(t, res, "should be true")
+	res = checkFilename(ctx, file)
+	assert.True(t, res)
+
+	file = "CIMBL-0666-EU.csv"
+	res = checkFilename(ctx, file)
+	assert.True(t, res)
 }
 
 func TestCheckOpenPGP(t *testing.T) {

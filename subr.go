@@ -4,8 +4,8 @@ import (
 	"regexp"
 )
 
-func checkFilename(file string) (ok bool) {
-	re := regexp.MustCompile(`(?i:CIMBL-\d+-CERTS\.(csv|zip)(\.asc|))`)
+func checkFilename(ctx *Context, file string) (ok bool) {
+	re := regexp.MustCompile(ctx.config.REFile)
 
 	return re.MatchString(file)
 }
