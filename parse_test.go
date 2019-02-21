@@ -332,7 +332,19 @@ func TestHandleSingleFile_Zip(t *testing.T) {
 }
 
 func TestHandleAllFiles_None(t *testing.T) {
-	ctx := &Context{}
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+	require.NotEmpty(t, config.REFile)
+
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		config:  config,
+		tempdir: snd,
+	}
 
 	res, err := handleAllFiles(ctx, nil)
 	assert.NoError(t, err)
@@ -340,7 +352,19 @@ func TestHandleAllFiles_None(t *testing.T) {
 }
 
 func TestHandleAllFiles_Null(t *testing.T) {
-	ctx := &Context{}
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+	require.NotEmpty(t, config.REFile)
+
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		config:  config,
+		tempdir: snd,
+	}
 
 	res, err := handleAllFiles(ctx, []string{"/nonexistent"})
 	assert.NoError(t, err)
@@ -348,11 +372,17 @@ func TestHandleAllFiles_Null(t *testing.T) {
 }
 
 func TestHandleAllFiles_SingleBad(t *testing.T) {
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+	require.NotEmpty(t, config.REFile)
+
 	snd, err := sandbox.New("test")
 	require.NoError(t, err)
 	defer snd.Cleanup()
 
 	ctx := &Context{
+		config:  config,
 		tempdir: snd,
 	}
 
@@ -362,11 +392,17 @@ func TestHandleAllFiles_SingleBad(t *testing.T) {
 }
 
 func TestHandleAllFiles_SingleBad2(t *testing.T) {
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+	require.NotEmpty(t, config.REFile)
+
 	snd, err := sandbox.New("test")
 	require.NoError(t, err)
 	defer snd.Cleanup()
 
 	ctx := &Context{
+		config:  config,
 		tempdir: snd,
 	}
 

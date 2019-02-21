@@ -1,19 +1,20 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLoadConfigNone(t *testing.T) {
 	baseDir = "testdata"
 	configName = "/nonexistant"
-	empty := &Config{}
 
 	c, err := loadConfig()
-	assert.Equal(t, empty, c, "empty")
+	assert.NotNil(t, c)
+	assert.Empty(t, c)
 	assert.Error(t, err, "should be in error")
 }
 
@@ -22,7 +23,7 @@ func TestLoadConfigBad(t *testing.T) {
 	configName = "bad.toml"
 
 	c, err := loadConfig()
-	assert.Nil(t, c, "nil value")
+	assert.Empty(t, c)
 	assert.Error(t, err, "should be in error")
 }
 
@@ -35,7 +36,7 @@ func TestLoadConfigPerms(t *testing.T) {
 	assert.NoError(t, err, "should be fine")
 
 	c, err := loadConfig()
-	assert.Nil(t, c, "nil value")
+	assert.Empty(t, c)
 	assert.Error(t, err, "should be in error")
 
 	err = os.Chmod(file, 0644)
@@ -57,8 +58,9 @@ func TestLoadConfigGood(t *testing.T) {
 		Cc:      "root@example.com",
 		Subject: "CRQ: New URLs/files to be BLOCKED",
 		Server:  "SMTP:PORT",
+		REFile:  `(?i:CIMBL-\d+-(CERTS|EU)\.(csv|zip)(\.asc|))`,
 	}
-	assert.Equal(t, cnf, c, "should be equal")
+	assert.EqualValues(t, cnf, c, "should be equal")
 }
 
 func TestLoadConfigGoodVerbose(t *testing.T) {
@@ -77,7 +79,8 @@ func TestLoadConfigGoodVerbose(t *testing.T) {
 		Cc:      "root@example.com",
 		Subject: "CRQ: New URLs/files to be BLOCKED",
 		Server:  "SMTP:PORT",
+		REFile:  `(?i:CIMBL-\d+-(CERTS|EU)\.(csv|zip)(\.asc|))`,
 	}
-	assert.Equal(t, cnf, c, "should be equal")
+	assert.EqualValues(t, cnf, c, "should be equal")
 	fVerbose = false
 }
