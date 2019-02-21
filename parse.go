@@ -187,7 +187,7 @@ func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 	// For all files on the CLI
 	res := NewResults()
 	for _, file := range files {
-		if checkFilename(file) {
+		if checkFilename(ctx, file) {
 			verbose("Checking %s…\n", file)
 
 			nfile, _ := filepath.Abs(file)
