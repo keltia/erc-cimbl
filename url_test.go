@@ -34,6 +34,7 @@ func TestSanitize(t *testing.T) {
 		{"[1.2.3.4]", "http://1.2.3.4", nil},
 		{"103.15.234.152:80/index.php", "http://103.15.234.152:80/index.php", nil},
 		{":/--%2Fexample.com", "http://:/--%2Fexample.com", nil},
+		{"https://jtabserver.org/bins/jayct.vbs&amp#39;,&amp;#39;%ALLUSERSPROFILE%\\jayct.vbs&amp;quot;", "", ErrParseError},
 	}
 	for _, u := range urls {
 		t.Logf("url=%s", u.url)

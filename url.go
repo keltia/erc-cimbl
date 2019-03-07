@@ -61,6 +61,11 @@ func sanitize(str string) (out string, err error) {
 		myurl, err = url.Parse(str)
 	}
 
+	if myurl == nil {
+		debug("str=%s myurl is null", str)
+		return "", ErrParseError
+	}
+
 	// We do not test https
 	if myurl.Scheme == "https" {
 		return str, ErrHttpsSkip
@@ -96,6 +101,7 @@ func sanitize(str string) (out string, err error) {
 
 func handleURL(ctx *Context, str string) (string, error) {
 
+	debug("before,url=%s", str)
 	// https URLs will not be blocked, no MITM
 	myurl, err := sanitize(str)
 	if err == ErrHttpsSkip {
