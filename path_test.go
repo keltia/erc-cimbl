@@ -10,12 +10,14 @@ func TestHandlePath(t *testing.T) {
 	ctx := &Context{}
 
 	path1 := "foo.exe"
-	r := handlePath(ctx, path1)
+	r, err := handlePath(ctx, path1)
 	assert.Empty(t, r)
+	assert.Error(t, err)
 
 	path2 := "foo.docx"
-	r = handlePath(ctx, path2)
+	r, err = handlePath(ctx, path2)
 	assert.NotEmpty(t, r)
+	assert.NoError(t, err)
 }
 
 func TestHandlePathVerbose(t *testing.T) {
@@ -23,12 +25,14 @@ func TestHandlePathVerbose(t *testing.T) {
 	fVerbose = true
 
 	path1 := "foo.exe"
-	r := handlePath(ctx, path1)
+	r, err := handlePath(ctx, path1)
 	assert.Empty(t, r)
+	assert.Error(t, err)
 
 	path2 := "foo.docx"
-	r = handlePath(ctx, path2)
+	r, err = handlePath(ctx, path2)
 	assert.NotEmpty(t, r)
+	assert.NoError(t, err)
 	fVerbose = false
 }
 
