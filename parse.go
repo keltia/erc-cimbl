@@ -141,6 +141,13 @@ func handleSingleFile(ctx *Context, file string) (*Results, error) {
 	return handleCSV(ctx, buf)
 }
 
+type command func(ctx *Context, e string) (string, error)
+
+var table = map[string]command{
+	"filename": handlePath,
+	"url":      handleURL,
+}
+
 // handleCSV decodes the CSV file
 func handleCSV(ctx *Context, r io.Reader) (*Results, error) {
 	res := NewResults()
@@ -160,24 +167,12 @@ func handleCSV(ctx *Context, r io.Reader) (*Results, error) {
 		debug("row=%v", row)
 		rt := strings.Split(row["type"], "|")[0]
 		debug("rt=%s", rt)
-		switch rt {
-		case "filename":
-			if !fNoPaths {
-				p, _ := handlePath(ctx, row["value"])
-				if p != "" {
-					res.Add(rt, p)
-				}
+		if f, ok := table[rt]; ok {
+			r, err := f(ctx, row["value"])
+			if err != nil {
+				log.Printf("error(%s): %v", row["value"], err)
 			}
-		case "url":
-			if !fNoURLs {
-				u, err := handleURL(ctx, row["value"])
-				if err != nil {
-					log.Printf("error(%s): %s", row["value"], err.Error())
-					continue
-				}
-				res.Add(rt, u)
-
-			}
+			res.Add(rt, r)
 		}
 	}
 	return res, err
