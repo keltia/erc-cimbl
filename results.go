@@ -24,11 +24,11 @@ func (r *Results) Add(t string, e string) *Results {
 }
 
 func (r *Results) Merge(s *Results) *Results {
-    for p, _ := range s.Paths {
-        r.Paths[p] = true
-    }
-    for u, _ := range s.URLs {
-        r.URLs[u] = true
-    }
-    return r
+	for p, _ := range s.Paths {
+		r.Paths[p] = true
+	}
+	for u, _ := range s.URLs {
+		r.URLs[u] = true
+	}
+	return r
 }
