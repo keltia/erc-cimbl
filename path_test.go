@@ -40,7 +40,7 @@ func TestEntryToPath(t *testing.T) {
 	str := "foo.doc|1a9ceab8d9b2358b46f2c767ccfc1317"
 
 	val := entryToPath(str)
-	assert.NotNil(t, val, "not nil")
-	assert.NotEmpty(t, val, "not empty")
-	assert.EqualValues(t, "foo.doc", val, "should be equal")
+	assert.NotNil(t, val)
+	assert.NotEmpty(t, val)
+	assert.EqualValues(t, "foo.doc", val)
 }
