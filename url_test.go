@@ -255,3 +255,16 @@ func TestHandleURLblock(t *testing.T) {
 	require.NotEmpty(t, u)
 	assert.Equal(t, u, TestSite)
 }
+
+func TestHandleURLno(t *testing.T) {
+	// Check values
+	ctx := &Context{}
+
+	fNoURLs = true
+
+	u, err := handleURL(ctx, TestSite)
+	assert.NoError(t, err)
+	require.Empty(t, u)
+
+	fNoURLs = false
+}
