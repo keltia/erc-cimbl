@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -33,13 +34,13 @@ func init() {
 	restr = regexp.MustCompile(fmt.Sprintf("\\.(i:%s)$", strings.Join(fileEXTS, "|")))
 }
 
-func handlePath(ctx *Context, path string) string {
+func handlePath(ctx *Context, path string) (string, error) {
 	if !restr.MatchString(path) {
 		verbose("Filename %s CHECK", path)
-		return path
+		return path, nil
 	}
 	verbose("Filename %s: IGNORED ", path)
-	return ""
+	return "", errors.New("ignored")
 }
 
 //
