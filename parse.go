@@ -155,6 +155,7 @@ func handleCSV(ctx *Context, r io.Reader) (*Results, error) {
 		return res, errors.Wrapf(err, "reading csv")
 	}
 
+	verbose("%d entries found.", len(rows))
 	for _, row := range rows {
 		debug("row=%v", row)
 		rt := strings.Split(row["type"], "|")[0]
