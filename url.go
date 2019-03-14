@@ -102,6 +102,11 @@ func sanitize(str string) (out string, err error) {
 func handleURL(ctx *Context, str string) (string, error) {
 
 	debug("before,url=%s", str)
+
+	if fNoURLs {
+		return "", nil
+	}
+
 	// https URLs will not be blocked, no MITM
 	myurl, err := sanitize(str)
 	if err == ErrHttpsSkip {

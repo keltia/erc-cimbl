@@ -35,6 +35,9 @@ func init() {
 }
 
 func handlePath(ctx *Context, str string) (string, error) {
+	if fNoPaths {
+		return "", nil
+	}
 	path := entryToPath(str)
 	if !restr.MatchString(path) {
 		verbose("Filename %s CHECK", path)
