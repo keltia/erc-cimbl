@@ -165,7 +165,7 @@ func handleCSV(ctx *Context, r io.Reader) (*Results, error) {
 			if !fNoPaths {
 				p, _ := handlePath(ctx, row["value"])
 				if p != "" {
-					res.Add("path", p)
+					res.Add(rt, p)
 				}
 			}
 		case "url":
@@ -175,7 +175,7 @@ func handleCSV(ctx *Context, r io.Reader) (*Results, error) {
 					log.Printf("error(%s): %s", row["value"], err.Error())
 					continue
 				}
-				res.Add("url", u)
+				res.Add(rt, u)
 
 			}
 		}

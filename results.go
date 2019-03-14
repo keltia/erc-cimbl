@@ -15,7 +15,7 @@ func NewResults() *Results {
 
 func (r *Results) Add(t string, e string) *Results {
 	switch t {
-	case "path":
+	case "filename":
 		r.Paths[e] = true
 	case "url":
 		r.URLs[e] = true
