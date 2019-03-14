@@ -34,7 +34,8 @@ func init() {
 	restr = regexp.MustCompile(fmt.Sprintf("\\.(i:%s)$", strings.Join(fileEXTS, "|")))
 }
 
-func handlePath(ctx *Context, path string) (string, error) {
+func handlePath(ctx *Context, str string) (string, error) {
+	path := entryToPath(str)
 	if !restr.MatchString(path) {
 		verbose("Filename %s CHECK", path)
 		return path, nil
