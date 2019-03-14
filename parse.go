@@ -163,7 +163,7 @@ func handleCSV(ctx *Context, r io.Reader) (*Results, error) {
 		switch rt {
 		case "filename":
 			if !fNoPaths {
-				p := handlePath(ctx, entryToPath(row["value"]))
+				p, _ := handlePath(ctx, entryToPath(row["value"]))
 				if p != "" {
 					res.Add("path", p)
 				}
