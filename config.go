@@ -40,8 +40,7 @@ func loadConfig() (*Config, error) {
 
 	var cnf Config
 
-	err = toml.Unmarshal(buf, &cnf)
-	if err != nil {
+	if err := toml.Unmarshal(buf, &cnf); err != nil {
 		return &Config{}, fmt.Errorf("Error parsing toml %s: %v", file, err)
 	}
 
