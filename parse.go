@@ -205,14 +205,12 @@ func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 			}
 		} else {
 			if strings.HasPrefix(file, "http:") {
-				if !fNoURLs {
-					u, err := handleURL(ctx, file)
-					if err != nil {
-						log.Printf("error checking %s: %v", file, err)
-						continue
-					}
-					res.Add("url", u)
+				u, err := handleURL(ctx, file)
+				if err != nil {
+					log.Printf("error checking %s: %v", file, err)
+					continue
 				}
+				res.Add("url", u)
 			} else {
 				verbose("Ignoring %s…", file)
 			}
