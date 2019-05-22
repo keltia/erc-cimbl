@@ -30,5 +30,6 @@ func (r *Results) Merge(s *Results) *Results {
 	for u, _ := range s.URLs {
 		r.URLs[u] = true
 	}
+	r.files = append(r.files, s.files...)
 	return r
 }
