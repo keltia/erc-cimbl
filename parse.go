@@ -196,7 +196,7 @@ func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 					return err
 				}
 				res.Merge(r)
-				ctx.files = append(ctx.files, filepath.Base(nfile))
+				//ctx.files = append(ctx.files, filepath.Base(nfile))
 				return nil
 			})
 			if err != nil {
