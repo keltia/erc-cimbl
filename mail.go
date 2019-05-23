@@ -114,7 +114,7 @@ func addURLs(res *Results) string {
 	if !fNoURLs {
 		if len(res.URLs) != 0 {
 			txt = fmt.Sprintf("%s", urlsTmpl)
-			for k, _ := range res.URLs {
+			for k := range res.URLs {
 				txt = fmt.Sprintf("%s  %s\n", txt, k)
 			}
 		}
