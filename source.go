@@ -102,7 +102,7 @@ func (l *List) AddFromFile(fn string) (*List, error) {
 }
 
 func (l *List) ReadFromCSV(r io.Reader) *List {
-
+	return &List{}
 }
 
 func (l *List) Check() *Results {
