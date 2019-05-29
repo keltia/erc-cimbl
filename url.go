@@ -119,7 +119,7 @@ func handleURL(ctx *Context, str string) (string, error) {
 	*/
 	_, transport := proxy.SetupTransport(myurl)
 	if transport == nil {
-		return "", fmt.Errorf("SetupTransport")
+		return "", errors.New("SetupTransport")
 	}
 
 	// It is better to re-use than creating a new one each time
