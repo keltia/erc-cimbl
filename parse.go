@@ -138,7 +138,9 @@ func handleSingleFile(ctx *Context, file string) (*Results, error) {
 		return &Results{}, errors.Wrap(err, "single/readfile")
 	}
 
-	return handleCSV(ctx, buf)
+	r, err := handleCSV(ctx, buf)
+	r.files = []string{file}
+	return r, err
 }
 
 type command func(ctx *Context, e string) (string, error)
