@@ -53,7 +53,10 @@ type List struct {
 }
 
 func NewList(ctx *Context, files []string) *List {
-	l := new(List)
+	l := &List{s:[]Sourcer{}}
+	if files == nil || len(files) == 0{
+		return &List{}
+	}
 	for _, e := range files {
 		if checkFilename(ctx, e) {
 			var err error
