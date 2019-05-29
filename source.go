@@ -2,10 +2,12 @@ package main
 
 import (
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/maxim2266/csvplus"
 	"github.com/pkg/errors"
 )
 
@@ -54,7 +56,12 @@ func NewList(ctx *Context, files []string) *List {
 	l := new(List)
 	for _, e := range files {
 		if checkFilename(ctx, e) {
-			l.AddFromFile(e)
+			var err error
+
+			l, err = l.AddFromFile(e)
+			if err != nil {
+				log.Printf("%v: reading error", e)
+			}
 		} else if strings.HasPrefix(e, "http:") {
 			l.Add(NewURL(e))
 		}
@@ -98,11 +105,37 @@ func (l *List) AddFromFile(fn string) (*List, error) {
 		return l, errors.Wrap(err, "single/readfile")
 	}
 
-	return l.ReadFromCSV(buf), nil
+	return l.ReadFromCSV(buf)
 }
 
-func (l *List) ReadFromCSV(r io.Reader) *List {
-	return &List{}
+func (l *List) ReadFromCSV(r io.Reader) (*List, error) {
+	allLines := csvplus.FromReader(r).SelectColumns("type", "value")
+	rows, err := csvplus.Take(allLines).
+		Filter(csvplus.Any(csvplus.Like(csvplus.Row{"type": "url"}),
+			csvplus.Like(csvplus.Row{"type": "filename"}),
+			csvplus.Like(csvplus.Row{"type": "filename|sha1"}))).
+		ToRows()
+	if err != nil {
+		return &List{}, errors.Wrapf(err, "reading csv")
+	}
+
+	verbose("%d entries found.", len(rows))
+
+	for _, row := range rows {
+		debug("row=%v", row)
+		rt := strings.Split(row["type"], "|")[0]
+		debug("rt=%s", rt)
+		switch rt {
+		case "filename":
+			l.Add(NewFilename(row["value"]))
+		case "url":
+			l.Add((NewURL(row["value"])))
+		default:
+			continue
+		}
+	}
+
+	return &List{}, nil
 }
 
 func (l *List) Check() *Results {
