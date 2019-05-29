@@ -84,7 +84,7 @@ func createMail(ctx *Context, res *Results) (str string, err error) {
 		Subject:   ctx.config.Subject,
 		MyName:    MyName,
 		MyVersion: MyVersion,
-		Files:     strings.Join(ctx.files, ", "),
+		Files:     strings.Join(res.files, ", "),
 		Paths:     addPaths(res),
 		URLs:      addURLs(res),
 	}
@@ -114,7 +114,7 @@ func addURLs(res *Results) string {
 	if !fNoURLs {
 		if len(res.URLs) != 0 {
 			txt = fmt.Sprintf("%s", urlsTmpl)
-			for k, _ := range res.URLs {
+			for k := range res.URLs {
 				txt = fmt.Sprintf("%s  %s\n", txt, k)
 			}
 		}

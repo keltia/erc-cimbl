@@ -33,7 +33,6 @@ type Context struct {
 
 	config    *Config
 	tempdir   *sandbox.Dir
-	files     []string
 	proxyauth string
 	mail      MailSender
 }
