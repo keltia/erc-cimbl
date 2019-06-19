@@ -6,12 +6,17 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/keltia/archive"
 	"github.com/keltia/proxy"
 	"github.com/keltia/sandbox"
 	"github.com/pkg/errors"
+)
+
+const (
+	REfn = `(?i:CIMBL-\d+-(CERTS|EU)\.(csv|zip)(\.asc|))`
 )
 
 var (
@@ -25,6 +30,9 @@ var (
 	fVerbose bool
 	fNoURLs  bool
 	fNoPaths bool
+
+	// RE to check filenames — sensible default
+	REFile *regexp.Regexp = regexp.MustCompile(REfn)
 )
 
 // Context is the way to share info across functions.
@@ -76,6 +84,10 @@ func setup() (*Context, error) {
 		fDoMail = false
 	} else {
 		verbose("Got mail server %s…", config.Server)
+	}
+
+	if config.REFile != "" {
+		REFile = regexp.MustCompile(config.REFile)
 	}
 
 	ctx := &Context{
