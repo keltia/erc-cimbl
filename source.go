@@ -52,13 +52,15 @@ type List struct {
 	s []Sourcer
 }
 
-func NewList(ctx *Context, files []string) *List {
-	l := &List{s:[]Sourcer{}}
-	if files == nil || len(files) == 0{
+func NewList(files []string) *List {
+	if files == nil || len(files) == 0 {
 		return &List{}
 	}
+
+	l := &List{}
+
 	for _, e := range files {
-		if checkFilename(ctx, e) {
+		if REFile.MatchString(e) {
 			var err error
 
 			l, err = l.AddFromFile(e)
@@ -67,6 +69,8 @@ func NewList(ctx *Context, files []string) *List {
 			}
 		} else if strings.HasPrefix(e, "http:") {
 			l.Add(NewURL(e))
+		} else {
+			log.Printf("invalid filename")
 		}
 	}
 	return l

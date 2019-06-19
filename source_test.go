@@ -62,35 +62,25 @@ func TestURL_Check(t *testing.T) {
 // List
 
 func TestNewList(t *testing.T) {
-	ctx := &Context{}
-	l := NewList(ctx, nil)
+	l := NewList(nil)
 	assert.Empty(t, l)
 }
 
 func TestNewList2(t *testing.T) {
-	ctx := &Context{}
-	l := NewList(ctx, []string{})
+	l := NewList([]string{})
 	assert.Empty(t, l)
 }
 
 func TestNewList3(t *testing.T) {
 	td := NewURL("http://www.example.net/")
 
-	ctx := &Context{
-		config:&Config{REFile:`(?i:CIMBL-\\d+-(CERTS|EU)\\.(csv|zip)(\\.asc|))`},
-	}
-
-	l := NewList(ctx, []string{"http://www.example.net/"})
+	l := NewList([]string{"http://www.example.net/"})
 	assert.NotEmpty(t, l)
 	assert.Equal(t, td, l.s[0])
 }
 
 func TestNewList4(t *testing.T) {
-	ctx := &Context{
-		config:&Config{REFile:`(?i:CIMBL-\d+-(CERTS|EU)\.(csv|zip)(\.asc|))`},
-	}
-
-	l := NewList(ctx, []string{"testdata/CIMBL-0666-CERTS.csv"})
+	l := NewList([]string{"testdata/CIMBL-0666-CERTS.csv"})
 	assert.NotEmpty(t, l)
 	t.Log(l.s)
 	//assert.Equal(t, "", l.s[0])
@@ -98,8 +88,7 @@ func TestNewList4(t *testing.T) {
 
 func TestList_Add(t *testing.T) {
 	td := []Sourcer{NewFilename("exemple.docx")}
-	ctx := &Context{}
-	l := NewList(ctx, nil)
+	l := NewList(nil)
 	l.Add(NewFilename("exemple.docx"))
 	assert.NotEmpty(t, l.s)
 	assert.Equal(t, td, l.s)
