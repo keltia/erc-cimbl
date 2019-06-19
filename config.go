@@ -19,7 +19,7 @@ type Config struct {
 	KeyID   string
 
 	// RE to check filenames
-	REFile string
+	REFile string `toml:"re_file"`
 }
 
 func loadConfig() (*Config, error) {
