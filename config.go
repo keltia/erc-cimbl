@@ -44,9 +44,5 @@ func loadConfig() (*Config, error) {
 		return &Config{}, fmt.Errorf("Error parsing toml %s: %v", file, err)
 	}
 
-	// Ensure we got sensible defaults
-	if cnf.REFile == "" {
-		cnf.REFile = `(?i:CIMBL-\d+-(CERTS|EU)\.(csv|zip)(\.asc|))`
-	}
 	return &cnf, nil
 }

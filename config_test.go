@@ -63,6 +63,25 @@ func TestLoadConfigGood(t *testing.T) {
 	assert.EqualValues(t, cnf, c, "should be equal")
 }
 
+func TestLoadConfigGood_NoRE(t *testing.T) {
+	baseDir = "testdata"
+	configName = "config-nore.toml"
+
+	c, err := loadConfig()
+	assert.NotEmpty(t, c, "not empty")
+	assert.NoError(t, err, "should be fine")
+
+	// Check values
+	cnf := &Config{
+		From:    "foo@example.com",
+		To:      "security@example.com",
+		Cc:      "root@example.com",
+		Subject: "CRQ: New URLs/files to be BLOCKED",
+		Server:  "SMTP:PORT",
+	}
+	assert.EqualValues(t, cnf, c, "should be equal")
+}
+
 func TestLoadConfigGoodVerbose(t *testing.T) {
 	baseDir = "testdata"
 	configName = "config.toml"
