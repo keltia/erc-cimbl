@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -21,10 +22,11 @@ func doCheck(ctx *Context, req *http.Request) (string, error) {
 
 	resp, err := ctx.Client.Do(req)
 	if err != nil {
-		debug("err: %s", err)
+		log.Printf("err: %s", err)
 		return "", errors.Wrap(err, "Do")
 	}
 
+	log.Printf("status=%d", resp.StatusCode)
 	switch resp.StatusCode {
 	case 403:
 		return ActionBlocked, nil
