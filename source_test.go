@@ -1,9 +1,11 @@
 package main
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Filename
@@ -21,7 +23,7 @@ func TestNewFilename2(t *testing.T) {
 }
 
 func TestFilename_AddTo(t *testing.T) {
-	td := map[string]bool{"example.docx":true}
+	td := map[string]bool{"example.docx": true}
 
 	fn := NewFilename("example.docx")
 
@@ -45,7 +47,7 @@ func TestNewURL(t *testing.T) {
 }
 
 func TestURL_AddTo(t *testing.T) {
-	td := map[string]bool{"http://www.example.net/":true}
+	td := map[string]bool{"http://www.example.net/": true}
 
 	u := NewURL("http://www.example.net/")
 	r := NewResults()
@@ -75,15 +77,20 @@ func TestNewList3(t *testing.T) {
 	td := NewURL("http://www.example.net/")
 
 	l := NewList([]string{"http://www.example.net/"})
-	assert.NotEmpty(t, l)
+	require.NotEmpty(t, l)
 	assert.Equal(t, td, l.s[0])
 }
 
 func TestNewList4(t *testing.T) {
-	l := NewList([]string{"testdata/CIMBL-0666-CERTS.csv"})
-	assert.NotEmpty(t, l)
-	t.Log(l.s)
-	//assert.Equal(t, "", l.s[0])
+	td := []Sourcer{
+		NewFilename("55fe62947f3860108e7798c4498618cb.rtf"),
+		NewURL("http://pontonerywariva342.top/search.php"),
+		NewURL("http://www.example.net/"),
+	}
+
+	l := NewList([]string{"testdata/CIMBL-0666-CERTS.csv", "exemple.docx", "http://www.example.net/"})
+	require.NotEmpty(t, l)
+	assert.EqualValues(t, td, l.s)
 }
 
 func TestList_Add(t *testing.T) {
@@ -94,11 +101,88 @@ func TestList_Add(t *testing.T) {
 	assert.Equal(t, td, l.s)
 }
 
-func TestList_AddFromFile(t *testing.T) {
+func TestList_Add2(t *testing.T) {
+	td := []Sourcer{
+		NewFilename("exemple.docx"),
+		NewURL("http://www.example.net/"),
+	}
 
+	l := NewList(nil)
+	l.Add(NewFilename("exemple.docx"))
+	l.Add(NewURL("http://www.example.net/"))
+	assert.NotEmpty(t, l.s)
+	assert.Equal(t, td, l.s)
+}
+
+func TestList_AddFromFile(t *testing.T) {
+	td := []Sourcer{
+		NewFilename("55fe62947f3860108e7798c4498618cb.rtf"),
+		NewURL("http://pontonerywariva342.top/search.php"),
+	}
+
+	l := NewList(nil)
+	l1, err := l.AddFromFile("testdata/CIMBL-0666-CERTS.csv")
+	require.NoError(t, err)
+	require.NotEmpty(t, l)
+	assert.EqualValues(t, td, l.s)
+	assert.EqualValues(t, l1, l)
+}
+
+func TestList_AddFromFile_None(t *testing.T) {
+	l := NewList(nil)
+	l1, err := l.AddFromFile("/nonexistent")
+	require.Error(t, err)
+	require.Empty(t, l)
+	assert.EqualValues(t, l1, l)
+}
+
+func TestList_AddFromFile_Perms(t *testing.T) {
+	file := "testdata/CIMBL-0666-CERTS.csv"
+
+	l := NewList(nil)
+
+	assert.NoError(t, os.Chmod(file, 0000), "should be fine")
+
+	l1, err := l.AddFromFile(file)
+
+	require.Error(t, err)
+	require.Empty(t, l)
+	assert.EqualValues(t, l1, l)
+
+	assert.NoError(t, os.Chmod(file, 0644), "should be fine")
+}
+
+func TestList_AddFromFile_Badcsv(t *testing.T) {
+
+	l := NewList(nil)
+	l1, err := l.AddFromFile("testdata/bad.csv")
+	require.Error(t, err)
+	require.Empty(t, l)
+	assert.EqualValues(t, l1, l)
+}
+
+func TestList_Merge(t *testing.T) {
+	td2 := []string{"http://example.net/"}
+
+	tdm := []Sourcer{
+		NewFilename("55fe62947f3860108e7798c4498618cb.rtf"),
+		NewURL("http://pontonerywariva342.top/search.php"),
+		NewURL("http://example.net/"),
+	}
+
+	l := NewList(nil)
+	_, err := l.AddFromFile("testdata/CIMBL-0666-CERTS.csv")
+	require.NoError(t, err)
+	require.NotEmpty(t, l)
+
+	l1 := NewList(td2)
+	l2 := l.Merge(l1)
+
+	assert.Equal(t, 3, len(l.s))
+	assert.EqualValues(t, tdm, l2.s)
+	assert.EqualValues(t, tdm, l.s)
 }
 
 func TestList_Check(t *testing.T) {
 
 }
-
