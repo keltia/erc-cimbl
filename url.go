@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/keltia/proxy"
@@ -96,6 +97,11 @@ func sanitize(str string) (out string, err error) {
 			myurl.Path = u.Path
 		}
 		return myurl.String(), nil
+	}
+
+	// Onion sites are not reachable except within Tor
+	if strings.HasSuffix(myurl.Host, ".onion") {
+		return str, ErrHttpsSkip
 	}
 
 	// check for [IP]
