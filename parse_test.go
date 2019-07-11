@@ -429,6 +429,59 @@ func TestHandleAllFiles_OneFile(t *testing.T) {
 	assert.EqualValues(t, realURLs, res.URLs)
 }
 
+func TestHandleAllFiles_OneFile1(t *testing.T) {
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	fDebug = true
+
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
+
+	realURLs := map[string]bool{
+		TestSite: true,
+	}
+
+	snd, err := sandbox.New("test")
+	require.NoError(t, err)
+	defer snd.Cleanup()
+
+	ctx := &Context{
+		config:  config,
+		tempdir: snd,
+	}
+
+	_, transport := proxy.SetupTransport(TestSite)
+	require.NotNil(t, transport)
+
+	// Set up minimal client
+	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
+
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		Reply(200)
+
+	gock.InterceptClient(ctx.Client)
+	defer gock.RestoreClient(ctx.Client)
+
+	file := "testdata/CIMBL-0666-CERTS.csv"
+
+	res, err := handleAllFiles(ctx, []string{file})
+	assert.NoError(t, err)
+
+	assert.NotEmpty(t, res.Paths)
+	assert.NotEmpty(t, res.URLs)
+	assert.EqualValues(t, realPaths, res.Paths)
+	assert.EqualValues(t, realURLs, res.URLs)
+
+	fDebug = false
+}
+
 func TestHandleAllFiles_OneURL(t *testing.T) {
 	baseDir = "testdata"
 	config, err := loadConfig()
@@ -473,4 +526,6 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 	assert.Empty(t, res.Paths)
 	assert.NotEmpty(t, res.URLs)
 	assert.EqualValues(t, realURLs, res.URLs)
+
+	fVerbose = false
 }
