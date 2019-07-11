@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/keltia/archive"
@@ -31,6 +32,8 @@ var (
 	fNoURLs  bool
 	fNoPaths bool
 
+	fJobs int
+
 	// RE to check filenames — sensible default
 	REFile *regexp.Regexp = regexp.MustCompile(REfn)
 )
@@ -43,6 +46,8 @@ type Context struct {
 	tempdir   *sandbox.Dir
 	proxyauth string
 	mail      MailSender
+	jobs      int
+	files     []string
 }
 
 // Usage string override.
@@ -60,6 +65,7 @@ func init() {
 	flag.BoolVar(&fDoMail, "M", false, "Send mail")
 	flag.BoolVar(&fNoPaths, "P", false, "Do not check filenames")
 	flag.BoolVar(&fNoURLs, "U", false, "Do not check URLs")
+	flag.IntVar(&fJobs, "j", runtime.NumCPU(), "parallel jobs")
 	flag.BoolVar(&fVerbose, "v", false, "Verbose mode")
 }
 
@@ -93,6 +99,7 @@ func setup() (*Context, error) {
 	ctx := &Context{
 		config: config,
 		mail:   SMTPMailSender{},
+		jobs:   fJobs,
 	}
 
 	proxyauth, err := proxy.SetupProxyAuth()
