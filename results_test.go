@@ -27,12 +27,10 @@ func TestResults_Add(t *testing.T) {
 func TestResults_Merge(t *testing.T) {
 	r1 := &Results{
 		Paths: map[string]bool{"foobar.txt": true},
-		files: []string{"foo.txt"},
 	}
 
 	r2 := &Results{
 		Paths: map[string]bool{"bar.doc": true},
-		files: []string{"bar.txt"},
 	}
 
 	mm := &Results{
@@ -40,7 +38,6 @@ func TestResults_Merge(t *testing.T) {
 			"bar.doc":    true,
 			"foobar.txt": true,
 		},
-		files: []string{"foo.txt", "bar.txt"},
 	}
 
 	tt := r1.Merge(r2)
@@ -52,13 +49,11 @@ func TestResults_Merge2(t *testing.T) {
 	r1 := &Results{
 		Paths: map[string]bool{"foobar.txt": true},
 		URLs:  map[string]bool{"example.com": true},
-		files: []string{"foo.txt"},
 	}
 
 	r2 := &Results{
 		Paths: map[string]bool{"bar.doc": true},
 		URLs:  map[string]bool{"example.net": true},
-		files: []string{"bar.txt"},
 	}
 
 	mm := &Results{
@@ -70,7 +65,6 @@ func TestResults_Merge2(t *testing.T) {
 			"example.com": true,
 			"example.net": true,
 		},
-		files: []string{"foo.txt", "bar.txt"},
 	}
 
 	tt := r1.Merge(r2)
