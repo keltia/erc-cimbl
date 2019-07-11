@@ -28,9 +28,14 @@ func doCheck(ctx *Context, req *http.Request) (string, error) {
 
 	log.Printf("status=%d", resp.StatusCode)
 	switch resp.StatusCode {
-	case 403:
+	// Error (blocked port etc.)
+	case http.StatusServiceUnavailable:
+		fallthrough
+	// Already blocked
+	case http.StatusForbidden:
 		return ActionBlocked, nil
-	case 407:
+	// Missing a parameter
+	case http.StatusProxyAuthRequired:
 		return ActionAuth, nil
 	default:
 		return ActionBlock, nil
