@@ -2,14 +2,10 @@ package main
 
 import (
 	"bytes"
-	"io"
-	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/keltia/archive"
-	"github.com/maxim2266/csvplus"
 	"github.com/pkg/errors"
 )
 
@@ -106,118 +102,17 @@ We filter on "type", looking for "url" & "filename".
 
 */
 
-// handleSingleFile creates a tempdir and dispatch csv/zip files to handler.
-func handleSingleFile(ctx *Context, file string) (*Results, error) {
-	var (
-		base string
-		err  error
-	)
-
-	if _, err := os.Stat(file); err != nil {
-		return &Results{}, errors.Wrapf(err, "unknown file %s", file)
-	}
-
-	base = file
-
-	// Special case for .zip.asc
-	if strings.HasSuffix(base, ".zip.asc") || strings.HasSuffix(base, ".zip.gpg") {
-		rbase, err := extractZipFrom(file)
-		if err != nil {
-			return &Results{}, errors.Wrap(err, "extractzip")
-		}
-		base, err = filepath.Abs(rbase)
-		if err != nil {
-			return &Results{}, errors.Wrap(err, "basename")
-		}
-	}
-
-	debug("opening %s", base)
-
-	buf, err := readFile(base)
-	if err != nil {
-		return &Results{}, errors.Wrap(err, "single/readfile")
-	}
-
-	r, err := handleCSV(ctx, buf)
-	r.files = []string{file}
-	return r, err
-}
-
-type command func(ctx *Context, e string) (string, error)
-
-var table = map[string]command{
-	"filename": handlePath,
-	"url":      handleURL,
-}
-
-// handleCSV decodes the CSV file
-func handleCSV(ctx *Context, r io.Reader) (*Results, error) {
-	res := NewResults()
-
-	allLines := csvplus.FromReader(r).SelectColumns("type", "value")
-	rows, err := csvplus.Take(allLines).
-		Filter(csvplus.Any(csvplus.Like(csvplus.Row{"type": "url"}),
-			csvplus.Like(csvplus.Row{"type": "filename"}),
-			csvplus.Like(csvplus.Row{"type": "filename|sha1"}))).
-		ToRows()
-	if err != nil {
-		return res, errors.Wrapf(err, "reading csv")
-	}
-
-	verbose("%d entries found.", len(rows))
-	for _, row := range rows {
-		debug("row=%v", row)
-		rt := strings.Split(row["type"], "|")[0]
-		debug("rt=%s", rt)
-		if f, ok := table[rt]; ok {
-			r, err := f(ctx, row["value"])
-			if err != nil {
-				log.Printf("error(%s): %v", row["value"], err)
-			}
-			res.Add(rt, r)
-		}
-	}
-	return res, err
-}
-
 // handleAllFiles processes a list of files
 func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 	// For all files on the CLI
-	res := NewResults()
-	for _, file := range files {
-		if checkFilename(ctx, file) {
-			verbose("Checking %s…\n", file)
+	//res := NewResults()
 
-			nfile, _ := filepath.Abs(file)
-			err := ctx.tempdir.Run(func() error {
-				var err error
+	list := NewList(files)
+	debug("list=%#v\n", list)
+	list.ctx = ctx
 
-				r, err := handleSingleFile(ctx, nfile)
-				if err != nil {
-					log.Printf("error reading %s: %v", nfile, err)
-					return err
-				}
-				res.Merge(r)
-				//ctx.files = append(ctx.files, filepath.Base(nfile))
-				return nil
-			})
-			if err != nil {
-				log.Printf("got error %v for %s", err, file)
-				continue
-			}
-		} else {
-			if strings.HasPrefix(file, "http:") {
-				u, err := handleURL(ctx, file)
-				if err != nil {
-					log.Printf("error checking %s: %v", file, err)
-					continue
-				}
-				res.Add("url", u)
-			} else {
-				verbose("Ignoring %s…", file)
-			}
-		}
-	}
+	r := list.Check(ctx)
+	debug("r=%#v\n", r)
 
-	return res, nil
+	return r, nil
 }

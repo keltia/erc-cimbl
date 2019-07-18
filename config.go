@@ -19,7 +19,7 @@ type Config struct {
 	KeyID   string
 
 	// RE to check filenames
-	REFile string
+	REFile string `toml:"re_file"`
 }
 
 func loadConfig() (*Config, error) {
@@ -44,9 +44,5 @@ func loadConfig() (*Config, error) {
 		return &Config{}, fmt.Errorf("Error parsing toml %s: %v", file, err)
 	}
 
-	// Ensure we got sensible defaults
-	if cnf.REFile == "" {
-		cnf.REFile = `(?i:CIMBL-\d+-(CERTS|EU)\.(csv|zip)(\.asc|))`
-	}
 	return &cnf, nil
 }

@@ -66,6 +66,8 @@ func TestCheckForIP(t *testing.T) {
 func TestDoCheck403(t *testing.T) {
 	defer gock.Off()
 
+	fDebug = true
+
 	// Check values
 	ctx := &Context{}
 
@@ -89,8 +91,11 @@ func TestDoCheck403(t *testing.T) {
 	require.NoError(t, err)
 
 	res, err := doCheck(ctx, req)
+	t.Logf("res=%#v", res)
 	assert.NoError(t, err)
 	assert.Equal(t, ActionBlocked, res)
+
+	fDebug = false
 }
 
 func TestDoCheck200(t *testing.T) {

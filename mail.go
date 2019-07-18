@@ -22,8 +22,8 @@ Dear Service Desk,
 After reading the following files received from CERT-EU:
   {{.Files}}
 
-{{.Paths}}
 {{.URLs}}
+{{.Paths}}
 Best regards,
 --
 Your friendly script - {{.MyName}}/{{.MyVersion}}
@@ -84,7 +84,7 @@ func createMail(ctx *Context, res *Results) (str string, err error) {
 		Subject:   ctx.config.Subject,
 		MyName:    MyName,
 		MyVersion: MyVersion,
-		Files:     strings.Join(res.files, ", "),
+		Files:     strings.Join(ctx.files, ", "),
 		Paths:     addPaths(res),
 		URLs:      addURLs(res),
 	}

@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/keltia/proxy"
@@ -21,15 +23,22 @@ func doCheck(ctx *Context, req *http.Request) (string, error) {
 
 	resp, err := ctx.Client.Do(req)
 	if err != nil {
-		debug("err: %s", err)
+		log.Printf("err: %s", err)
 		return "", errors.Wrap(err, "Do")
 	}
 
+	//log.Printf("status=%d", resp.StatusCode)
 	switch resp.StatusCode {
-	case 403:
+	// Error (blocked port etc.)
+	case http.StatusServiceUnavailable:
+		fallthrough
+	// Already blocked
+	case http.StatusForbidden:
 		return ActionBlocked, nil
-	case 407:
+	// Missing a parameter
+	case http.StatusProxyAuthRequired:
 		return ActionAuth, nil
+	// Block it already!
 	default:
 		return ActionBlock, nil
 	}
@@ -91,6 +100,11 @@ func sanitize(str string) (out string, err error) {
 		return myurl.String(), nil
 	}
 
+	// Onion sites are not reachable except within Tor
+	if strings.HasSuffix(myurl.Host, ".onion") {
+		return str, ErrHttpsSkip
+	}
+
 	// check for [IP]
 	l := len(myurl.Host)
 	if myurl.Host[0] == '[' && myurl.Host[l-1] == ']' {
@@ -101,7 +115,7 @@ func sanitize(str string) (out string, err error) {
 
 func handleURL(ctx *Context, str string) (string, error) {
 
-	debug("before,url=%s", str)
+	//debug("before,url=%s", str)
 
 	if fNoURLs {
 		return "", nil
@@ -113,7 +127,7 @@ func handleURL(ctx *Context, str string) (string, error) {
 		skipped = append(skipped, str)
 		return "", nil
 	}
-	debug("url=%s", myurl)
+	//debug("url=%s", myurl)
 	/*
 	   Setup connection including proxy stuff
 	*/
@@ -137,8 +151,8 @@ func handleURL(ctx *Context, str string) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "doCheck")
 	}
-	verbose("Checking %s: %s", myurl, result)
 	if result == ActionBlock {
+		verbose("Checking %s: %s", myurl, result)
 		return myurl, nil
 	}
 	return "", nil

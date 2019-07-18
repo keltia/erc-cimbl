@@ -6,13 +6,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/maxim2266/csvplus"
 	"github.com/pkg/errors"
 )
 
 type Sourcer interface {
-	Check() bool
+	Check(ctx *Context) bool
 	AddTo(r *Results)
 }
 
@@ -24,11 +25,17 @@ func NewURL(u string) *URL {
 	return &URL{H: u}
 }
 
-func (u *URL) Check() bool {
-	return true
+// XXX
+func (u *URL) Check(ctx *Context) bool {
+	r, _ := handleURL(ctx, u.H)
+	if r == u.H {
+		return true
+	}
+	return false
 }
 
 func (u *URL) AddTo(r *Results) {
+	verbose("U")
 	r.Add("url", u.H)
 }
 
@@ -40,39 +47,48 @@ func NewFilename(s string) *Filename {
 	return &Filename{Name: s}
 }
 
-func (f *Filename) Check() bool {
+func (f *Filename) Check(ctx *Context) bool {
 	return true
 }
 
 func (f *Filename) AddTo(r *Results) {
+	verbose("F")
 	r.Add("filename", f.Name)
 }
 
 type List struct {
-	s []Sourcer
+	ctx *Context
+	s   []Sourcer
 }
 
-func NewList(ctx *Context, files []string) *List {
-	l := &List{s:[]Sourcer{}}
-	if files == nil || len(files) == 0{
+// NewList create a new list from sources, either URL or a CIMBL filename
+// NewList() with another filename is not supported although an URL is.
+func NewList(files []string) *List {
+	if files == nil || len(files) == 0 {
 		return &List{}
 	}
+
+	l := &List{}
+
 	for _, e := range files {
-		if checkFilename(ctx, e) {
+		if strings.HasPrefix(e, "http:") {
+			l.Add(NewURL(e))
+		} else if REFile.MatchString(e) {
 			var err error
 
 			l, err = l.AddFromFile(e)
 			if err != nil {
 				log.Printf("%v: reading error", e)
 			}
-		} else if strings.HasPrefix(e, "http:") {
-			l.Add(NewURL(e))
+		} else {
+			log.Printf("invalid filename")
 		}
 	}
 	return l
 }
 
 func (l *List) Add(s Sourcer) *List {
+	debug("adding %#v", s)
 	l.s = append(l.s, s)
 	return l
 }
@@ -130,23 +146,61 @@ func (l *List) ReadFromCSV(r io.Reader) (*List, error) {
 		debug("rt=%s", rt)
 		switch rt {
 		case "filename":
-			l.Add(NewFilename(row["value"]))
+			fn := strings.Split(row["value"], "|")[0]
+			l.Add(NewFilename(fn))
 		case "url":
 			l.Add((NewURL(row["value"])))
-		default:
-			continue
 		}
 	}
 
-	return &List{}, nil
+	return l, nil
 }
 
-func (l *List) Check() *Results {
-	r := NewResults()
-	for _, e := range l.s {
-		if e.Check() {
-			e.AddTo(r)
-		}
+func (l *List) Merge(l1 *List) *List {
+	for _, e := range l1.s {
+		l.Add(e)
 	}
+	return l
+}
+
+func (l *List) Check(ctx *Context) *Results {
+	var mut sync.Mutex
+
+	r := NewResults()
+
+	wg := &sync.WaitGroup{}
+
+	queue := make(chan Sourcer, len(l.s))
+
+	debug("setup %d workers\n", ctx.jobs)
+
+	// Setup workers
+	for i := 0; i < ctx.jobs; i++ {
+		wg.Add(1)
+		c := ctx
+		go func(n int, wg *sync.WaitGroup) {
+			defer wg.Done()
+
+			debug("%d is fine\n", n)
+			for e := range queue {
+				verbose("w%d - %d left", n, len(queue))
+				if e.Check(c) {
+					mut.Lock()
+					verbose("adding %#v\n", e)
+					e.AddTo(r)
+					mut.Unlock()
+				}
+			}
+		}(i, wg)
+	}
+
+	debug("scan queue:\n")
+	for _, q := range l.s {
+		queue <- q
+	}
+
+	close(queue)
+	debug("r=%#v\n", r)
+	wg.Wait()
 	return r
 }

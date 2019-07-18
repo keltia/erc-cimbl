@@ -1,7 +1,7 @@
 module github.com/keltia/erc-cimbl
 
 require (
-	github.com/BurntSushi/toml v0.3.0
+	github.com/BurntSushi/toml v0.3.1
 	github.com/h2non/gock v1.0.10
 	github.com/keltia/archive v0.3.3
 	github.com/keltia/proxy v0.9.5
