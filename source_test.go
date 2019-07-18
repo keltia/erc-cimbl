@@ -1,9 +1,15 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
+	"net/url"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/h2non/gock"
+	"github.com/keltia/proxy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,8 +40,9 @@ func TestFilename_AddTo(t *testing.T) {
 }
 
 func TestFilename_Check(t *testing.T) {
+	ctx := &Context{}
 	fn := NewFilename("example.docx")
-	assert.True(t, fn.Check())
+	assert.True(t, fn.Check(ctx))
 }
 
 // URL
@@ -56,9 +63,136 @@ func TestURL_AddTo(t *testing.T) {
 	assert.Equal(t, td, r.URLs)
 }
 
-func TestURL_Check(t *testing.T) {
-	u := NewURL("http://www.example.net/")
-	assert.True(t, u.Check())
+func TestList_Check(t *testing.T) {
+	defer gock.Off()
+
+	baseDir = "testdata"
+	file := "testdata/CIMBL-0666-CERTS.csv"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+	assert.NotNil(t, config)
+
+	ctx := &Context{
+		config: config,
+		jobs:   1,
+	}
+
+	l := NewList([]string{file})
+	require.NotEmpty(t, l)
+	_, transport := proxy.SetupTransport(TestSite)
+	require.NotNil(t, transport)
+
+	// Set up minimal client
+	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
+
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		Reply(200)
+
+	gock.InterceptClient(ctx.Client)
+	defer gock.RestoreClient(ctx.Client)
+
+	u := NewURL(TestSite)
+	assert.True(t, u.Check(ctx))
+}
+
+func TestList_Check2(t *testing.T) {
+	defer gock.Off()
+
+	baseDir = "testdata"
+	file := "testdata/CIMBL-0666-CERTS.csv"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+	assert.NotNil(t, config)
+
+	ctx := &Context{
+		config: config,
+		jobs:   1,
+	}
+
+	l := NewList([]string{file})
+	require.NotEmpty(t, l)
+
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
+	realURLs := map[string]bool{
+		TestSite: true,
+	}
+
+	_, transport := proxy.SetupTransport(TestSite)
+	require.NotNil(t, transport)
+
+	// Set up minimal client
+	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
+
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		Reply(200)
+
+	gock.InterceptClient(ctx.Client)
+	defer gock.RestoreClient(ctx.Client)
+
+	res := l.Check(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, realPaths, res.Paths)
+	assert.Equal(t, realURLs, res.URLs)
+}
+
+func TestList_Check3(t *testing.T) {
+	defer gock.Off()
+
+	baseDir = "testdata"
+	file := "testdata/CIMBL-0666-CERTS.csv"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	fVerbose = true
+
+	ctx := &Context{
+		config: config,
+		jobs:   1,
+	}
+
+	l := NewList([]string{file})
+
+	require.NotEmpty(t, l)
+
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
+	realURLs := map[string]bool{
+		TestSite: true,
+	}
+
+	_, transport := proxy.SetupTransport(TestSite)
+	require.NotNil(t, transport)
+
+	// Set up minimal client
+	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
+
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
+		Reply(200)
+
+	gock.InterceptClient(ctx.Client)
+	defer gock.RestoreClient(ctx.Client)
+
+	res := l.Check(ctx)
+	assert.NoError(t, err, "no error")
+	assert.Equal(t, realPaths, res.Paths)
+	assert.Equal(t, realURLs, res.URLs)
+	fVerbose = false
 }
 
 // List
@@ -152,6 +286,18 @@ func TestList_AddFromFile_Perms(t *testing.T) {
 	assert.NoError(t, os.Chmod(file, 0644), "should be fine")
 }
 
+func TestList_AddFromFile2(t *testing.T) {
+	file := "testdata/CIMBL-0666-CERTS.zip"
+
+	l := NewList(nil)
+
+	l1, err := l.AddFromFile(file)
+	assert.NotEmpty(t, l1)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, l)
+}
+
 func TestList_AddFromFile_Badcsv(t *testing.T) {
 
 	l := NewList(nil)
@@ -181,8 +327,4 @@ func TestList_Merge(t *testing.T) {
 	assert.Equal(t, 3, len(l.s))
 	assert.EqualValues(t, tdm, l2.s)
 	assert.EqualValues(t, tdm, l.s)
-}
-
-func TestList_Check(t *testing.T) {
-
 }
