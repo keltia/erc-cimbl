@@ -34,6 +34,7 @@ func TestSanitize(t *testing.T) {
 		{"[1.2.3.4]", "http://1.2.3.4", nil},
 		{"103.15.234.152:80/index.php", "http://103.15.234.152:80/index.php", nil},
 		{":/--%2Fexample.com", "http://:/--%2Fexample.com", nil},
+		{"https://jtabserver.org/bins/jayct.vbs&amp#39;,&amp;#39;%ALLUSERSPROFILE%\\jayct.vbs&amp;quot;", "", ErrParseError},
 	}
 	for _, u := range urls {
 		t.Logf("url=%s", u.url)
@@ -65,6 +66,8 @@ func TestCheckForIP(t *testing.T) {
 func TestDoCheck403(t *testing.T) {
 	defer gock.Off()
 
+	fDebug = true
+
 	// Check values
 	ctx := &Context{}
 
@@ -88,8 +91,11 @@ func TestDoCheck403(t *testing.T) {
 	require.NoError(t, err)
 
 	res, err := doCheck(ctx, req)
+	t.Logf("res=%#v", res)
 	assert.NoError(t, err)
 	assert.Equal(t, ActionBlocked, res)
+
+	fDebug = false
 }
 
 func TestDoCheck200(t *testing.T) {
@@ -253,4 +259,17 @@ func TestHandleURLblock(t *testing.T) {
 	assert.NoError(t, err)
 	require.NotEmpty(t, u)
 	assert.Equal(t, u, TestSite)
+}
+
+func TestHandleURLno(t *testing.T) {
+	// Check values
+	ctx := &Context{}
+
+	fNoURLs = true
+
+	u, err := handleURL(ctx, TestSite)
+	assert.NoError(t, err)
+	require.Empty(t, u)
+
+	fNoURLs = false
 }

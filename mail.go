@@ -22,8 +22,8 @@ Dear Service Desk,
 After reading the following files received from CERT-EU:
   {{.Files}}
 
-{{.Paths}}
 {{.URLs}}
+{{.Paths}}
 Best regards,
 --
 Your friendly script - {{.MyName}}/{{.MyVersion}}
@@ -114,7 +114,7 @@ func addURLs(res *Results) string {
 	if !fNoURLs {
 		if len(res.URLs) != 0 {
 			txt = fmt.Sprintf("%s", urlsTmpl)
-			for k, _ := range res.URLs {
+			for k := range res.URLs {
 				txt = fmt.Sprintf("%s  %s\n", txt, k)
 			}
 		}

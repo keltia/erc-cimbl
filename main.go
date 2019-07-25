@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/keltia/archive"
@@ -14,17 +16,26 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	REfn = `(?i:CIMBL-\d+-(CERTS|EU)\.(csv|zip)(\.asc|))`
+)
+
 var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.9.0"
+	MyVersion = "0.10.0-P"
 
 	fDebug   bool
 	fDoMail  bool
 	fVerbose bool
 	fNoURLs  bool
 	fNoPaths bool
+	fSkipped bool
+	fJobs    int
+
+	// RE to check filenames — sensible default
+	REFile *regexp.Regexp = regexp.MustCompile(REfn)
 )
 
 // Context is the way to share info across functions.
@@ -33,9 +44,10 @@ type Context struct {
 
 	config    *Config
 	tempdir   *sandbox.Dir
-	files     []string
 	proxyauth string
 	mail      MailSender
+	jobs      int
+	files     []string
 }
 
 // Usage string override.
@@ -52,7 +64,9 @@ func init() {
 	flag.BoolVar(&fDebug, "D", false, "Debug mode")
 	flag.BoolVar(&fDoMail, "M", false, "Send mail")
 	flag.BoolVar(&fNoPaths, "P", false, "Do not check filenames")
+	flag.BoolVar(&fSkipped, "S", false, "Display skipped URLs")
 	flag.BoolVar(&fNoURLs, "U", false, "Do not check URLs")
+	flag.IntVar(&fJobs, "j", runtime.NumCPU(), "parallel jobs")
 	flag.BoolVar(&fVerbose, "v", false, "Verbose mode")
 }
 
@@ -79,9 +93,14 @@ func setup() (*Context, error) {
 		verbose("Got mail server %s…", config.Server)
 	}
 
+	if config.REFile != "" {
+		REFile = regexp.MustCompile(config.REFile)
+	}
+
 	ctx := &Context{
 		config: config,
 		mail:   SMTPMailSender{},
+		jobs:   fJobs,
 	}
 
 	proxyauth, err := proxy.SetupProxyAuth()
@@ -128,10 +147,11 @@ func realmain(args []string) error {
 		return errors.Wrap(err, "sending mail")
 	}
 
-	if len(skipped) != 0 {
-		log.Printf("\nSkipped URLs:\n%s", strings.Join(skipped, "\n"))
+	if fSkipped {
+		if len(skipped) != 0 {
+			log.Printf("\nSkipped URLs:\n%s", strings.Join(skipped, "\n"))
+		}
 	}
-
 	return nil
 }
 

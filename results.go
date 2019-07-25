@@ -3,7 +3,6 @@ package main
 type Results struct {
 	Paths map[string]bool
 	URLs  map[string]bool
-	files []string
 }
 
 func NewResults() *Results {
@@ -15,7 +14,7 @@ func NewResults() *Results {
 
 func (r *Results) Add(t string, e string) *Results {
 	switch t {
-	case "path":
+	case "filename":
 		r.Paths[e] = true
 	case "url":
 		r.URLs[e] = true
@@ -24,11 +23,11 @@ func (r *Results) Add(t string, e string) *Results {
 }
 
 func (r *Results) Merge(s *Results) *Results {
-    for p, _ := range s.Paths {
-        r.Paths[p] = true
-    }
-    for u, _ := range s.URLs {
-        r.URLs[u] = true
-    }
-    return r
+	for p, _ := range s.Paths {
+		r.Paths[p] = true
+	}
+	for u, _ := range s.URLs {
+		r.URLs[u] = true
+	}
+	return r
 }
