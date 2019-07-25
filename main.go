@@ -24,7 +24,7 @@ var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version
-	MyVersion = "0.9.0/P"
+	MyVersion = "0.10.0-P"
 
 	fDebug   bool
 	fDoMail  bool
