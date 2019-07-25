@@ -128,7 +128,7 @@ func (l *List) AddFromFile(fn string) (*List, error) {
 }
 
 func (l *List) ReadFromCSV(r io.Reader) (*List, error) {
-	allLines := csvplus.FromReader(r).SelectColumns("type", "value")
+	allLines := csvplus.FromReader(r).SelectColumns("type", "value", "to_ids")
 	rows, err := csvplus.Take(allLines).
 		Filter(csvplus.Any(csvplus.Like(csvplus.Row{"type": "url"}),
 			csvplus.Like(csvplus.Row{"type": "filename"}),
