@@ -31,8 +31,8 @@ var (
 	fVerbose bool
 	fNoURLs  bool
 	fNoPaths bool
-
-	fJobs int
+	fSkipped bool
+	fJobs    int
 
 	// RE to check filenames — sensible default
 	REFile *regexp.Regexp = regexp.MustCompile(REfn)
@@ -64,6 +64,7 @@ func init() {
 	flag.BoolVar(&fDebug, "D", false, "Debug mode")
 	flag.BoolVar(&fDoMail, "M", false, "Send mail")
 	flag.BoolVar(&fNoPaths, "P", false, "Do not check filenames")
+	flag.BoolVar(&fSkipped, "S", false, "Display skipped URLs")
 	flag.BoolVar(&fNoURLs, "U", false, "Do not check URLs")
 	flag.IntVar(&fJobs, "j", runtime.NumCPU(), "parallel jobs")
 	flag.BoolVar(&fVerbose, "v", false, "Verbose mode")
@@ -146,10 +147,11 @@ func realmain(args []string) error {
 		return errors.Wrap(err, "sending mail")
 	}
 
-	if len(skipped) != 0 {
-		log.Printf("\nSkipped URLs:\n%s", strings.Join(skipped, "\n"))
+	if fSkipped {
+		if len(skipped) != 0 {
+			log.Printf("\nSkipped URLs:\n%s", strings.Join(skipped, "\n"))
+		}
 	}
-
 	return nil
 }
 
