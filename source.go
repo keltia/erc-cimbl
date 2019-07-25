@@ -149,7 +149,10 @@ func (l *List) ReadFromCSV(r io.Reader) (*List, error) {
 			fn := strings.Split(row["value"], "|")[0]
 			l.Add(NewFilename(fn))
 		case "url":
-			l.Add((NewURL(row["value"])))
+			// if to_ids is set to 0, do not auto block.
+			if row["to_ids"] == "1" {
+				l.Add((NewURL(row["value"])))
+			}
 		}
 	}
 
