@@ -113,7 +113,7 @@ func setup() (*Context, error) {
 		ctx.proxyauth = proxyauth
 	}
 
-	// Create our sendbox
+	// Create our sandbox
 	ctx.tempdir, err = sandbox.New(MyName)
 	if err != nil {
 		return nil, errors.Wrap(err, "setup")
