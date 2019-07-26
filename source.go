@@ -57,7 +57,7 @@ func (f *Filename) AddTo(r *Results) {
 }
 
 type List struct {
-	ctx *Context
+	ctx *Context // XXX FIX NEEDED
 	s   []Sourcer
 }
 
@@ -124,8 +124,6 @@ func (l *List) AddFromFile(fn string) (*List, error) {
 		return l, errors.Wrap(err, "single/readfile")
 	}
 
-	// Update the file list.
-	l.ctx.files = append(l.ctx.files, filepath.Base(base))
 	return l.ReadFromCSV(buf)
 }
 
