@@ -188,8 +188,8 @@ func (l *List) Check(ctx *Context) *Results {
 			for e := range queue {
 				verbose("w%d - %d left", n, len(queue))
 				if e.Check(c) {
-					mut.Lock()
 					verbose("adding %#v\n", e)
+					mut.Lock()
 					e.AddTo(r)
 					mut.Unlock()
 				}
