@@ -303,7 +303,7 @@ func TestList_AddFromFile_Badcsv(t *testing.T) {
 	l := NewList(nil)
 	l1, err := l.AddFromFile("testdata/bad.csv")
 	require.Error(t, err)
-	require.NotEmpty(t, l)
+	require.Empty(t, l)
 	assert.Empty(t, l1.files)
 }
 
