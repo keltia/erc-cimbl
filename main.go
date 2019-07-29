@@ -100,7 +100,6 @@ func setup() (*Context, error) {
 		config: config,
 		mail:   SMTPMailSender{},
 		jobs:   fJobs,
-		files:  []string{},
 	}
 
 	proxyauth, err := proxy.SetupProxyAuth()
