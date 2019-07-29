@@ -47,7 +47,6 @@ type Context struct {
 	proxyauth string
 	mail      MailSender
 	jobs      int
-	files     []string
 }
 
 // Usage string override.

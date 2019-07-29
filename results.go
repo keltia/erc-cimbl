@@ -1,6 +1,7 @@
 package main
 
 type Results struct {
+	files []string
 	Paths map[string]bool
 	URLs  map[string]bool
 }

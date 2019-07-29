@@ -57,8 +57,9 @@ func (f *Filename) AddTo(r *Results) {
 }
 
 type List struct {
-	ctx *Context
-	s   []Sourcer
+	ctx   *Context
+	s     []Sourcer
+	files []string
 }
 
 // NewList create a new list from sources, either URL or a CIMBL filename
@@ -125,7 +126,7 @@ func (l *List) AddFromFile(fn string) (*List, error) {
 	}
 
 	// Update the file list.
-	l.ctx.files = append(l.ctx.files, filepath.Base(base))
+	l.files = append(l.files, filepath.Base(base))
 	return l.ReadFromCSV(buf)
 }
 
@@ -159,6 +160,10 @@ func (l *List) ReadFromCSV(r io.Reader) (*List, error) {
 	}
 
 	return l, nil
+}
+
+func (l *List) Files() []string {
+	return l.files
 }
 
 func (l *List) Merge(l1 *List) *List {
@@ -207,5 +212,6 @@ func (l *List) Check(ctx *Context) *Results {
 	close(queue)
 	debug("r=%#v\n", r)
 	wg.Wait()
+	r.files = l.Files()
 	return r
 }
