@@ -139,6 +139,11 @@ func TestRealMain_Noarg(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestRealMain_InvalidFile(t *testing.T) {
+	err := realmain([]string{"testdata/bad.csv"})
+	assert.NoError(t, err)
+}
+
 func TestRealMain_Badtemp(t *testing.T) {
 	old := os.Getenv("TMPDIR")
 	require.NoError(t, os.Setenv("TMPDIR", "/nonexistent"))
