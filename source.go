@@ -125,8 +125,11 @@ func (l *List) AddFromFile(fn string) (*List, error) {
 		return l, errors.Wrap(err, "single/readfile")
 	}
 
+<<<<<<< HEAD
 	// Update the file list.
 	l.files = append(l.files, filepath.Base(base))
+=======
+>>>>>>> 75fafbf49ae86ec552e951f4a8d50e7fe948986a
 	return l.ReadFromCSV(buf)
 }
 
@@ -195,8 +198,8 @@ func (l *List) Check(ctx *Context) *Results {
 			for e := range queue {
 				verbose("w%d - %d left", n, len(queue))
 				if e.Check(c) {
-					mut.Lock()
 					verbose("adding %#v\n", e)
+					mut.Lock()
 					e.AddTo(r)
 					mut.Unlock()
 				}
