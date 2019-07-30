@@ -303,8 +303,9 @@ func TestList_AddFromFile_Badcsv(t *testing.T) {
 	l := NewList(nil)
 	l1, err := l.AddFromFile("testdata/bad.csv")
 	require.Error(t, err)
-	require.Empty(t, l)
-	assert.Empty(t, l1.files)
+	assert.NotEmpty(t, l)
+	assert.NotEmpty(t, l1.files)
+	assert.EqualValues(t, []string{"bad.csv"}, l1.files)
 }
 
 func TestList_Merge(t *testing.T) {
