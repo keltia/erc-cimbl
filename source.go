@@ -137,7 +137,7 @@ func (l *List) ReadFromCSV(r io.Reader) (*List, error) {
 			csvplus.Like(csvplus.Row{"type": "filename|sha1"}))).
 		ToRows()
 	if err != nil {
-		return &List{}, errors.Wrapf(err, "reading csv")
+		return l, errors.Wrapf(err, "reading csv")
 	}
 
 	verbose("%d entries found.", len(rows))
