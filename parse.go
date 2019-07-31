@@ -112,7 +112,7 @@ func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 	list.ctx = ctx
 
 	r := list.Check(ctx)
-	debug("r=%#v\n", r)
+	debug("r(main)=%#v\n", r)
 
 	return r, nil
 }

@@ -7,9 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
-	"github.com/keltia/proxy"
+	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 )
 
@@ -18,31 +17,6 @@ const (
 	ActionBlock   = "**BLOCK**"
 	ActionBlocked = "BLOCKED-EEC"
 )
-
-func doCheck(ctx *Context, req *http.Request) (string, error) {
-
-	resp, err := ctx.Client.Do(req)
-	if err != nil {
-		log.Printf("err: %s", err)
-		return "", errors.Wrap(err, "Do")
-	}
-
-	//log.Printf("status=%d", resp.StatusCode)
-	switch resp.StatusCode {
-	// Error (blocked port etc.)
-	case http.StatusServiceUnavailable:
-		fallthrough
-	// Already blocked
-	case http.StatusForbidden:
-		return ActionBlocked, nil
-	// Missing a parameter
-	case http.StatusProxyAuthRequired:
-		return ActionAuth, nil
-	// Block it already!
-	default:
-		return ActionBlock, nil
-	}
-}
 
 var (
 	ErrHttpsSkip  = errors.New("skipping https")
@@ -113,7 +87,7 @@ func sanitize(str string) (out string, err error) {
 	return myurl.String(), err
 }
 
-func handleURL(ctx *Context, str string) (string, error) {
+func handleURL(c *resty.Client, str string) (string, error) {
 
 	//debug("before,url=%s", str)
 
@@ -127,33 +101,28 @@ func handleURL(ctx *Context, str string) (string, error) {
 		skipped = append(skipped, str)
 		return "", nil
 	}
-	//debug("url=%s", myurl)
-	/*
-	   Setup connection including proxy stuff
-	*/
-	_, transport := proxy.SetupTransport(myurl)
-	if transport == nil {
-		return "", errors.New("SetupTransport")
-	}
+	debug("url=%s", myurl)
 
-	// It is better to re-use than creating a new one each time
-	if ctx.Client == nil {
-		ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-	}
-
-	/*
-	   Do the thing, manage redirects, auth requests and stuff
-	*/
-	req, _ := http.NewRequest("HEAD", myurl, nil)
-	req.Header.Set("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion))
-
-	result, err := doCheck(ctx, req)
+	resp, err := c.R().
+		SetHeader("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
+		Head(myurl)
 	if err != nil {
-		return "", errors.Wrap(err, "doCheck")
+		return "", errors.Wrap(err, "Head")
 	}
-	if result == ActionBlock {
-		verbose("Checking %s: %s", myurl, result)
-		return myurl, nil
+
+	switch resp.StatusCode() {
+	// Error (blocked port etc.)
+	case http.StatusServiceUnavailable:
+		fallthrough
+	// Already blocked
+	case http.StatusForbidden:
+		return ActionBlocked, nil
+	// Missing a parameter
+	case http.StatusProxyAuthRequired:
+		log.Printf("Auth required")
+		return ActionAuth, err
+	// Block it already!
+	default:
+		return str, nil
 	}
-	return "", nil
 }

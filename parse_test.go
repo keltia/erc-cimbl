@@ -2,14 +2,13 @@ package main
 
 import (
 	"io/ioutil"
-	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/h2non/gock"
-	"github.com/keltia/proxy"
 	"github.com/keltia/sandbox"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -183,9 +182,17 @@ func TestHandleAllFiles_SingleBad2(t *testing.T) {
 		jobs:    1,
 	}
 
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
+
+	ctx.Client = c
+
+	fDebug = true
 	res, err := handleAllFiles(ctx, []string{"http://localhost/foo.php"})
+	t.Logf("res/test=%#v", res)
 	assert.NoError(t, err)
 	assert.Empty(t, res.URLs)
+	fDebug = false
 }
 
 func TestHandleAllFiles_OneFile(t *testing.T) {
@@ -213,12 +220,10 @@ func TestHandleAllFiles_OneFile(t *testing.T) {
 		jobs:    1,
 	}
 
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
 
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-
+	ctx.Client = c
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
@@ -226,8 +231,8 @@ func TestHandleAllFiles_OneFile(t *testing.T) {
 		Head(testSite.Path).
 		Reply(200)
 
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
 
 	file := "testdata/CIMBL-0666-CERTS.csv"
 
@@ -265,12 +270,10 @@ func TestHandleAllFiles_OneFile1(t *testing.T) {
 		jobs:    1,
 	}
 
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
 
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-
+	ctx.Client = c
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
@@ -278,8 +281,8 @@ func TestHandleAllFiles_OneFile1(t *testing.T) {
 		Head(testSite.Path).
 		Reply(200)
 
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
 
 	file := "testdata/CIMBL-0666-CERTS.csv"
 
@@ -315,12 +318,10 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 		jobs:    1,
 	}
 
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
 
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-
+	ctx.Client = c
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
@@ -328,8 +329,8 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 		Head(testSite.Path).
 		Reply(200)
 
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
 
 	file := TestSite
 

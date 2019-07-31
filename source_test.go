@@ -2,14 +2,12 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 	"os"
 	"testing"
-	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/h2non/gock"
-	"github.com/keltia/proxy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -40,9 +38,11 @@ func TestFilename_AddTo(t *testing.T) {
 }
 
 func TestFilename_Check(t *testing.T) {
-	ctx := &Context{}
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
+
 	fn := NewFilename("example.docx")
-	assert.True(t, fn.Check(ctx))
+	assert.True(t, fn.Check(c))
 }
 
 // URL
@@ -67,23 +67,15 @@ func TestList_Check(t *testing.T) {
 	defer gock.Off()
 
 	baseDir = "testdata"
-	file := "testdata/CIMBL-0666-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err)
 	assert.NotNil(t, config)
 
-	ctx := &Context{
-		config: config,
-		jobs:   1,
-	}
+	l := NewList([]string{})
+	require.Empty(t, l)
 
-	l := NewList([]string{file})
-	require.NotEmpty(t, l)
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
-
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
 
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
@@ -92,11 +84,11 @@ func TestList_Check(t *testing.T) {
 		Head(testSite.Path).
 		Reply(200)
 
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
 
 	u := NewURL(TestSite)
-	assert.True(t, u.Check(ctx))
+	assert.True(t, u.Check(c))
 }
 
 func TestList_Check2(t *testing.T) {
@@ -123,12 +115,10 @@ func TestList_Check2(t *testing.T) {
 		TestSite: true,
 	}
 
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
 
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-
+	ctx.Client = c
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
@@ -136,8 +126,8 @@ func TestList_Check2(t *testing.T) {
 		Head(testSite.Path).
 		Reply(200)
 
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
 
 	res := l.Check(ctx)
 	assert.NoError(t, err)
@@ -171,12 +161,10 @@ func TestList_Check3(t *testing.T) {
 		TestSite: true,
 	}
 
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
 
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-
+	ctx.Client = c
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
@@ -185,8 +173,8 @@ func TestList_Check3(t *testing.T) {
 		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
 		Reply(200)
 
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
 
 	res := l.Check(ctx)
 	assert.NoError(t, err, "no error")

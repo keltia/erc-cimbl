@@ -4,14 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/keltia/archive"
-	"github.com/keltia/proxy"
 	"github.com/keltia/sandbox"
 	"github.com/pkg/errors"
 )
@@ -40,19 +40,18 @@ var (
 
 // Context is the way to share info across functions.
 type Context struct {
-	Client *http.Client
+	Client *resty.Client
 
-	config    *Config
-	tempdir   *sandbox.Dir
-	proxyauth string
-	mail      MailSender
-	jobs      int
+	config  *Config
+	tempdir *sandbox.Dir
+	mail    MailSender
+	jobs    int
 }
 
 // Usage string override.
 var Usage = func() {
-	fmt.Fprintf(os.Stderr, "%s/%s (Archive/%s Proxy/%s Sandbox/%s)\n\n",
-		MyName, MyVersion, archive.Version(), proxy.Version(), sandbox.Version())
+	fmt.Fprintf(os.Stderr, "%s/%s (Archive/%s Sandbox/%s)\n\n",
+		MyName, MyVersion, archive.Version(), sandbox.Version())
 
 	flag.PrintDefaults()
 }
@@ -74,8 +73,8 @@ func setup() (*Context, error) {
 		fVerbose = true
 	}
 
-	verbose("%s/%s Archive/%s Proxy/%s Sandbox/%s",
-		MyName, MyVersion, archive.Version(), proxy.Version(), sandbox.Version())
+	verbose("%s/%s-resty Archive/%s Sandbox/%s",
+		MyName, MyVersion, archive.Version(), sandbox.Version())
 
 	// No config file is not an error but you do not get to send mail
 	config, err := loadConfig()
@@ -102,14 +101,15 @@ func setup() (*Context, error) {
 		jobs:   fJobs,
 	}
 
-	proxyauth, err := proxy.SetupProxyAuth()
-	if err != nil {
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy).SetTimeout(10 * time.Second)
+	ctx.Client = c
+
+	if proxy == "" {
 		verbose("No proxy auth.: %v", err)
 	} else {
 		verbose("Found http_proxy variable")
 		debug("Using %s as proxy…", os.Getenv("http_proxy"))
-		debug("Got %s as proxyauth", proxyauth)
-		ctx.proxyauth = proxyauth
 	}
 
 	// Create our sandbox
