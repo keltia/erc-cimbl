@@ -161,6 +161,22 @@ func TestRealMain_Onearg_Empty(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestRealMain_Onearg_EmptySkipped(t *testing.T) {
+	fSkipped = true
+	err := realmain([]string{"testdata/CIMBL-0667-CERTS.csv"})
+	assert.NoError(t, err)
+	fSkipped = false
+}
+
+func TestRealMain_Onearg_EmptySkipped2(t *testing.T) {
+	fSkipped = true
+	skipped = append(skipped, "https://example.net/")
+	err := realmain([]string{"testdata/CIMBL-0667-CERTS.csv"})
+	assert.NoError(t, err)
+	fSkipped = false
+	skipped = []string{}
+}
+
 func TestRealMain_Onearg_Good(t *testing.T) {
 	err := realmain([]string{"testdata/CIMBL-0666-CERTS.csv"})
 	assert.NoError(t, err)
@@ -173,4 +189,8 @@ func TestRealMain_Onearg_GoodZip(t *testing.T) {
 
 func TestUsage(t *testing.T) {
 	Usage()
+}
+
+func TestMain1(t *testing.T) {
+	main()
 }
