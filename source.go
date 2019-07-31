@@ -8,12 +8,13 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/maxim2266/csvplus"
 	"github.com/pkg/errors"
 )
 
 type Sourcer interface {
-	Check(ctx *Context) bool
+	Check(req *resty.Client) bool
 	AddTo(r *Results)
 }
 
@@ -26,8 +27,8 @@ func NewURL(u string) *URL {
 }
 
 // XXX
-func (u *URL) Check(ctx *Context) bool {
-	r, _ := handleURL(ctx, u.H)
+func (u *URL) Check(c *resty.Client) bool {
+	r, _ := handleURL(c, u.H)
 	if r == u.H {
 		return true
 	}
@@ -47,7 +48,7 @@ func NewFilename(s string) *Filename {
 	return &Filename{Name: s}
 }
 
-func (f *Filename) Check(ctx *Context) bool {
+func (f *Filename) Check(c *resty.Client) bool {
 	return true
 }
 
@@ -186,14 +187,14 @@ func (l *List) Check(ctx *Context) *Results {
 	// Setup workers
 	for i := 0; i < ctx.jobs; i++ {
 		wg.Add(1)
-		c := ctx
+
 		go func(n int, wg *sync.WaitGroup) {
 			defer wg.Done()
 
 			debug("%d is fine\n", n)
 			for e := range queue {
 				verbose("w%d - %d left", n, len(queue))
-				if e.Check(c) {
+				if e.Check(ctx.Client) {
 					verbose("adding %#v\n", e)
 					mut.Lock()
 					e.AddTo(r)
@@ -209,8 +210,8 @@ func (l *List) Check(ctx *Context) *Results {
 	}
 
 	close(queue)
-	debug("r=%#v\n", r)
 	wg.Wait()
 	r.files = l.Files()
+	debug("r/check=%#v\n", r)
 	return r
 }
