@@ -24,6 +24,7 @@ func TestSanitize(t *testing.T) {
 		err error
 	}{
 		{"https://example.com", "https://example.com", ErrHttpsSkip},
+		{"http://example.onion", "https://example.onion", ErrHttpsSkip},
 		{"http://example.com", "http://example.com", nil},
 		{"ttp://example.com", "http://example.com", nil},
 		{"://example.com", "http://://example.com", nil},
@@ -96,6 +97,50 @@ func TestHandleURLblocked(t *testing.T) {
 	u, err := handleURL(c, TestSite)
 	assert.NoError(t, err)
 	require.EqualValues(t, ActionBlocked, u)
+}
+
+func TestHandleURLAuth(t *testing.T) {
+	defer gock.Off()
+
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
+
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
+		Reply(407)
+
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
+
+	u, err := handleURL(c, TestSite)
+	assert.NoError(t, err)
+	require.EqualValues(t, ActionAuth, u)
+}
+
+func TestHandleURLNope(t *testing.T) {
+	defer gock.Off()
+
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
+
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
+		Reply(503)
+
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
+
+	u, err := handleURL(c, TestSite)
+	assert.NoError(t, err)
+	require.EqualValues(t, ActionAuth, u)
 }
 
 func TestHandleURLblock(t *testing.T) {
