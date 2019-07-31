@@ -95,7 +95,6 @@ func TestSetupProxyError(t *testing.T) {
 
 	assert.NotNil(t, ctx.config)
 	assert.NotNil(t, ctx.tempdir)
-	assert.NotEmpty(t, ctx.proxyauth)
 	unsetvars(t)
 }
 
@@ -113,7 +112,6 @@ func TestSetupProxyAuth(t *testing.T) {
 
 	assert.NotNil(t, ctx.config)
 	assert.NotNil(t, ctx.tempdir)
-	assert.NotEmpty(t, ctx.proxyauth)
 	unsetvars(t)
 }
 
@@ -129,7 +127,6 @@ func TestSetupServer(t *testing.T) {
 
 	assert.NotNil(t, ctx.config)
 	assert.NotNil(t, ctx.tempdir)
-	assert.NotNil(t, ctx.proxyauth)
 	assert.NotEmpty(t, ctx.config.Server)
 	fDebug = false
 }
