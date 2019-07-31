@@ -24,7 +24,7 @@ func TestSanitize(t *testing.T) {
 		err error
 	}{
 		{"https://example.com", "https://example.com", ErrHttpsSkip},
-		{"http://example.onion", "https://example.onion", ErrHttpsSkip},
+		{"http://example.onion", "http://example.onion", ErrHttpsSkip},
 		{"http://example.com", "http://example.com", nil},
 		{"ttp://example.com", "http://example.com", nil},
 		{"://example.com", "http://://example.com", nil},
@@ -140,7 +140,7 @@ func TestHandleURLNope(t *testing.T) {
 
 	u, err := handleURL(c, TestSite)
 	assert.NoError(t, err)
-	require.EqualValues(t, ActionAuth, u)
+	require.EqualValues(t, ActionBlocked, u)
 }
 
 func TestHandleURLblock(t *testing.T) {
