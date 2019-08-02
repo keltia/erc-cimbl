@@ -118,7 +118,7 @@ func TestSetupProxyAuth(t *testing.T) {
 func TestSetupServer(t *testing.T) {
 	baseDir = "testdata"
 	configName = "config-smtp.toml"
-	os.Setenv("NETRC", filepath.Join(".", "test", "test-netrc"))
+	require.NoError(t, os.Setenv("NETRC", filepath.Join(".", "test", "test-netrc")))
 
 	fDebug = true
 	ctx, err := setup()
@@ -128,6 +128,8 @@ func TestSetupServer(t *testing.T) {
 	assert.NotNil(t, ctx.config)
 	assert.NotNil(t, ctx.tempdir)
 	assert.NotEmpty(t, ctx.config.Server)
+
+	require.NoError(t, os.Unsetenv("NETRC"))
 	fDebug = false
 }
 
