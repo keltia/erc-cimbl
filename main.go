@@ -73,7 +73,7 @@ func setup() (*Context, error) {
 		fVerbose = true
 	}
 
-	verbose("%s/%s-resty Archive/%s Sandbox/%s",
+	verbose("%s/%s Archive/%s Sandbox/%s",
 		MyName, MyVersion, archive.Version(), sandbox.Version())
 
 	// No config file is not an error but you do not get to send mail
