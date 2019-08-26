@@ -359,3 +359,10 @@ func TestRemoveExt3(t *testing.T) {
 func TestRemoveExt4(t *testing.T) {
 	assert.EqualValues(t, "foobar.zip", RemoveExt("foobar.zip.asc"))
 }
+
+func BenchmarkRemoveExt(b *testing.B) {
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		_ = RemoveExt("foobar.zip.asc")
+	}
+}
