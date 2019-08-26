@@ -72,8 +72,8 @@ func TestExtractZipZipin(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, base)
-	assert.Equal(t, "zipin.zip.zip", base)
-	assert.FileExists(t, filepath.Join(ctx.tempdir.Cwd(), "zipin.zip.zip"))
+	assert.Equal(t, "zipin", base)
+	assert.FileExists(t, filepath.Join(ctx.tempdir.Cwd(), "zipin"))
 }
 
 func TestReadFile_None(t *testing.T) {

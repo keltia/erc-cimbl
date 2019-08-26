@@ -41,12 +41,12 @@ func extractZipFrom(file string) (string, error) {
 		return "", errors.Wrap(err, "extract")
 	}
 
-	base := filepath.Base(file)
+	base := RemoveExt(filepath.Base(file))
 
-	debug("creating %s.zip", base+".zip")
+	debug("creating %s", base)
 
 	// Create a temp file
-	zipfh, err := os.Create(base + ".zip")
+	zipfh, err := os.Create(base)
 	if err != nil {
 		return "", errors.Wrap(err, "create/temp")
 	}
@@ -60,7 +60,7 @@ func extractZipFrom(file string) (string, error) {
 		return "", errors.Wrap(err, "short read")
 	}
 	err = zipfh.Close()
-	return base + ".zip", err
+	return base, err
 }
 
 func readFile(base string) (*bytes.Buffer, error) {
