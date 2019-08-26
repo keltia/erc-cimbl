@@ -343,3 +343,19 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 
 	fVerbose = false
 }
+
+func TestRemoveExt(t *testing.T) {
+	assert.Empty(t, RemoveExt(""))
+}
+
+func TestRemoveExt2(t *testing.T) {
+	assert.EqualValues(t, "foobar", RemoveExt("foobar"))
+}
+
+func TestRemoveExt3(t *testing.T) {
+	assert.EqualValues(t, "foobar", RemoveExt("foobar.js"))
+}
+
+func TestRemoveExt4(t *testing.T) {
+	assert.EqualValues(t, "foobar.zip", RemoveExt("foobar.zip.asc"))
+}

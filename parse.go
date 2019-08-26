@@ -4,12 +4,26 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/keltia/archive"
 	"github.com/pkg/errors"
 )
 
 // These functions assume they are in the sandbox
+
+// RemoveExt removes the extension of the file, used for .zip.asc
+func RemoveExt(fn string) string {
+	ext := filepath.Ext(fn)
+	all := strings.Split(fn, ".")
+	if len(all) <= 1 {
+		return fn
+	}
+	if "."+all[len(all)-1] == ext {
+		return strings.Join(all[0:len(all)-1], ".")
+	}
+	return ""
+}
 
 // Given an asc/gpg file, create a temp file with uncrypted content
 // Assumes it is inside a sandbox
