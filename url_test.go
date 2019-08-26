@@ -25,6 +25,7 @@ func TestSanitize(t *testing.T) {
 	}{
 		{"https://example.com", "https://example.com", ErrHttpsSkip},
 		{"http://example.onion", "http://example.onion", ErrHttpsSkip},
+		{"http://example.onion:3636", "http://example.onion:3636", ErrHttpsSkip},
 		{"http://example.com", "http://example.com", nil},
 		{"ttp://example.com", "http://example.com", nil},
 		{"://example.com", "http://://example.com", nil},
