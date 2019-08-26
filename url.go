@@ -75,7 +75,7 @@ func sanitize(str string) (out string, err error) {
 	}
 
 	// Onion sites are not reachable except within Tor
-	if strings.HasSuffix(myurl.Host, ".onion") {
+	if strings.Contains(myurl.Host, ".onion") {
 		return str, ErrHttpsSkip
 	}
 
