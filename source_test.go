@@ -286,6 +286,19 @@ func TestList_AddFromFile2(t *testing.T) {
 	assert.NotEmpty(t, l)
 }
 
+func TestList_AddFromFile_Gpg(t *testing.T) {
+	file := "testdata/CIMBL-0666-CERTS.zip.asc"
+	fDebug = true
+	l := NewList(nil)
+
+	l1, err := l.AddFromFile(file)
+	assert.Empty(t, l1)
+	assert.Error(t, err)
+
+	assert.Empty(t, l)
+	fDebug = false
+}
+
 func TestList_AddFromFile_Badcsv(t *testing.T) {
 
 	l := NewList(nil)
