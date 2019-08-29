@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/keltia/archive"
 	"github.com/pkg/errors"
@@ -125,7 +126,10 @@ func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 	debug("list=%#v\n", list)
 	list.ctx = ctx
 
+	t1 := time.Now()
 	r := list.Check(ctx)
+	t2 := time.Since(t1)
+	verbose("time=%v", t2)
 	debug("r(main)=%#v\n", r)
 
 	return r, nil

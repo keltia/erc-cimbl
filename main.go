@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"runtime/pprof"
 	"strings"
 	"time"
 
@@ -31,6 +32,7 @@ var (
 	fVerbose bool
 	fNoURLs  bool
 	fNoPaths bool
+	fProfile bool
 	fSkipped bool
 	fJobs    int
 
@@ -66,6 +68,7 @@ func init() {
 	flag.BoolVar(&fNoURLs, "U", false, "Do not check URLs")
 	flag.IntVar(&fJobs, "j", runtime.NumCPU(), "parallel jobs")
 	flag.BoolVar(&fVerbose, "v", false, "Verbose mode")
+	flag.BoolVar(&fProfile, "prof", false, "Profiling")
 }
 
 func setup() (*Context, error) {
@@ -101,6 +104,12 @@ func setup() (*Context, error) {
 		jobs:   fJobs,
 	}
 
+	if fProfile {
+		f, _ := os.Create("cpu.prof")
+		if err = pprof.StartCPUProfile(f); err != nil {
+			log.Fatalf("cant profile")
+		}
+	}
 	proxy := os.Getenv("http_proxy")
 	c := resty.New().SetProxy(proxy).SetTimeout(10 * time.Second)
 	ctx.Client = c
@@ -126,7 +135,9 @@ func realmain(args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "realmain")
 	}
-
+	if fProfile {
+		defer pprof.StopCPUProfile()
+	}
 	defer ctx.tempdir.Cleanup()
 
 	if (fNoURLs && fNoPaths) || len(args) == 0 {

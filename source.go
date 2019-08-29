@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -141,7 +142,7 @@ func (l *List) ReadFromCSV(r io.Reader) (*List, error) {
 		return l, errors.Wrapf(err, "reading csv")
 	}
 
-	verbose("%d entries found.", len(rows))
+	verbose("csv/%d entries found.", len(rows))
 
 	for _, row := range rows {
 		debug("row=%v", row)
@@ -199,6 +200,54 @@ func (l *List) Check(ctx *Context) *Results {
 					mut.Lock()
 					e.AddTo(r)
 					mut.Unlock()
+				}
+			}
+		}(i, wg)
+	}
+
+	debug("scan queue:\n")
+	for _, q := range l.s {
+		queue <- q
+	}
+
+	close(queue)
+	wg.Wait()
+	r.files = l.Files()
+	debug("r/check=%#v\n", r)
+	return r
+}
+
+func (l *List) Check1(ctx *Context) *Results {
+	r := NewResults()
+
+	wg := &sync.WaitGroup{}
+
+	queue := make(chan Sourcer, len(l.s))
+	ins := make(chan Sourcer, len(l.s))
+
+	go func(r *Results) {
+		for {
+			e := <-ins
+			fmt.Print(".")
+			e.AddTo(r)
+		}
+	}(r)
+
+	debug("setup %d workers\n", ctx.jobs)
+
+	// Setup workers
+	for i := 0; i < ctx.jobs; i++ {
+		wg.Add(1)
+
+		go func(n int, wg *sync.WaitGroup) {
+			defer wg.Done()
+
+			debug("%d is fine\n", n)
+			for e := range queue {
+				debug("w%d - %d left", n, len(queue))
+				if e.Check(ctx.Client) {
+					debug("adding %#v\n", e)
+					ins <- e
 				}
 			}
 		}(i, wg)
