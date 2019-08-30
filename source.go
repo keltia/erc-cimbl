@@ -174,7 +174,8 @@ func (l *List) Merge(l1 *List) *List {
 	return l
 }
 
-func (l *List) Check(ctx *Context) *Results {
+// Check1 (now reversed), is the initial implementation with a mutex
+func (l *List) Check1(ctx *Context) *Results {
 	var mut sync.Mutex
 
 	r := NewResults()
@@ -217,14 +218,18 @@ func (l *List) Check(ctx *Context) *Results {
 	return r
 }
 
-func (l *List) Check1(ctx *Context) *Results {
+// Check is an alternate version of Check where we still parallelize checks but serialize updating results
+// instead of using a mutex.
+func (l *List) Check(ctx *Context) *Results {
 	r := NewResults()
 
 	wg := &sync.WaitGroup{}
 
+	// Length for the 2nd one will be tuned
 	queue := make(chan Sourcer, len(l.s))
 	ins := make(chan Sourcer, len(l.s))
 
+	// Setup the receiving end
 	go func(r *Results) {
 		for {
 			e := <-ins
@@ -253,12 +258,15 @@ func (l *List) Check1(ctx *Context) *Results {
 		}(i, wg)
 	}
 
+	// Feed the queue
 	debug("scan queue:\n")
 	for _, q := range l.s {
 		queue <- q
 	}
 
 	close(queue)
+	close(ins)
+
 	wg.Wait()
 	r.files = l.Files()
 	debug("r/check=%#v\n", r)
