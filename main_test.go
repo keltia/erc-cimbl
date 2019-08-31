@@ -140,7 +140,7 @@ func TestRealMain_Noarg(t *testing.T) {
 
 func TestRealMain_InvalidFile(t *testing.T) {
 	err := realmain([]string{"testdata/bad.csv"})
-	assert.Error(t, err)
+	assert.NoError(t, err)
 }
 
 func TestRealMain_Badtemp(t *testing.T) {
