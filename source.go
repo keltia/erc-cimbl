@@ -233,8 +233,10 @@ func (l *List) Check(ctx *Context) *Results {
 	go func(r *Results) {
 		for {
 			e := <-ins
-			fmt.Print(".")
-			e.AddTo(r)
+			if e != nil {
+				fmt.Print(".")
+				e.AddTo(r)
+			}
 		}
 	}(r)
 
@@ -265,9 +267,10 @@ func (l *List) Check(ctx *Context) *Results {
 	}
 
 	close(queue)
+	wg.Wait()
+
 	close(ins)
 
-	wg.Wait()
 	r.files = l.Files()
 	debug("r/check=%#v\n", r)
 	return r
