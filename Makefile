@@ -10,7 +10,7 @@ SRCS= config.go mail.go main.go parse.go path.go source.go subr.go url.go utils.
 SRCSW= config_windows.go
 SRCSU= config_unix.go
 
-OPTS=	-ldflags="-s -w" -v
+OPTS=	-ldflags="-s -w" -v -race
 
 PROG=	erc-cimbl
 BIN=	${PROG}

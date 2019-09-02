@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	TestSite = "http://pontonerywariva342.top/search.php"
+	TestSite = "http://example.net/search.php"
 )
 
 func TestSanitize(t *testing.T) {

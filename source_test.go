@@ -130,9 +130,10 @@ func TestList_Check2(t *testing.T) {
 	defer gock.RestoreClient(c.GetClient())
 
 	res := l.Check(ctx)
+	t.Logf("res=%#v", res)
 	assert.NoError(t, err)
-	assert.Equal(t, realPaths, res.Paths)
-	assert.Equal(t, realURLs, res.URLs)
+	assert.EqualValues(t, realPaths, res.Paths)
+	assert.EqualValues(t, realURLs, res.URLs)
 }
 
 func TestList_Check3(t *testing.T) {
@@ -143,7 +144,7 @@ func TestList_Check3(t *testing.T) {
 	config, err := loadConfig()
 	assert.NoError(t, err)
 
-	fVerbose = true
+	fDebug = true
 
 	ctx := &Context{
 		config: config,
@@ -177,10 +178,11 @@ func TestList_Check3(t *testing.T) {
 	defer gock.RestoreClient(c.GetClient())
 
 	res := l.Check(ctx)
+	t.Logf("res=%#v", res)
 	assert.NoError(t, err, "no error")
-	assert.Equal(t, realPaths, res.Paths)
-	assert.Equal(t, realURLs, res.URLs)
-	fVerbose = false
+	assert.EqualValues(t, realPaths, res.Paths)
+	assert.EqualValues(t, realURLs, res.URLs)
+	fDebug = false
 }
 
 // List
@@ -206,7 +208,7 @@ func TestNewList3(t *testing.T) {
 func TestNewList4(t *testing.T) {
 	td := []Sourcer{
 		NewFilename("55fe62947f3860108e7798c4498618cb.rtf"),
-		NewURL("http://pontonerywariva342.top/search.php"),
+		NewURL(TestSite),
 		NewURL("http://www.example.net/"),
 	}
 
@@ -239,7 +241,7 @@ func TestList_Add2(t *testing.T) {
 func TestList_AddFromFile(t *testing.T) {
 	td := []Sourcer{
 		NewFilename("55fe62947f3860108e7798c4498618cb.rtf"),
-		NewURL("http://pontonerywariva342.top/search.php"),
+		NewURL(TestSite),
 	}
 
 	l := NewList(nil)
@@ -312,7 +314,7 @@ func TestList_Merge(t *testing.T) {
 
 	tdm := []Sourcer{
 		NewFilename("55fe62947f3860108e7798c4498618cb.rtf"),
-		NewURL("http://pontonerywariva342.top/search.php"),
+		NewURL(TestSite),
 		NewURL("http://example.net/"),
 	}
 

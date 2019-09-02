@@ -81,7 +81,7 @@ func NewList(files []string) *List {
 
 			l, err = l.AddFromFile(e)
 			if err != nil {
-				log.Printf("%v: reading error", e)
+				log.Printf("%v: reading error: %v", e, errors.Wrap(err, "AddFromFile"))
 			}
 		} else {
 			log.Printf("invalid filename")
@@ -94,6 +94,10 @@ func (l *List) Add(s Sourcer) *List {
 	debug("adding %#v", s)
 	l.s = append(l.s, s)
 	return l
+}
+
+func (l *List) Length() int {
+	return len(l.s)
 }
 
 func (l *List) AddFromFile(fn string) (*List, error) {
@@ -268,7 +272,6 @@ func (l *List) Check(ctx *Context) *Results {
 
 	close(queue)
 	wg.Wait()
-
 	close(ins)
 
 	r.files = l.Files()

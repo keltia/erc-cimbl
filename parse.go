@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -126,11 +127,14 @@ func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 	debug("list=%#v\n", list)
 	list.ctx = ctx
 
-	t1 := time.Now()
-	r := list.Check(ctx)
-	t2 := time.Since(t1)
-	verbose("time=%v", t2)
-	debug("r(main)=%#v\n", r)
-
-	return r, nil
+	if list.Length() != 0 {
+		t1 := time.Now()
+		r := list.Check1(ctx)
+		t2 := time.Since(t1)
+		verbose("time=%v", t2)
+		debug("r(main)=%#v\n", r)
+		return r, nil
+	}
+	log.Printf("Empty list.")
+	return NewResults(), nil
 }
