@@ -236,6 +236,8 @@ func (l *List) Check(ctx *Context) *Results {
 
 	// Setup the receiving end
 	go func(wg *sync.WaitGroup, r *Results) {
+		defer wg.Done()
+
 		wg.Add(1)
 		for {
 			e := <-ins
@@ -243,10 +245,9 @@ func (l *List) Check(ctx *Context) *Results {
 				fmt.Print(".")
 				e.AddTo(r)
 			} else {
-				break
+				return
 			}
 		}
-		wg.Done()
 	}(res, r)
 
 	debug("setup %d workers\n", ctx.jobs)
