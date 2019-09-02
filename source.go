@@ -228,21 +228,26 @@ func (l *List) Check(ctx *Context) *Results {
 	r := NewResults()
 
 	wg := &sync.WaitGroup{}
+	res := &sync.WaitGroup{}
 
 	// Length for the 2nd one will be tuned
 	queue := make(chan Sourcer, len(l.s))
 	ins := make(chan Sourcer, len(l.s))
 
 	// Setup the receiving end
-	go func(r *Results) {
+	go func(wg *sync.WaitGroup, r *Results) {
+		wg.Add(1)
 		for {
 			e := <-ins
 			if e != nil {
 				fmt.Print(".")
 				e.AddTo(r)
+			} else {
+				break
 			}
 		}
-	}(r)
+		wg.Done()
+	}(res, r)
 
 	debug("setup %d workers\n", ctx.jobs)
 
@@ -273,6 +278,7 @@ func (l *List) Check(ctx *Context) *Results {
 	close(queue)
 	wg.Wait()
 	close(ins)
+	res.Wait()
 
 	r.files = l.Files()
 	debug("r/check=%#v\n", r)
