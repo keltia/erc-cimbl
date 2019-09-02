@@ -129,7 +129,7 @@ func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 
 	if list.Length() != 0 {
 		t1 := time.Now()
-		r := list.Check1(ctx)
+		r := list.Check(ctx)
 		t2 := time.Since(t1)
 		verbose("time=%v", t2)
 		debug("r(main)=%#v\n", r)
