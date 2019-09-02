@@ -228,31 +228,23 @@ func (l *List) Check(ctx *Context) *Results {
 	r := NewResults()
 
 	wg := &sync.WaitGroup{}
-	res := &sync.WaitGroup{}
 
 	// Length for the 2nd one will be tuned
 	queue := make(chan Sourcer, len(l.s))
-	ins := make(chan Sourcer, len(l.s))
+	ins := make(chan Sourcer)
 
 	// Setup the receiving end
-	go func(wg *sync.WaitGroup, r *Results) {
-		defer wg.Done()
-
-		wg.Add(1)
-		for {
-			e := <-ins
-			if e != nil {
-				fmt.Print(".")
-				e.AddTo(r)
-			} else {
-				return
-			}
+	go func(r *Results) {
+		for e := range ins {
+			fmt.Print(".")
+			e.AddTo(r)
 		}
-	}(res, r)
+	}(r)
 
+	// Setup the end of the fan-out
 	debug("setup %d workers\n", ctx.jobs)
 
-	// Setup workers
+	// Setup workers (fan-in)
 	for i := 0; i < ctx.jobs; i++ {
 		wg.Add(1)
 
@@ -276,10 +268,11 @@ func (l *List) Check(ctx *Context) *Results {
 		queue <- q
 	}
 
-	close(queue)
-	wg.Wait()
-	close(ins)
-	res.Wait()
+	go func() {
+		wg.Wait()
+		close(queue)
+		close(ins)
+	}()
 
 	r.files = l.Files()
 	debug("r/check=%#v\n", r)
