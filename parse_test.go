@@ -302,7 +302,7 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 	config, err := loadConfig()
 	assert.NoError(t, err)
 
-	fVerbose = true
+	fDebug = true
 
 	realURLs := map[string]bool{
 		TestSite: true,
@@ -341,7 +341,7 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 	assert.NotEmpty(t, res.URLs)
 	assert.EqualValues(t, realURLs, res.URLs)
 
-	fVerbose = false
+	fDebug = false
 }
 
 func TestRemoveExt(t *testing.T) {
