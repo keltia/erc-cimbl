@@ -267,11 +267,9 @@ func (l *List) Check(ctx *Context) *Results {
 		queue <- q
 	}
 
-	go func() {
-		wg.Wait()
-		close(queue)
-		close(ins)
-	}()
+	close(queue)
+	wg.Wait()
+	close(ins)
 
 	r.files = l.Files()
 	debug("r/check=%#v\n", r)
