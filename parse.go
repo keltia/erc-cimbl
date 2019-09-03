@@ -125,7 +125,6 @@ func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 
 	list := NewList(files)
 	debug("list=%#v\n", list)
-	list.ctx = ctx
 
 	if list.Length() != 0 {
 		t1 := time.Now()
