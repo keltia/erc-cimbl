@@ -59,7 +59,6 @@ func (f *Filename) AddTo(r *Results) {
 }
 
 type List struct {
-	ctx   *Context
 	s     []Sourcer
 	files []string
 }
