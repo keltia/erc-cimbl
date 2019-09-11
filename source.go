@@ -238,6 +238,7 @@ func (l *List) Check(ctx *Context) *Results {
 			fmt.Print(".")
 			e.AddTo(r)
 		}
+		close(queue)
 	}(r)
 
 	// Setup the end of the fan-out
@@ -267,7 +268,6 @@ func (l *List) Check(ctx *Context) *Results {
 		queue <- q
 	}
 
-	close(queue)
 	wg.Wait()
 	close(ins)
 
