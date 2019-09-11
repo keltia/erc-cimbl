@@ -73,9 +73,8 @@ func TestHandleURLhttps(t *testing.T) {
 	c := resty.New().SetProxy(proxy)
 
 	u, err := handleURL(c, "https://example.com")
-	assert.NoError(t, err)
+	assert.Error(t, err)
 	assert.Empty(t, u)
-	assert.EqualValues(t, []string{"https://example.com"}, skipped)
 }
 
 func TestHandleURLblocked(t *testing.T) {

@@ -98,8 +98,7 @@ func handleURL(c *resty.Client, str string) (string, error) {
 	// https URLs will not be blocked, no MITM
 	myurl, err := sanitize(str)
 	if err == ErrHttpsSkip {
-		skipped = append(skipped, str)
-		return "", nil
+		return "", err
 	}
 	debug("url=%s", myurl)
 
