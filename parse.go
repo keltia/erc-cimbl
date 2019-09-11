@@ -30,7 +30,7 @@ func RemoveExt(fn string) string {
 // Given an asc/gpg file, create a temp file with uncrypted content
 // Assumes it is inside a sandbox
 func extractZipFrom(file string) (string, error) {
-	debug("reading %s", file)
+	debug("extractZipFile %s", file)
 
 	// Process the file (gpg encrypted zip file)
 	a, err := archive.New(file)
@@ -65,10 +65,11 @@ func extractZipFrom(file string) (string, error) {
 	return base, err
 }
 
+// Read the actual file out of a possible archive (zip, gpg, etc.)
 func readFile(base string) (*bytes.Buffer, error) {
 	var buf bytes.Buffer
 
-	debug("openzip %s", base)
+	debug("readFile %s", base)
 
 	// Here buf is the decrypted arc or plain file
 	arc, err := archive.New(base)
