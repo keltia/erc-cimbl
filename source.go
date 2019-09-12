@@ -230,7 +230,8 @@ func (l *List) Check(ctx *Context) *Results {
 
 	// Length for the 2nd one will be tuned
 	queue := make(chan Sourcer, len(l.s))
-	ins := make(chan Sourcer)
+	// Defaults to # of workers
+	ins := make(chan Sourcer, ctx.jobs)
 
 	// Setup the receiving end
 	go func(r *Results) {
