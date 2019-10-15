@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/url"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -176,15 +176,9 @@ func TestHandleAllFiles_SingleBad2(t *testing.T) {
 	require.NoError(t, err)
 	defer snd.Cleanup()
 
-	ctx := &Context{
-		config:  config,
-		tempdir: snd,
-		jobs:    1,
-	}
+	ctx := &Context{config:  config, tempdir: snd, jobs: 1}
 
-	proxy := os.Getenv("http_proxy")
-	c := resty.New().SetProxy(proxy)
-
+	c := resty.New()
 	ctx.Client = c
 
 	fDebug = true
@@ -210,18 +204,9 @@ func TestHandleAllFiles_OneFile(t *testing.T) {
 		TestSite: true,
 	}
 
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
+	ctx := &Context{config:  config, jobs: 1}
 
-	ctx := &Context{
-		config:  config,
-		tempdir: snd,
-		jobs:    1,
-	}
-
-	proxy := os.Getenv("http_proxy")
-	c := resty.New().SetProxy(proxy)
+	c := resty.New()
 
 	ctx.Client = c
 	testSite, err := url.Parse(TestSite)
@@ -229,6 +214,7 @@ func TestHandleAllFiles_OneFile(t *testing.T) {
 
 	gock.New(testSite.Host).
 		Head(testSite.Path).
+		MatchHeader("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
 		Reply(200)
 
 	gock.InterceptClient(c.GetClient())
@@ -260,18 +246,9 @@ func TestHandleAllFiles_OneFile1(t *testing.T) {
 		TestSite: true,
 	}
 
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
+	ctx := &Context{config:  config, jobs: 1}
 
-	ctx := &Context{
-		config:  config,
-		tempdir: snd,
-		jobs:    1,
-	}
-
-	proxy := os.Getenv("http_proxy")
-	c := resty.New().SetProxy(proxy)
+	c := resty.New()
 
 	ctx.Client = c
 	testSite, err := url.Parse(TestSite)
@@ -279,6 +256,7 @@ func TestHandleAllFiles_OneFile1(t *testing.T) {
 
 	gock.New(testSite.Host).
 		Head(testSite.Path).
+		MatchHeader("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
 		Reply(200)
 
 	gock.InterceptClient(c.GetClient())
@@ -318,8 +296,7 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 		jobs:    1,
 	}
 
-	proxy := os.Getenv("http_proxy")
-	c := resty.New().SetProxy(proxy)
+	c := resty.New()
 
 	ctx.Client = c
 	testSite, err := url.Parse(TestSite)
@@ -327,6 +304,7 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 
 	gock.New(testSite.Host).
 		Head(testSite.Path).
+		MatchHeader("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
 		Reply(200)
 
 	gock.InterceptClient(c.GetClient())
