@@ -323,19 +323,16 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 }
 
 func TestRemoveExt(t *testing.T) {
-	assert.Empty(t, RemoveExt(""))
-}
+	td := []struct{in, out string}{
+		{"", ""},
+		{"foobar", "foobar"},
+		{"foobar.js", "foobar"},
+		{"foobar.zip.asc", "foobar.zip"},
+	}
 
-func TestRemoveExt2(t *testing.T) {
-	assert.EqualValues(t, "foobar", RemoveExt("foobar"))
-}
-
-func TestRemoveExt3(t *testing.T) {
-	assert.EqualValues(t, "foobar", RemoveExt("foobar.js"))
-}
-
-func TestRemoveExt4(t *testing.T) {
-	assert.EqualValues(t, "foobar.zip", RemoveExt("foobar.zip.asc"))
+	for _, d := range td {
+		assert.Equal(t, d.out, RemoveExt(d.in))
+	}
 }
 
 func BenchmarkRemoveExt(b *testing.B) {
