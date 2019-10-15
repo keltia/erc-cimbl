@@ -27,14 +27,15 @@ var (
 	// MyVersion is our version, add our features
 	MyVersion = "0.10.0,parallel,resty"
 
-	fDebug   bool
-	fDoMail  bool
-	fVerbose bool
-	fNoURLs  bool
-	fNoPaths bool
-	fProfile bool
-	fSkipped bool
-	fJobs    int
+	fNoCleanup bool
+	fDebug     bool
+	fDoMail    bool
+	fVerbose   bool
+	fNoURLs    bool
+	fNoPaths   bool
+	fProfile   bool
+	fSkipped   bool
+	fJobs      int
 
 	// RE to check filenames — sensible default
 	REFile *regexp.Regexp = regexp.MustCompile(REfn)
@@ -61,6 +62,7 @@ var Usage = func() {
 func init() {
 	flag.Usage = Usage
 
+	flag.BoolVar(&fNoCleanup, "C", false, "No cleanup for temp files.")
 	flag.BoolVar(&fDebug, "D", false, "Debug mode")
 	flag.BoolVar(&fDoMail, "M", false, "Send mail")
 	flag.BoolVar(&fNoPaths, "P", false, "Do not check filenames")
@@ -160,6 +162,14 @@ func realmain(args []string) error {
 	if fSkipped {
 		if len(skipped) != 0 {
 			log.Printf("\nSkipped URLs:\n%s", strings.Join(skipped, "\n"))
+		}
+	}
+
+	if !fNoCleanup {
+		for _, fn := range res.files {
+			if err := os.Remove(fn); err != nil {
+				log.Printf("Can not delete %s: %v", fn, err)
+			}
 		}
 	}
 	return nil
