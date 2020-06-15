@@ -224,7 +224,6 @@ func (l *List) Check1(ctx *Context) *Results {
 // Check is an alternate version of Check where we still parallelize checks but serialize updating results
 // instead of using a mutex.
 func (l *List) Check(ctx *Context) *Results {
-	r := NewResults()
 
 	wg := &sync.WaitGroup{}
 
@@ -233,13 +232,29 @@ func (l *List) Check(ctx *Context) *Results {
 	// Defaults to # of workers
 	ins := make(chan Sourcer, ctx.jobs)
 
+	done := make(chan struct{})
+	defer close(done)
+
+	debug("setup done")
+
 	// Setup the receiving end
-	go func(r *Results) {
+	res := func(done <-chan struct{}) *Results {
+		debug("processing results")
+		r := NewResults()
+
 		for e := range ins {
-			fmt.Print(".")
-			e.AddTo(r)
+			fmt.Print("*")
+			select {
+			case <-ins:
+				fmt.Print(".")
+				e.AddTo(r)
+			case <-done:
+				break
+			}
 		}
-	}(r)
+		debug("\nresults done")
+		return r
+	}
 
 	// Setup the end of the fan-out
 	debug("setup %d workers\n", ctx.jobs)
@@ -262,14 +277,24 @@ func (l *List) Check(ctx *Context) *Results {
 		}(i, wg)
 	}
 
+	var r *Results
+
 	// Feed the queue
 	debug("scan queue:\n")
 	for _, q := range l.s {
 		queue <- q
 	}
 
+	go func() {
+		wg.Wait()
+		r = res(done)
+	}()
+
+	debug("after done")
+	done <- struct{}{}
+
+	debug("closing")
 	close(queue)
-	wg.Wait()
 	close(ins)
 
 	r.files = l.Files()
