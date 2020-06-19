@@ -228,7 +228,8 @@ func (l *List) Check(ctx *Context) *Results {
 	wg := &sync.WaitGroup{}
 
 	// Length for the 2nd one will be tuned
-	queue := make(chan Sourcer, len(l.s))
+	queue := make(chan Sourcer, 50)
+
 	// Defaults to # of workers
 	ins := make(chan Sourcer, ctx.jobs)
 
@@ -249,7 +250,7 @@ func (l *List) Check(ctx *Context) *Results {
 				fmt.Print(".")
 				e.AddTo(r)
 			case <-done:
-				break
+				return r
 			}
 		}
 		debug("\nresults done")
@@ -263,32 +264,37 @@ func (l *List) Check(ctx *Context) *Results {
 	for i := 0; i < ctx.jobs; i++ {
 		wg.Add(1)
 
-		go func(n int, wg *sync.WaitGroup) {
+		go func(n int, queue <-chan Sourcer, wg *sync.WaitGroup) {
 			defer wg.Done()
 
 			debug("%d is fine\n", n)
-			for e := range queue {
-				debug("w%d - %d left", n, len(queue))
+			for {
+				e, ok := <-queue
+				if !ok {
+					return
+				}
+
+				debug("w%d - checking %v", n, e)
 				if e.Check(ctx.Client) {
 					debug("adding %#v\n", e)
 					ins <- e
 				}
 			}
-		}(i, wg)
+		}(i, queue, wg)
 	}
 
 	var r *Results
+
+	go func() {
+		wg.Wait()
+		r = res(done)
+	}()
 
 	// Feed the queue
 	debug("scan queue:\n")
 	for _, q := range l.s {
 		queue <- q
 	}
-
-	go func() {
-		wg.Wait()
-		r = res(done)
-	}()
 
 	debug("after done")
 	done <- struct{}{}
