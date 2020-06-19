@@ -95,11 +95,12 @@ func TestList_Check2(t *testing.T) {
 	defer gock.Off()
 
 	baseDir = "testdata"
-	file := "testdata/CIMBL-0666-CERTS.csv"
+	file := "testdata/CIMBL-0669-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err)
 	assert.NotNil(t, config)
 
+	fDebug = true
 	ctx := &Context{
 		config: config,
 		jobs:   1,
@@ -112,7 +113,8 @@ func TestList_Check2(t *testing.T) {
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
 	realURLs := map[string]bool{
-		TestSite: true,
+		TestSite:                 true,
+		"http://www.example.net": true,
 	}
 
 	proxy := os.Getenv("http_proxy")
@@ -134,6 +136,7 @@ func TestList_Check2(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, realPaths, res.Paths)
 	assert.EqualValues(t, realURLs, res.URLs)
+	fDebug = false
 }
 
 func TestList_Check3(t *testing.T) {
