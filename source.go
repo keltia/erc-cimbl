@@ -14,6 +14,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+// -----
+
 type Sourcer interface {
 	Check(req *resty.Client) bool
 	AddTo(r *Results)
@@ -57,6 +59,8 @@ func (f *Filename) AddTo(r *Results) {
 	verbose("F")
 	r.Add("filename", f.Name)
 }
+
+// -----
 
 type List struct {
 	s     []Sourcer
@@ -221,6 +225,18 @@ func (l *List) Check1(ctx *Context) *Results {
 	return r
 }
 
+// gather results
+func res(ins <-chan Sourcer) *Results {
+	debug("processing results")
+	r := NewResults()
+
+	for e := range ins {
+		fmt.Print(".")
+		e.AddTo(r)
+	}
+	return r
+}
+
 // Check is an alternate version of Check where we still parallelize checks but serialize updating results
 // instead of using a mutex.
 func (l *List) Check(ctx *Context) *Results {
@@ -230,32 +246,12 @@ func (l *List) Check(ctx *Context) *Results {
 	// Length for the 2nd one will be tuned
 	queue := make(chan Sourcer, 50)
 
-	// Defaults to # of workers
-	ins := make(chan Sourcer, ctx.jobs)
+	ins := make(chan Sourcer, l.Length())
 
 	done := make(chan struct{})
 	defer close(done)
 
 	debug("setup done")
-
-	// Setup the receiving end
-	res := func(done <-chan struct{}) *Results {
-		debug("processing results")
-		r := NewResults()
-
-		for e := range ins {
-			fmt.Print("*")
-			select {
-			case <-ins:
-				fmt.Print(".")
-				e.AddTo(r)
-			case <-done:
-				return r
-			}
-		}
-		debug("\nresults done")
-		return r
-	}
 
 	// Setup the end of the fan-out
 	debug("setup %d workers\n", ctx.jobs)
@@ -283,12 +279,7 @@ func (l *List) Check(ctx *Context) *Results {
 		}(i, queue, wg)
 	}
 
-	var r *Results
-
-	go func() {
-		wg.Wait()
-		r = res(done)
-	}()
+	var result *Results
 
 	// Feed the queue
 	debug("scan queue:\n")
@@ -296,14 +287,20 @@ func (l *List) Check(ctx *Context) *Results {
 		queue <- q
 	}
 
-	debug("after done")
-	done <- struct{}{}
+	go func() {
+		wg.Wait()
+		debug("after wait")
+		close(ins)
+	}()
 
 	debug("closing")
 	close(queue)
-	close(ins)
 
-	r.files = l.Files()
-	debug("r/check=%#v\n", r)
-	return r
+	//done <- struct{}{}
+	debug("after close")
+
+	result = res(ins)
+	result.files = l.Files()
+	debug("r/check=%#v\n", result)
+	return result
 }
