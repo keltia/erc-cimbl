@@ -14,6 +14,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+// -----
+
 type Sourcer interface {
 	Check(req *resty.Client) bool
 	AddTo(r *Results)
@@ -57,6 +59,8 @@ func (f *Filename) AddTo(r *Results) {
 	verbose("F")
 	r.Add("filename", f.Name)
 }
+
+// -----
 
 type List struct {
 	s     []Sourcer
@@ -221,25 +225,33 @@ func (l *List) Check1(ctx *Context) *Results {
 	return r
 }
 
+// gather results
+func res(ins <-chan Sourcer) *Results {
+	debug("processing results")
+	r := NewResults()
+
+	for e := range ins {
+		fmt.Print(".")
+		e.AddTo(r)
+	}
+	return r
+}
+
 // Check is an alternate version of Check where we still parallelize checks but serialize updating results
 // instead of using a mutex.
 func (l *List) Check(ctx *Context) *Results {
-	r := NewResults()
 
 	wg := &sync.WaitGroup{}
 
 	// Length for the 2nd one will be tuned
-	queue := make(chan Sourcer, len(l.s))
-	// Defaults to # of workers
-	ins := make(chan Sourcer, ctx.jobs)
+	queue := make(chan Sourcer, 50)
 
-	// Setup the receiving end
-	go func(r *Results) {
-		for e := range ins {
-			fmt.Print(".")
-			e.AddTo(r)
-		}
-	}(r)
+	ins := make(chan Sourcer, l.Length())
+
+	done := make(chan struct{})
+	defer close(done)
+
+	debug("setup done")
 
 	// Setup the end of the fan-out
 	debug("setup %d workers\n", ctx.jobs)
@@ -248,19 +260,26 @@ func (l *List) Check(ctx *Context) *Results {
 	for i := 0; i < ctx.jobs; i++ {
 		wg.Add(1)
 
-		go func(n int, wg *sync.WaitGroup) {
+		go func(n int, queue <-chan Sourcer, wg *sync.WaitGroup) {
 			defer wg.Done()
 
 			debug("%d is fine\n", n)
-			for e := range queue {
-				debug("w%d - %d left", n, len(queue))
+			for {
+				e, ok := <-queue
+				if !ok {
+					return
+				}
+
+				debug("w%d - checking %v", n, e)
 				if e.Check(ctx.Client) {
 					debug("adding %#v\n", e)
 					ins <- e
 				}
 			}
-		}(i, wg)
+		}(i, queue, wg)
 	}
+
+	var result *Results
 
 	// Feed the queue
 	debug("scan queue:\n")
@@ -268,11 +287,20 @@ func (l *List) Check(ctx *Context) *Results {
 		queue <- q
 	}
 
-	close(queue)
-	wg.Wait()
-	close(ins)
+	go func() {
+		wg.Wait()
+		debug("after wait")
+		close(ins)
+	}()
 
-	r.files = l.Files()
-	debug("r/check=%#v\n", r)
-	return r
+	debug("closing")
+	close(queue)
+
+	//done <- struct{}{}
+	debug("after close")
+
+	result = res(ins)
+	result.files = l.Files()
+	debug("r/check=%#v\n", result)
+	return result
 }
