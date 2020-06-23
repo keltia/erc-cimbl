@@ -100,7 +100,6 @@ func TestList_Check2(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, config)
 
-	fDebug = true
 	ctx := &Context{
 		config: config,
 		jobs:   1,
@@ -135,7 +134,6 @@ func TestList_Check2(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, realPaths, res.Paths)
 	assert.EqualValues(t, realURLs, res.URLs)
-	fDebug = false
 }
 
 func TestList_Check3(t *testing.T) {
@@ -195,8 +193,6 @@ func TestList_Check41(t *testing.T) {
 	config, err := loadConfig()
 	assert.NoError(t, err)
 
-	fDebug = true
-
 	ctx := &Context{
 		config: config,
 		jobs:   1,
@@ -204,8 +200,6 @@ func TestList_Check41(t *testing.T) {
 
 	l := NewList([]string{file})
 	require.NotEmpty(t, l)
-
-	t.Logf("Queue length = %d", l.Length())
 
 	t.Logf("site=%#v", TestSite)
 	realPaths := map[string]bool{
@@ -230,11 +224,9 @@ func TestList_Check41(t *testing.T) {
 	defer gock.RestoreClient(c.GetClient())
 
 	res := l.Check(ctx)
-	t.Logf("res=%#v", res)
 	assert.NoError(t, err)
 	assert.EqualValues(t, realPaths, res.Paths)
 	assert.EqualValues(t, realURLs, res.URLs)
-	fDebug = false
 }
 
 func TestList_Check43(t *testing.T) {
@@ -244,8 +236,6 @@ func TestList_Check43(t *testing.T) {
 	file := "testdata/CIMBL-0669-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err)
-
-	fDebug = true
 
 	ctx := &Context{
 		config: config,
@@ -277,11 +267,9 @@ func TestList_Check43(t *testing.T) {
 	defer gock.RestoreClient(c.GetClient())
 
 	res := l.Check(ctx)
-	t.Logf("res=%#v", res)
 	assert.NoError(t, err)
 	assert.EqualValues(t, realPaths, res.Paths)
 	assert.EqualValues(t, realURLs, res.URLs)
-	fDebug = false
 }
 
 func TestList_Check44(t *testing.T) {
@@ -291,8 +279,6 @@ func TestList_Check44(t *testing.T) {
 	file := "testdata/CIMBL-0669-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err)
-
-	fDebug = true
 
 	ctx := &Context{
 		config: config,
@@ -324,11 +310,9 @@ func TestList_Check44(t *testing.T) {
 	defer gock.RestoreClient(c.GetClient())
 
 	res := l.Check(ctx)
-	t.Logf("res=%#v", res)
 	assert.NoError(t, err)
 	assert.EqualValues(t, realPaths, res.Paths)
 	assert.EqualValues(t, realURLs, res.URLs)
-	fDebug = false
 }
 
 func TestList_Check48(t *testing.T) {
@@ -338,8 +322,6 @@ func TestList_Check48(t *testing.T) {
 	file := "testdata/CIMBL-0669-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err)
-
-	fDebug = true
 
 	ctx := &Context{
 		config: config,
@@ -363,7 +345,6 @@ func TestList_Check48(t *testing.T) {
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
-	t.Logf("site=%s", testSite.Host)
 	gock.New(testSite.Host).
 		Head(testSite.Path).
 		Reply(200)
@@ -372,11 +353,9 @@ func TestList_Check48(t *testing.T) {
 	defer gock.RestoreClient(c.GetClient())
 
 	res := l.Check(ctx)
-	t.Logf("res=%#v", res)
 	assert.NoError(t, err)
 	assert.EqualValues(t, realPaths, res.Paths)
 	assert.EqualValues(t, realURLs, res.URLs)
-	fDebug = false
 }
 
 // List
