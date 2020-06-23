@@ -109,14 +109,11 @@ func TestList_Check2(t *testing.T) {
 	l := NewList([]string{file})
 	require.NotEmpty(t, l)
 
-	ATestSite := "http://www.example.net/search.php"
-
 	realPaths := map[string]bool{
 		"55fe62947f3860108e7798c4498618cb.rtf": true,
 	}
 	realURLs := map[string]bool{
-		TestSite:  true,
-		ATestSite: true,
+		TestSite: true,
 	}
 
 	proxy := os.Getenv("http_proxy")
@@ -126,15 +123,8 @@ func TestList_Check2(t *testing.T) {
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
-	atestSite, err := url.Parse(ATestSite)
-	require.NoError(t, err)
-
 	gock.New(testSite.Host).
 		Head(testSite.Path).
-		Reply(200)
-
-	gock.New(atestSite.Host).
-		Head(atestSite.Path).
 		Reply(200)
 
 	gock.InterceptClient(c.GetClient())
@@ -197,149 +187,32 @@ func TestList_Check3(t *testing.T) {
 	fDebug = false
 }
 
-var foo = []string{
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://www.example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-	"http://example.net/search.php",
-}
-
 func TestList_Check41(t *testing.T) {
 	defer gock.Off()
 
 	baseDir = "testdata"
+	file := "testdata/CIMBL-0669-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err)
-	assert.NotNil(t, config)
 
 	fDebug = true
+
 	ctx := &Context{
 		config: config,
 		jobs:   1,
 	}
 
-	l := NewList(foo)
+	l := NewList([]string{file})
 	require.NotEmpty(t, l)
 
 	t.Logf("Queue length = %d", l.Length())
-	ATestSite := "http://www.example.net/search.php"
 
-	realPaths := map[string]bool{}
+	t.Logf("site=%#v", TestSite)
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
 	realURLs := map[string]bool{
-		TestSite:  true,
-		ATestSite: true,
+		TestSite: true,
 	}
 
 	proxy := os.Getenv("http_proxy")
@@ -349,15 +222,8 @@ func TestList_Check41(t *testing.T) {
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
-	atestSite, err := url.Parse(ATestSite)
-	require.NoError(t, err)
-
 	gock.New(testSite.Host).
 		Head(testSite.Path).
-		Reply(200)
-
-	gock.New(atestSite.Host).
-		Head(atestSite.Path).
 		Reply(200)
 
 	gock.InterceptClient(c.GetClient())
@@ -375,25 +241,25 @@ func TestList_Check43(t *testing.T) {
 	defer gock.Off()
 
 	baseDir = "testdata"
+	file := "testdata/CIMBL-0669-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err)
-	assert.NotNil(t, config)
 
 	fDebug = true
+
 	ctx := &Context{
 		config: config,
 		jobs:   3,
 	}
 
-	l := NewList(foo)
+	l := NewList([]string{file})
 	require.NotEmpty(t, l)
 
-	ATestSite := "http://www.example.net/search.php"
-
-	realPaths := map[string]bool{}
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
 	realURLs := map[string]bool{
-		TestSite:  true,
-		ATestSite: true,
+		TestSite: true,
 	}
 
 	proxy := os.Getenv("http_proxy")
@@ -403,15 +269,8 @@ func TestList_Check43(t *testing.T) {
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
-	atestSite, err := url.Parse(ATestSite)
-	require.NoError(t, err)
-
 	gock.New(testSite.Host).
 		Head(testSite.Path).
-		Reply(200)
-
-	gock.New(atestSite.Host).
-		Head(atestSite.Path).
 		Reply(200)
 
 	gock.InterceptClient(c.GetClient())
@@ -429,25 +288,25 @@ func TestList_Check44(t *testing.T) {
 	defer gock.Off()
 
 	baseDir = "testdata"
+	file := "testdata/CIMBL-0669-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err)
-	assert.NotNil(t, config)
 
 	fDebug = true
+
 	ctx := &Context{
 		config: config,
 		jobs:   4,
 	}
 
-	l := NewList(foo)
+	l := NewList([]string{file})
 	require.NotEmpty(t, l)
 
-	ATestSite := "http://www.example.net/search.php"
-
-	realPaths := map[string]bool{}
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
 	realURLs := map[string]bool{
-		TestSite:  true,
-		ATestSite: true,
+		TestSite: true,
 	}
 
 	proxy := os.Getenv("http_proxy")
@@ -457,15 +316,8 @@ func TestList_Check44(t *testing.T) {
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
-	atestSite, err := url.Parse(ATestSite)
-	require.NoError(t, err)
-
 	gock.New(testSite.Host).
 		Head(testSite.Path).
-		Reply(200)
-
-	gock.New(atestSite.Host).
-		Head(atestSite.Path).
 		Reply(200)
 
 	gock.InterceptClient(c.GetClient())
@@ -483,25 +335,25 @@ func TestList_Check48(t *testing.T) {
 	defer gock.Off()
 
 	baseDir = "testdata"
+	file := "testdata/CIMBL-0669-CERTS.csv"
 	config, err := loadConfig()
 	assert.NoError(t, err)
-	assert.NotNil(t, config)
 
 	fDebug = true
+
 	ctx := &Context{
 		config: config,
 		jobs:   8,
 	}
 
-	l := NewList(foo)
+	l := NewList([]string{file})
 	require.NotEmpty(t, l)
 
-	ATestSite := "http://www.example.net/search.php"
-
-	realPaths := map[string]bool{}
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
 	realURLs := map[string]bool{
-		TestSite:  true,
-		ATestSite: true,
+		TestSite: true,
 	}
 
 	proxy := os.Getenv("http_proxy")
@@ -511,15 +363,9 @@ func TestList_Check48(t *testing.T) {
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
-	atestSite, err := url.Parse(ATestSite)
-	require.NoError(t, err)
-
+	t.Logf("site=%s", testSite.Host)
 	gock.New(testSite.Host).
 		Head(testSite.Path).
-		Reply(200)
-
-	gock.New(atestSite.Host).
-		Head(atestSite.Path).
 		Reply(200)
 
 	gock.InterceptClient(c.GetClient())
