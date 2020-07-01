@@ -84,7 +84,7 @@ func createMail(ctx *Context, res *Results) (str string, err error) {
 		Subject:   ctx.config.Subject,
 		MyName:    MyName,
 		MyVersion: MyVersion,
-		Files:     strings.Join(ctx.files, ", "),
+		Files:     strings.Join(res.files, ", "),
 		Paths:     addPaths(res),
 		URLs:      addURLs(res),
 	}

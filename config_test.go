@@ -15,7 +15,7 @@ func TestLoadConfigNone(t *testing.T) {
 	c, err := loadConfig()
 	assert.NotNil(t, c)
 	assert.Empty(t, c)
-	assert.Error(t, err, "should be in error")
+	assert.Error(t, err)
 }
 
 func TestLoadConfigBad(t *testing.T) {
@@ -24,7 +24,7 @@ func TestLoadConfigBad(t *testing.T) {
 
 	c, err := loadConfig()
 	assert.Empty(t, c)
-	assert.Error(t, err, "should be in error")
+	assert.Error(t, err)
 }
 
 func TestLoadConfigPerms(t *testing.T) {
@@ -33,14 +33,14 @@ func TestLoadConfigPerms(t *testing.T) {
 
 	file := filepath.Join(baseDir, configName)
 	err := os.Chmod(file, 0000)
-	assert.NoError(t, err, "should be fine")
+	assert.NoError(t, err)
 
 	c, err := loadConfig()
 	assert.Empty(t, c)
-	assert.Error(t, err, "should be in error")
+	assert.Error(t, err)
 
 	err = os.Chmod(file, 0644)
-	assert.NoError(t, err, "should be fine")
+	assert.NoError(t, err)
 }
 
 func TestLoadConfigGood(t *testing.T) {
@@ -48,8 +48,8 @@ func TestLoadConfigGood(t *testing.T) {
 	configName = "config.toml"
 
 	c, err := loadConfig()
-	assert.NotEmpty(t, c, "not empty")
-	assert.NoError(t, err, "should be fine")
+	assert.NotEmpty(t, c)
+	assert.NoError(t, err)
 
 	// Check values
 	cnf := &Config{
@@ -60,7 +60,7 @@ func TestLoadConfigGood(t *testing.T) {
 		Server:  "SMTP:PORT",
 		REFile:  `(?i:CIMBL-\d+-(CERTS|EU)\.(csv|zip)(\.asc|))`,
 	}
-	assert.EqualValues(t, cnf, c, "should be equal")
+	assert.EqualValues(t, cnf, c)
 }
 
 func TestLoadConfigGood_NoRE(t *testing.T) {
@@ -69,7 +69,7 @@ func TestLoadConfigGood_NoRE(t *testing.T) {
 
 	c, err := loadConfig()
 	assert.NotEmpty(t, c, "not empty")
-	assert.NoError(t, err, "should be fine")
+	assert.NoError(t, err)
 
 	// Check values
 	cnf := &Config{
@@ -79,7 +79,7 @@ func TestLoadConfigGood_NoRE(t *testing.T) {
 		Subject: "CRQ: New URLs/files to be BLOCKED",
 		Server:  "SMTP:PORT",
 	}
-	assert.EqualValues(t, cnf, c, "should be equal")
+	assert.EqualValues(t, cnf, c)
 }
 
 func TestLoadConfigGoodVerbose(t *testing.T) {
@@ -89,7 +89,7 @@ func TestLoadConfigGoodVerbose(t *testing.T) {
 
 	c, err := loadConfig()
 	assert.NotEmpty(t, c, "not empty")
-	assert.NoError(t, err, "should be fine")
+	assert.NoError(t, err)
 
 	// Check values
 	cnf := &Config{
@@ -100,6 +100,6 @@ func TestLoadConfigGoodVerbose(t *testing.T) {
 		Server:  "SMTP:PORT",
 		REFile:  `(?i:CIMBL-\d+-(CERTS|EU)\.(csv|zip)(\.asc|))`,
 	}
-	assert.EqualValues(t, cnf, c, "should be equal")
+	assert.EqualValues(t, cnf, c)
 	fVerbose = false
 }

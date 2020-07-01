@@ -4,14 +4,15 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"regexp"
 	"runtime"
+	"runtime/pprof"
 	"strings"
+	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/keltia/archive"
-	"github.com/keltia/proxy"
 	"github.com/keltia/sandbox"
 	"github.com/pkg/errors"
 )
@@ -23,16 +24,18 @@ const (
 var (
 	// MyName is the application
 	MyName = "erc-cimbl"
-	// MyVersion is our version
-	MyVersion = "0.10.0-P"
+	// MyVersion is our version, add our features
+	MyVersion = "0.11.0,parallel,resty"
 
-	fDebug   bool
-	fDoMail  bool
-	fVerbose bool
-	fNoURLs  bool
-	fNoPaths bool
-	fSkipped bool
-	fJobs    int
+	fNoCleanup bool
+	fDebug     bool
+	fDoMail    bool
+	fVerbose   bool
+	fNoURLs    bool
+	fNoPaths   bool
+	fProfile   bool
+	fSkipped   bool
+	fJobs      int
 
 	// RE to check filenames — sensible default
 	REFile *regexp.Regexp = regexp.MustCompile(REfn)
@@ -40,20 +43,18 @@ var (
 
 // Context is the way to share info across functions.
 type Context struct {
-	Client *http.Client
+	Client *resty.Client
 
-	config    *Config
-	tempdir   *sandbox.Dir
-	proxyauth string
-	mail      MailSender
-	jobs      int
-	files     []string
+	config  *Config
+	tempdir *sandbox.Dir
+	mail    MailSender
+	jobs    int
 }
 
 // Usage string override.
 var Usage = func() {
-	fmt.Fprintf(os.Stderr, "%s/%s (Archive/%s Proxy/%s Sandbox/%s)\n\n",
-		MyName, MyVersion, archive.Version(), proxy.Version(), sandbox.Version())
+	fmt.Fprintf(os.Stderr, "%s/%s (Archive/%s Sandbox/%s)\n\n",
+		MyName, MyVersion, archive.Version(), sandbox.Version())
 
 	flag.PrintDefaults()
 }
@@ -61,6 +62,7 @@ var Usage = func() {
 func init() {
 	flag.Usage = Usage
 
+	flag.BoolVar(&fNoCleanup, "C", false, "No cleanup for temp files.")
 	flag.BoolVar(&fDebug, "D", false, "Debug mode")
 	flag.BoolVar(&fDoMail, "M", false, "Send mail")
 	flag.BoolVar(&fNoPaths, "P", false, "Do not check filenames")
@@ -68,6 +70,7 @@ func init() {
 	flag.BoolVar(&fNoURLs, "U", false, "Do not check URLs")
 	flag.IntVar(&fJobs, "j", runtime.NumCPU(), "parallel jobs")
 	flag.BoolVar(&fVerbose, "v", false, "Verbose mode")
+	flag.BoolVar(&fProfile, "prof", false, "Profiling")
 }
 
 func setup() (*Context, error) {
@@ -75,8 +78,8 @@ func setup() (*Context, error) {
 		fVerbose = true
 	}
 
-	verbose("%s/%s Archive/%s Proxy/%s Sandbox/%s",
-		MyName, MyVersion, archive.Version(), proxy.Version(), sandbox.Version())
+	verbose("%s/%s Archive/%s Sandbox/%s",
+		MyName, MyVersion, archive.Version(), sandbox.Version())
 
 	// No config file is not an error but you do not get to send mail
 	config, err := loadConfig()
@@ -103,17 +106,24 @@ func setup() (*Context, error) {
 		jobs:   fJobs,
 	}
 
-	proxyauth, err := proxy.SetupProxyAuth()
-	if err != nil {
+	if fProfile {
+		f, _ := os.Create("cpu.prof")
+		if err = pprof.StartCPUProfile(f); err != nil {
+			log.Fatalf("cant profile")
+		}
+	}
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy).SetTimeout(10 * time.Second)
+	ctx.Client = c
+
+	if proxy == "" {
 		verbose("No proxy auth.: %v", err)
 	} else {
 		verbose("Found http_proxy variable")
 		debug("Using %s as proxy…", os.Getenv("http_proxy"))
-		debug("Got %s as proxyauth", proxyauth)
-		ctx.proxyauth = proxyauth
 	}
 
-	// Create our sendbox
+	// Create our sandbox
 	ctx.tempdir, err = sandbox.New(MyName)
 	if err != nil {
 		return nil, errors.Wrap(err, "setup")
@@ -127,7 +137,9 @@ func realmain(args []string) error {
 	if err != nil {
 		return errors.Wrap(err, "realmain")
 	}
-
+	if fProfile {
+		defer pprof.StopCPUProfile()
+	}
 	defer ctx.tempdir.Cleanup()
 
 	if (fNoURLs && fNoPaths) || len(args) == 0 {
@@ -150,6 +162,14 @@ func realmain(args []string) error {
 	if fSkipped {
 		if len(skipped) != 0 {
 			log.Printf("\nSkipped URLs:\n%s", strings.Join(skipped, "\n"))
+		}
+	}
+
+	if !fNoCleanup {
+		for _, fn := range res.files {
+			if err := os.Remove(fn); err != nil {
+				log.Printf("Can not delete %s: %v", fn, err)
+			}
 		}
 	}
 	return nil

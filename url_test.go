@@ -3,19 +3,18 @@ package main
 import (
 	"fmt"
 	"net"
-	"net/http"
 	"net/url"
+	"os"
 	"testing"
-	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/h2non/gock"
-	"github.com/keltia/proxy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 const (
-	TestSite = "http://pontonerywariva342.top/search.php"
+	TestSite = "http://example.net/search.php"
 )
 
 func TestSanitize(t *testing.T) {
@@ -25,6 +24,8 @@ func TestSanitize(t *testing.T) {
 		err error
 	}{
 		{"https://example.com", "https://example.com", ErrHttpsSkip},
+		{"http://example.onion", "http://example.onion", ErrHttpsSkip},
+		{"http://example.onion:3636", "http://example.onion:3636", ErrHttpsSkip},
 		{"http://example.com", "http://example.com", nil},
 		{"ttp://example.com", "http://example.com", nil},
 		{"://example.com", "http://://example.com", nil},
@@ -63,158 +64,24 @@ func TestCheckForIP(t *testing.T) {
 	assert.Empty(t, e)
 }
 
-func TestDoCheck403(t *testing.T) {
-	defer gock.Off()
-
-	fDebug = true
-
-	// Check values
-	ctx := &Context{}
-
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
-
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-
-	testSite, err := url.Parse(TestSite)
-	require.NoError(t, err)
-
-	gock.New(testSite.Host).
-		Head(testSite.Path).
-		Reply(403)
-
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
-
-	req, err := http.NewRequest("HEAD", TestSite, nil)
-	require.NoError(t, err)
-
-	res, err := doCheck(ctx, req)
-	t.Logf("res=%#v", res)
-	assert.NoError(t, err)
-	assert.Equal(t, ActionBlocked, res)
-
-	fDebug = false
-}
-
-func TestDoCheck200(t *testing.T) {
-	defer gock.Off()
-
-	// Check values
-	ctx := &Context{}
-
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
-
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-
-	testSite, err := url.Parse(TestSite)
-	require.NoError(t, err)
-
-	gock.New(testSite.Host).
-		Head(testSite.Path).
-		Reply(200)
-
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
-
-	req, err := http.NewRequest("HEAD", TestSite, nil)
-	require.NoError(t, err)
-
-	res, err := doCheck(ctx, req)
-	assert.NoError(t, err)
-	assert.Equal(t, ActionBlock, res)
-}
-
-func TestDoCheck407(t *testing.T) {
-	defer gock.Off()
-
-	// Check values
-	ctx := &Context{}
-
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
-
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-
-	testSite, err := url.Parse(TestSite)
-	require.NoError(t, err)
-
-	gock.New(testSite.Host).
-		Head(testSite.Path).
-		Reply(407)
-
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
-
-	req, err := http.NewRequest("HEAD", TestSite, nil)
-	require.NoError(t, err)
-
-	res, err := doCheck(ctx, req)
-	assert.NoError(t, err)
-	assert.Equal(t, ActionAuth, res)
-}
-
-func TestDoCheckError(t *testing.T) {
-	// Check values
-	ctx := &Context{}
-
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
-
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-
-	req, err := http.NewRequest("HEAD", TestSite, nil)
-	require.NoError(t, err)
-
-	req.URL = nil
-	_, err = doCheck(ctx, req)
-	assert.Error(t, err)
-}
-
-func TestDoCheck_Transport(t *testing.T) {
-	// Check values
-	ctx := &Context{}
-
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: nil, Timeout: 10 * time.Second}
-
-	req, err := http.NewRequest("HEAD", TestSite, nil)
-	require.NoError(t, err)
-
-	_, err = doCheck(ctx, req)
-	assert.Error(t, err)
-}
-
 func TestHandleURLhttps(t *testing.T) {
 	defer gock.Off()
 
 	skipped = []string{}
 
-	// Check values
-	ctx := &Context{}
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
 
-	u, err := handleURL(ctx, "https://example.com")
-	assert.NoError(t, err)
+	u, err := handleURL(c, "https://example.com")
+	assert.Error(t, err)
 	assert.Empty(t, u)
-	assert.EqualValues(t, []string{"https://example.com"}, skipped)
 }
 
 func TestHandleURLblocked(t *testing.T) {
 	defer gock.Off()
 
-	// Check values
-	ctx := &Context{}
-
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
-
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
 
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
@@ -224,25 +91,63 @@ func TestHandleURLblocked(t *testing.T) {
 		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
 		Reply(403)
 
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
 
-	u, err := handleURL(ctx, TestSite)
+	u, err := handleURL(c, TestSite)
 	assert.NoError(t, err)
-	require.Empty(t, u)
+	require.EqualValues(t, ActionBlocked, u)
+}
+
+func TestHandleURLAuth(t *testing.T) {
+	defer gock.Off()
+
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
+
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
+		Reply(407)
+
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
+
+	u, err := handleURL(c, TestSite)
+	assert.NoError(t, err)
+	require.EqualValues(t, ActionAuth, u)
+}
+
+func TestHandleURLNope(t *testing.T) {
+	defer gock.Off()
+
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
+
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
+		Reply(503)
+
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
+
+	u, err := handleURL(c, TestSite)
+	assert.NoError(t, err)
+	require.EqualValues(t, ActionBlocked, u)
 }
 
 func TestHandleURLblock(t *testing.T) {
 	defer gock.Off()
 
-	// Check values
-	ctx := &Context{}
-
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
-
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
 
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
@@ -252,22 +157,23 @@ func TestHandleURLblock(t *testing.T) {
 		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
 		Reply(200)
 
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
 
-	u, err := handleURL(ctx, TestSite)
+	u, err := handleURL(c, TestSite)
 	assert.NoError(t, err)
 	require.NotEmpty(t, u)
 	assert.Equal(t, u, TestSite)
 }
 
 func TestHandleURLno(t *testing.T) {
-	// Check values
-	ctx := &Context{}
+
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
 
 	fNoURLs = true
 
-	u, err := handleURL(ctx, TestSite)
+	u, err := handleURL(c, TestSite)
 	assert.NoError(t, err)
 	require.Empty(t, u)
 

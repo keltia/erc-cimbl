@@ -1,15 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
-	"net/http"
 	"net/url"
 	"path/filepath"
+	"strings"
 	"testing"
-	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/h2non/gock"
-	"github.com/keltia/proxy"
 	"github.com/keltia/sandbox"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -73,8 +73,8 @@ func TestExtractZipZipin(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, base)
-	assert.Equal(t, "zipin.zip.zip", base)
-	assert.FileExists(t, filepath.Join(ctx.tempdir.Cwd(), "zipin.zip.zip"))
+	assert.Equal(t, "zipin", base)
+	assert.FileExists(t, filepath.Join(ctx.tempdir.Cwd(), "zipin"))
 }
 
 func TestReadFile_None(t *testing.T) {
@@ -102,6 +102,25 @@ func TestReadFile_Good(t *testing.T) {
 	require.NotEmpty(t, b)
 
 	assert.Equal(t, string(b), buf.String())
+}
+
+func TestReadIPlist_None(t *testing.T) {
+	file := "nonexistent.txt"
+	buf, err := readIPlist(file)
+	assert.Error(t, err)
+	assert.Empty(t, buf)
+}
+
+func TestReadIPList_Good(t *testing.T) {
+	all := []string{"10.1.1.1", "172.16.1.1", "192.168.1.1", ""}
+	allf := strings.Join(all, "\n")
+
+	file := "testdata/iplist.txt"
+	buf, err := readIPlist(file)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, buf)
+
+	assert.Equal(t, allf, buf.String())
 }
 
 func TestHandleAllFiles_None(t *testing.T) {
@@ -177,15 +196,17 @@ func TestHandleAllFiles_SingleBad2(t *testing.T) {
 	require.NoError(t, err)
 	defer snd.Cleanup()
 
-	ctx := &Context{
-		config:  config,
-		tempdir: snd,
-		jobs:    1,
-	}
+	ctx := &Context{config: config, tempdir: snd, jobs: 1}
 
+	c := resty.New()
+	ctx.Client = c
+
+	fDebug = true
 	res, err := handleAllFiles(ctx, []string{"http://localhost/foo.php"})
+	t.Logf("res/test=%#v", res)
 	assert.NoError(t, err)
 	assert.Empty(t, res.URLs)
+	fDebug = false
 }
 
 func TestHandleAllFiles_OneFile(t *testing.T) {
@@ -203,31 +224,21 @@ func TestHandleAllFiles_OneFile(t *testing.T) {
 		TestSite: true,
 	}
 
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
+	ctx := &Context{config: config, jobs: 1}
 
-	ctx := &Context{
-		config:  config,
-		tempdir: snd,
-		jobs:    1,
-	}
+	c := resty.New()
 
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
-
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-
+	ctx.Client = c
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
 	gock.New(testSite.Host).
 		Head(testSite.Path).
+		MatchHeader("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
 		Reply(200)
 
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
 
 	file := "testdata/CIMBL-0666-CERTS.csv"
 
@@ -255,31 +266,21 @@ func TestHandleAllFiles_OneFile1(t *testing.T) {
 		TestSite: true,
 	}
 
-	snd, err := sandbox.New("test")
-	require.NoError(t, err)
-	defer snd.Cleanup()
+	ctx := &Context{config: config, jobs: 1}
 
-	ctx := &Context{
-		config:  config,
-		tempdir: snd,
-		jobs:    1,
-	}
+	c := resty.New()
 
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
-
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-
+	ctx.Client = c
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
 	gock.New(testSite.Host).
 		Head(testSite.Path).
+		MatchHeader("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
 		Reply(200)
 
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
 
 	file := "testdata/CIMBL-0666-CERTS.csv"
 
@@ -299,7 +300,7 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 	config, err := loadConfig()
 	assert.NoError(t, err)
 
-	fVerbose = true
+	fDebug = true
 
 	realURLs := map[string]bool{
 		TestSite: true,
@@ -315,21 +316,19 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 		jobs:    1,
 	}
 
-	_, transport := proxy.SetupTransport(TestSite)
-	require.NotNil(t, transport)
+	c := resty.New()
 
-	// Set up minimal client
-	ctx.Client = &http.Client{Transport: transport, Timeout: 10 * time.Second}
-
+	ctx.Client = c
 	testSite, err := url.Parse(TestSite)
 	require.NoError(t, err)
 
 	gock.New(testSite.Host).
 		Head(testSite.Path).
+		MatchHeader("User-Agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
 		Reply(200)
 
-	gock.InterceptClient(ctx.Client)
-	defer gock.RestoreClient(ctx.Client)
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
 
 	file := TestSite
 
@@ -340,5 +339,25 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 	assert.NotEmpty(t, res.URLs)
 	assert.EqualValues(t, realURLs, res.URLs)
 
-	fVerbose = false
+	fDebug = false
+}
+
+func TestRemoveExt(t *testing.T) {
+	td := []struct{ in, out string }{
+		{"", ""},
+		{"foobar", "foobar"},
+		{"foobar.js", "foobar"},
+		{"foobar.zip.asc", "foobar.zip"},
+	}
+
+	for _, d := range td {
+		assert.Equal(t, d.out, RemoveExt(d.in))
+	}
+}
+
+func BenchmarkRemoveExt(b *testing.B) {
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		_ = RemoveExt("foobar.zip.asc")
+	}
 }

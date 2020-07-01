@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -8,12 +10,15 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/maxim2266/csvplus"
 	"github.com/pkg/errors"
 )
 
+// -----
+
 type Sourcer interface {
-	Check(ctx *Context) bool
+	Check(req *resty.Client) bool
 	AddTo(r *Results)
 }
 
@@ -26,8 +31,8 @@ func NewURL(u string) *URL {
 }
 
 // XXX
-func (u *URL) Check(ctx *Context) bool {
-	r, _ := handleURL(ctx, u.H)
+func (u *URL) Check(c *resty.Client) bool {
+	r, _ := handleURL(c, u.H)
 	if r == u.H {
 		return true
 	}
@@ -47,7 +52,7 @@ func NewFilename(s string) *Filename {
 	return &Filename{Name: s}
 }
 
-func (f *Filename) Check(ctx *Context) bool {
+func (f *Filename) Check(c *resty.Client) bool {
 	return true
 }
 
@@ -56,9 +61,11 @@ func (f *Filename) AddTo(r *Results) {
 	r.Add("filename", f.Name)
 }
 
+// -----
+
 type List struct {
-	ctx *Context
-	s   []Sourcer
+	s     []Sourcer
+	files []string
 }
 
 // NewList create a new list from sources, either URL or a CIMBL filename
@@ -73,12 +80,17 @@ func NewList(files []string) *List {
 	for _, e := range files {
 		if strings.HasPrefix(e, "http:") {
 			l.Add(NewURL(e))
+		} else if strings.HasSuffix(e, ".txt") {
+			if l, err := l.AddFromIP(e); err != nil {
+				log.Printf("Invalid IP list: %s", e)
+				return l
+			}
 		} else if REFile.MatchString(e) {
 			var err error
 
 			l, err = l.AddFromFile(e)
 			if err != nil {
-				log.Printf("%v: reading error", e)
+				log.Printf("%v: reading error: %v", e, errors.Wrap(err, "AddFromFile"))
 			}
 		} else {
 			log.Printf("invalid filename")
@@ -91,6 +103,10 @@ func (l *List) Add(s Sourcer) *List {
 	debug("adding %#v", s)
 	l.s = append(l.s, s)
 	return l
+}
+
+func (l *List) Length() int {
+	return len(l.s)
 }
 
 func (l *List) AddFromFile(fn string) (*List, error) {
@@ -124,7 +140,25 @@ func (l *List) AddFromFile(fn string) (*List, error) {
 		return l, errors.Wrap(err, "single/readfile")
 	}
 
+	l.files = append(l.files, filepath.Base(base))
 	return l.ReadFromCSV(buf)
+}
+
+func (l *List) AddFromIP(fn string) (*List, error) {
+	if _, err := os.Stat(fn); err != nil {
+		return l, errors.Wrapf(err, "unknown fn %s", fn)
+	}
+
+	buf, err := readIPlist(fn)
+	if err != nil {
+		return nil, errors.Wrap(err, "addfromip")
+	}
+
+	s := bufio.NewScanner(buf)
+	for s.Scan() {
+		l.Add(NewURL(fmt.Sprintf("http://%s/", s.Text())))
+	}
+	return l, nil
 }
 
 func (l *List) ReadFromCSV(r io.Reader) (*List, error) {
@@ -135,10 +169,10 @@ func (l *List) ReadFromCSV(r io.Reader) (*List, error) {
 			csvplus.Like(csvplus.Row{"type": "filename|sha1"}))).
 		ToRows()
 	if err != nil {
-		return &List{}, errors.Wrapf(err, "reading csv")
+		return l, errors.Wrapf(err, "reading csv")
 	}
 
-	verbose("%d entries found.", len(rows))
+	verbose("csv/%d entries found.", len(rows))
 
 	for _, row := range rows {
 		debug("row=%v", row)
@@ -159,6 +193,10 @@ func (l *List) ReadFromCSV(r io.Reader) (*List, error) {
 	return l, nil
 }
 
+func (l *List) Files() []string {
+	return l.files
+}
+
 func (l *List) Merge(l1 *List) *List {
 	for _, e := range l1.s {
 		l.Add(e)
@@ -166,7 +204,8 @@ func (l *List) Merge(l1 *List) *List {
 	return l
 }
 
-func (l *List) Check(ctx *Context) *Results {
+// Check1 (now reversed), is the initial implementation with a mutex
+func (l *List) Check1(ctx *Context) *Results {
 	var mut sync.Mutex
 
 	r := NewResults()
@@ -180,16 +219,16 @@ func (l *List) Check(ctx *Context) *Results {
 	// Setup workers
 	for i := 0; i < ctx.jobs; i++ {
 		wg.Add(1)
-		c := ctx
+
 		go func(n int, wg *sync.WaitGroup) {
 			defer wg.Done()
 
 			debug("%d is fine\n", n)
 			for e := range queue {
 				verbose("w%d - %d left", n, len(queue))
-				if e.Check(c) {
-					mut.Lock()
+				if e.Check(ctx.Client) {
 					verbose("adding %#v\n", e)
+					mut.Lock()
 					e.AddTo(r)
 					mut.Unlock()
 				}
@@ -203,7 +242,88 @@ func (l *List) Check(ctx *Context) *Results {
 	}
 
 	close(queue)
-	debug("r=%#v\n", r)
 	wg.Wait()
+	r.files = l.Files()
+	debug("r/check=%#v\n", r)
 	return r
+}
+
+// gather results
+func res(ins <-chan Sourcer) *Results {
+	debug("processing results")
+	r := NewResults()
+
+	for e := range ins {
+		fmt.Print(".")
+		e.AddTo(r)
+	}
+	return r
+}
+
+// Check is an alternate version of Check where we still parallelize checks but serialize updating results
+// instead of using a mutex.
+func (l *List) Check(ctx *Context) *Results {
+
+	wg := &sync.WaitGroup{}
+
+	// Length for the 2nd one will be tuned
+	queue := make(chan Sourcer, 50)
+
+	ins := make(chan Sourcer, l.Length())
+
+	done := make(chan struct{})
+	defer close(done)
+
+	debug("setup done")
+
+	// Setup the end of the fan-out
+	debug("setup %d workers\n", ctx.jobs)
+
+	// Setup workers (fan-in)
+	for i := 0; i < ctx.jobs; i++ {
+		wg.Add(1)
+
+		go func(n int, queue <-chan Sourcer, wg *sync.WaitGroup) {
+			defer wg.Done()
+
+			debug("%d is fine\n", n)
+			for {
+				e, ok := <-queue
+				if !ok {
+					return
+				}
+
+				debug("w%d - checking %v", n, e)
+				if e.Check(ctx.Client) {
+					debug("adding %#v\n", e)
+					ins <- e
+				}
+			}
+		}(i, queue, wg)
+	}
+
+	var result *Results
+
+	// Feed the queue
+	debug("scan queue:\n")
+	for _, q := range l.s {
+		queue <- q
+	}
+
+	go func() {
+		wg.Wait()
+		debug("after wait")
+		close(ins)
+	}()
+
+	debug("closing")
+	close(queue)
+
+	//done <- struct{}{}
+	debug("after close")
+
+	result = res(ins)
+	result.files = l.Files()
+	debug("r/check=%#v\n", result)
+	return result
 }

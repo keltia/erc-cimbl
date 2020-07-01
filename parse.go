@@ -2,8 +2,12 @@ package main
 
 import (
 	"bytes"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/keltia/archive"
 	"github.com/pkg/errors"
@@ -11,10 +15,23 @@ import (
 
 // These functions assume they are in the sandbox
 
+// RemoveExt removes the extension of the file, used for .zip.asc
+func RemoveExt(fn string) string {
+	ext := filepath.Ext(fn)
+	all := strings.Split(fn, ".")
+	if len(all) <= 1 {
+		return fn
+	}
+	if "."+all[len(all)-1] == ext {
+		return strings.Join(all[0:len(all)-1], ".")
+	}
+	return ""
+}
+
 // Given an asc/gpg file, create a temp file with uncrypted content
 // Assumes it is inside a sandbox
 func extractZipFrom(file string) (string, error) {
-	debug("reading %s", file)
+	debug("extractZipFile %s", file)
 
 	// Process the file (gpg encrypted zip file)
 	a, err := archive.New(file)
@@ -27,12 +44,12 @@ func extractZipFrom(file string) (string, error) {
 		return "", errors.Wrap(err, "extract")
 	}
 
-	base := filepath.Base(file)
+	base := RemoveExt(filepath.Base(file))
 
-	debug("creating %s.zip", base+".zip")
+	debug("creating %s", base)
 
 	// Create a temp file
-	zipfh, err := os.Create(base + ".zip")
+	zipfh, err := os.Create(base)
 	if err != nil {
 		return "", errors.Wrap(err, "create/temp")
 	}
@@ -46,13 +63,14 @@ func extractZipFrom(file string) (string, error) {
 		return "", errors.Wrap(err, "short read")
 	}
 	err = zipfh.Close()
-	return base + ".zip", err
+	return base, err
 }
 
+// Read the actual file out of a possible archive (zip, gpg, etc.)
 func readFile(base string) (*bytes.Buffer, error) {
 	var buf bytes.Buffer
 
-	debug("openzip %s", base)
+	debug("readFile %s", base)
 
 	// Here buf is the decrypted arc or plain file
 	arc, err := archive.New(base)
@@ -65,6 +83,26 @@ func readFile(base string) (*bytes.Buffer, error) {
 		return nil, errors.Wrap(err, "extract(csv)")
 	}
 
+	n, err := buf.Write(unc)
+	if err != nil {
+		return nil, errors.Wrap(err, "buffer/write")
+	}
+
+	if n != buf.Len() {
+		return nil, errors.Wrap(err, "short read")
+	}
+	return &buf, nil
+}
+
+func readIPlist(base string) (*bytes.Buffer, error) {
+	var buf bytes.Buffer
+
+	debug("readFile %s", base)
+
+	unc, err := ioutil.ReadFile(base)
+	if err != nil {
+		return nil, errors.Wrapf(err, "ioutil/read")
+	}
 	n, err := buf.Write(unc)
 	if err != nil {
 		return nil, errors.Wrap(err, "buffer/write")
@@ -109,10 +147,15 @@ func handleAllFiles(ctx *Context, files []string) (*Results, error) {
 
 	list := NewList(files)
 	debug("list=%#v\n", list)
-	list.ctx = ctx
 
-	r := list.Check(ctx)
-	debug("r=%#v\n", r)
-
-	return r, nil
+	if list.Length() != 0 {
+		t1 := time.Now()
+		r := list.Check(ctx)
+		t2 := time.Since(t1)
+		verbose("time=%v", t2)
+		debug("r(main)=%#v\n", r)
+		return r, nil
+	}
+	log.Printf("Empty list.")
+	return NewResults(), nil
 }

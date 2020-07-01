@@ -95,7 +95,6 @@ func TestSetupProxyError(t *testing.T) {
 
 	assert.NotNil(t, ctx.config)
 	assert.NotNil(t, ctx.tempdir)
-	assert.NotEmpty(t, ctx.proxyauth)
 	unsetvars(t)
 }
 
@@ -113,14 +112,13 @@ func TestSetupProxyAuth(t *testing.T) {
 
 	assert.NotNil(t, ctx.config)
 	assert.NotNil(t, ctx.tempdir)
-	assert.NotEmpty(t, ctx.proxyauth)
 	unsetvars(t)
 }
 
 func TestSetupServer(t *testing.T) {
 	baseDir = "testdata"
 	configName = "config-smtp.toml"
-	os.Setenv("NETRC", filepath.Join(".", "test", "test-netrc"))
+	require.NoError(t, os.Setenv("NETRC", filepath.Join(".", "test", "test-netrc")))
 
 	fDebug = true
 	ctx, err := setup()
@@ -129,13 +127,19 @@ func TestSetupServer(t *testing.T) {
 
 	assert.NotNil(t, ctx.config)
 	assert.NotNil(t, ctx.tempdir)
-	assert.NotNil(t, ctx.proxyauth)
 	assert.NotEmpty(t, ctx.config.Server)
+
+	require.NoError(t, os.Unsetenv("NETRC"))
 	fDebug = false
 }
 
 func TestRealMain_Noarg(t *testing.T) {
 	err := realmain([]string{})
+	assert.NoError(t, err)
+}
+
+func TestRealMain_InvalidFile(t *testing.T) {
+	err := realmain([]string{"testdata/bad.csv"})
 	assert.NoError(t, err)
 }
 
@@ -159,6 +163,22 @@ func TestRealMain_Onearg_Empty(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestRealMain_Onearg_EmptySkipped(t *testing.T) {
+	fSkipped = true
+	err := realmain([]string{"testdata/CIMBL-0667-CERTS.csv"})
+	assert.NoError(t, err)
+	fSkipped = false
+}
+
+func TestRealMain_Onearg_EmptySkipped2(t *testing.T) {
+	fSkipped = true
+	skipped = append(skipped, "https://example.net/")
+	err := realmain([]string{"testdata/CIMBL-0667-CERTS.csv"})
+	assert.NoError(t, err)
+	fSkipped = false
+	skipped = []string{}
+}
+
 func TestRealMain_Onearg_Good(t *testing.T) {
 	err := realmain([]string{"testdata/CIMBL-0666-CERTS.csv"})
 	assert.NoError(t, err)
@@ -171,4 +191,8 @@ func TestRealMain_Onearg_GoodZip(t *testing.T) {
 
 func TestUsage(t *testing.T) {
 	Usage()
+}
+
+func TestMain1(t *testing.T) {
+	main()
 }
