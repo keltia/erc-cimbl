@@ -80,6 +80,11 @@ func NewList(files []string) *List {
 	for _, e := range files {
 		if strings.HasPrefix(e, "http:") {
 			l.Add(NewURL(e))
+		} else if strings.HasSuffix(e, ".txt") {
+			if l, err := l.AddFromIP(e); err != nil {
+				log.Printf("Invalid IP list: %s", e)
+				return l
+			}
 		} else if REFile.MatchString(e) {
 			var err error
 
