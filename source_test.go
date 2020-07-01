@@ -687,6 +687,23 @@ func TestNewList4(t *testing.T) {
 	assert.EqualValues(t, td, l.s)
 }
 
+func TestNewList_IP(t *testing.T) {
+	td := []Sourcer{
+		NewURL("http://10.1.1.1/"),
+		NewURL("http://172.16.1.1/"),
+		NewURL("http://192.168.1.1/"),
+	}
+
+	l := NewList([]string{"testdata/iplist.txt"})
+	require.NotEmpty(t, l)
+	assert.EqualValues(t, td, l.s)
+}
+
+func TestNewList_IPBad(t *testing.T) {
+	l := NewList([]string{"testdata/nonexistent.txt"})
+	assert.Empty(t, l)
+}
+
 func TestList_Add(t *testing.T) {
 	td := []Sourcer{NewFilename("exemple.docx")}
 	l := NewList(nil)
@@ -706,6 +723,29 @@ func TestList_Add2(t *testing.T) {
 	l.Add(NewURL("http://www.example.net/"))
 	assert.NotEmpty(t, l.s)
 	assert.Equal(t, td, l.s)
+}
+
+func TestList_AddFromIP_None(t *testing.T) {
+	fn := "nonexistent"
+	l := NewList(nil)
+	l1, err := l.AddFromIP(fn)
+	require.Error(t, err)
+	assert.Empty(t, l1)
+}
+
+func TestList_AddFromIP_Good(t *testing.T) {
+	td := []Sourcer{
+		NewURL("http://10.1.1.1/"),
+		NewURL("http://172.16.1.1/"),
+		NewURL("http://192.168.1.1/"),
+	}
+
+	fn := "testdata/iplist.txt"
+	l := NewList(nil)
+	l1, err := l.AddFromIP(fn)
+	require.NoError(t, err)
+	assert.NotEmpty(t, l1)
+	assert.EqualValues(t, td, l1.s)
 }
 
 func TestList_AddFromFile(t *testing.T) {

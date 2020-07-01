@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -136,6 +137,23 @@ func (l *List) AddFromFile(fn string) (*List, error) {
 
 	l.files = append(l.files, filepath.Base(base))
 	return l.ReadFromCSV(buf)
+}
+
+func (l *List) AddFromIP(fn string) (*List, error) {
+	if _, err := os.Stat(fn); err != nil {
+		return l, errors.Wrapf(err, "unknown fn %s", fn)
+	}
+
+	buf, err := readIPlist(fn)
+	if err != nil {
+		return nil, errors.Wrap(err, "addfromip")
+	}
+
+	s := bufio.NewScanner(buf)
+	for s.Scan() {
+		l.Add(NewURL(fmt.Sprintf("http://%s/", s.Text())))
+	}
+	return l, nil
 }
 
 func (l *List) ReadFromCSV(r io.Reader) (*List, error) {
