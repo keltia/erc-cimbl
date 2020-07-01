@@ -358,6 +358,303 @@ func TestList_Check48(t *testing.T) {
 	assert.EqualValues(t, realURLs, res.URLs)
 }
 
+// Variation with Check1
+
+func TestList_Check1(t *testing.T) {
+	defer gock.Off()
+
+	baseDir = "testdata"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+	assert.NotNil(t, config)
+
+	l := NewList([]string{})
+	require.Empty(t, l)
+
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
+
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		Reply(200)
+
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
+
+	u := NewURL(TestSite)
+	assert.True(t, u.Check(c))
+}
+
+func TestList_Check12(t *testing.T) {
+	defer gock.Off()
+
+	baseDir = "testdata"
+	file := "testdata/CIMBL-0669-CERTS.csv"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+	assert.NotNil(t, config)
+
+	ctx := &Context{
+		config: config,
+		jobs:   1,
+	}
+
+	l := NewList([]string{file})
+	require.NotEmpty(t, l)
+
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
+	realURLs := map[string]bool{
+		TestSite: true,
+	}
+
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
+
+	ctx.Client = c
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		Reply(200)
+
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
+
+	res := l.Check1(ctx)
+	t.Logf("res=%#v", res)
+	assert.NoError(t, err)
+	assert.EqualValues(t, realPaths, res.Paths)
+	assert.EqualValues(t, realURLs, res.URLs)
+}
+
+func TestList_Check13(t *testing.T) {
+	defer gock.Off()
+
+	baseDir = "testdata"
+	file := "testdata/CIMBL-0666-CERTS.csv"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	fDebug = true
+
+	ctx := &Context{
+		config: config,
+		jobs:   1,
+	}
+
+	l := NewList([]string{file})
+
+	require.NotEmpty(t, l)
+
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
+	realURLs := map[string]bool{
+		TestSite: true,
+	}
+
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
+
+	ctx.Client = c
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		MatchHeader("user-agent", fmt.Sprintf("%s/%s", MyName, MyVersion)).
+		Reply(200)
+
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
+
+	res := l.Check1(ctx)
+	t.Logf("res=%#v", res)
+	assert.NoError(t, err, "no error")
+	assert.EqualValues(t, realPaths, res.Paths)
+	assert.EqualValues(t, realURLs, res.URLs)
+	fDebug = false
+}
+
+func TestList_Check141(t *testing.T) {
+	defer gock.Off()
+
+	baseDir = "testdata"
+	file := "testdata/CIMBL-0669-CERTS.csv"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	ctx := &Context{
+		config: config,
+		jobs:   1,
+	}
+
+	l := NewList([]string{file})
+	require.NotEmpty(t, l)
+
+	t.Logf("site=%#v", TestSite)
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
+	realURLs := map[string]bool{
+		TestSite: true,
+	}
+
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
+
+	ctx.Client = c
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		Reply(200)
+
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
+
+	res := l.Check1(ctx)
+	assert.NoError(t, err)
+	assert.EqualValues(t, realPaths, res.Paths)
+	assert.EqualValues(t, realURLs, res.URLs)
+}
+
+func TestList_Check143(t *testing.T) {
+	defer gock.Off()
+
+	baseDir = "testdata"
+	file := "testdata/CIMBL-0669-CERTS.csv"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	ctx := &Context{
+		config: config,
+		jobs:   3,
+	}
+
+	l := NewList([]string{file})
+	require.NotEmpty(t, l)
+
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
+	realURLs := map[string]bool{
+		TestSite: true,
+	}
+
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
+
+	ctx.Client = c
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		Reply(200)
+
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
+
+	res := l.Check1(ctx)
+	assert.NoError(t, err)
+	assert.EqualValues(t, realPaths, res.Paths)
+	assert.EqualValues(t, realURLs, res.URLs)
+}
+
+func TestList_Check144(t *testing.T) {
+	defer gock.Off()
+
+	baseDir = "testdata"
+	file := "testdata/CIMBL-0669-CERTS.csv"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	ctx := &Context{
+		config: config,
+		jobs:   4,
+	}
+
+	l := NewList([]string{file})
+	require.NotEmpty(t, l)
+
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
+	realURLs := map[string]bool{
+		TestSite: true,
+	}
+
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
+
+	ctx.Client = c
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		Reply(200)
+
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
+
+	res := l.Check1(ctx)
+	assert.NoError(t, err)
+	assert.EqualValues(t, realPaths, res.Paths)
+	assert.EqualValues(t, realURLs, res.URLs)
+}
+
+func TestList_Check148(t *testing.T) {
+	defer gock.Off()
+
+	baseDir = "testdata"
+	file := "testdata/CIMBL-0669-CERTS.csv"
+	config, err := loadConfig()
+	assert.NoError(t, err)
+
+	ctx := &Context{
+		config: config,
+		jobs:   8,
+	}
+
+	l := NewList([]string{file})
+	require.NotEmpty(t, l)
+
+	realPaths := map[string]bool{
+		"55fe62947f3860108e7798c4498618cb.rtf": true,
+	}
+	realURLs := map[string]bool{
+		TestSite: true,
+	}
+
+	proxy := os.Getenv("http_proxy")
+	c := resty.New().SetProxy(proxy)
+
+	ctx.Client = c
+	testSite, err := url.Parse(TestSite)
+	require.NoError(t, err)
+
+	gock.New(testSite.Host).
+		Head(testSite.Path).
+		Reply(200)
+
+	gock.InterceptClient(c.GetClient())
+	defer gock.RestoreClient(c.GetClient())
+
+	res := l.Check1(ctx)
+	assert.NoError(t, err)
+	assert.EqualValues(t, realPaths, res.Paths)
+	assert.EqualValues(t, realURLs, res.URLs)
+}
+
 // List
 
 func TestNewList(t *testing.T) {
