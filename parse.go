@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -82,6 +83,26 @@ func readFile(base string) (*bytes.Buffer, error) {
 		return nil, errors.Wrap(err, "extract(csv)")
 	}
 
+	n, err := buf.Write(unc)
+	if err != nil {
+		return nil, errors.Wrap(err, "buffer/write")
+	}
+
+	if n != buf.Len() {
+		return nil, errors.Wrap(err, "short read")
+	}
+	return &buf, nil
+}
+
+func readIPlist(base string) (*bytes.Buffer, error) {
+	var buf bytes.Buffer
+
+	debug("readFile %s", base)
+
+	unc, err := ioutil.ReadFile(base)
+	if err != nil {
+		return nil, errors.Wrapf(err, "ioutil/read")
+	}
 	n, err := buf.Write(unc)
 	if err != nil {
 		return nil, errors.Wrap(err, "buffer/write")

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/go-resty/resty/v2"
@@ -103,6 +104,25 @@ func TestReadFile_Good(t *testing.T) {
 	assert.Equal(t, string(b), buf.String())
 }
 
+func TestReadIPlist_None(t *testing.T) {
+	file := "nonexistent.txt"
+	buf, err := readIPlist(file)
+	assert.Error(t, err)
+	assert.Empty(t, buf)
+}
+
+func TestReadIPList_Good(t *testing.T) {
+	all := []string{"10.1.1.1", "172.16.1.1", "192.168.1.1", ""}
+	allf := strings.Join(all, "\n")
+
+	file := "testdata/iplist.txt"
+	buf, err := readIPlist(file)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, buf)
+
+	assert.Equal(t, allf, buf.String())
+}
+
 func TestHandleAllFiles_None(t *testing.T) {
 	baseDir = "testdata"
 	config, err := loadConfig()
@@ -176,7 +196,7 @@ func TestHandleAllFiles_SingleBad2(t *testing.T) {
 	require.NoError(t, err)
 	defer snd.Cleanup()
 
-	ctx := &Context{config:  config, tempdir: snd, jobs: 1}
+	ctx := &Context{config: config, tempdir: snd, jobs: 1}
 
 	c := resty.New()
 	ctx.Client = c
@@ -204,7 +224,7 @@ func TestHandleAllFiles_OneFile(t *testing.T) {
 		TestSite: true,
 	}
 
-	ctx := &Context{config:  config, jobs: 1}
+	ctx := &Context{config: config, jobs: 1}
 
 	c := resty.New()
 
@@ -246,7 +266,7 @@ func TestHandleAllFiles_OneFile1(t *testing.T) {
 		TestSite: true,
 	}
 
-	ctx := &Context{config:  config, jobs: 1}
+	ctx := &Context{config: config, jobs: 1}
 
 	c := resty.New()
 
@@ -323,7 +343,7 @@ func TestHandleAllFiles_OneURL(t *testing.T) {
 }
 
 func TestRemoveExt(t *testing.T) {
-	td := []struct{in, out string}{
+	td := []struct{ in, out string }{
 		{"", ""},
 		{"foobar", "foobar"},
 		{"foobar.js", "foobar"},
