@@ -25,7 +25,7 @@ var (
 	// MyName is the application
 	MyName = "erc-cimbl"
 	// MyVersion is our version, add our features
-	MyVersion = "0.10.0,parallel,resty"
+	MyVersion = "0.11.0,parallel,resty"
 
 	fNoCleanup bool
 	fDebug     bool
