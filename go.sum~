@@ -7,8 +7,13 @@ github.com/go-resty/resty/v2 v2.0.0 h1:9Nq/U+V4xsoDnDa/iTrABDWUCuk3Ne92XFHPe6dKW
 github.com/go-resty/resty/v2 v2.0.0/go.mod h1:dZGr0i9PLlaaTD4H/hoZIDjQ+r6xq8mgbRzHZf7f2J8=
 github.com/h2non/gock v1.0.10 h1:EzHYzKKSLN4xk0w193uAy3tp8I3+L1jmaI2Mjg4lCgU=
 github.com/h2non/gock v1.0.10/go.mod h1:CZMcB0Lg5IWnr9bF79pPMg9WeV6WumxQiUJ1UvdO1iE=
+<<<<<<< HEAD
+github.com/keltia/archive v0.8.0 h1:A8JXixhY1yyLm+RaHb4DU4sDjtFu2ooppwMwIeIVv2M=
+github.com/keltia/archive v0.8.0/go.mod h1:KvIUtwVCyX6ZdMtMWxatP3a0XNhN9JZ7dwzJ2+11FnI=
+=======
 github.com/keltia/archive v0.9.1 h1:7DBasZh0gZeUAfPthwOiGKljF9MDSWkm0rqrsp7G/rs=
 github.com/keltia/archive v0.9.1/go.mod h1:ZYKhAaRolHUdi+vkeEDfWcp65XDOljDdxWq17j3I86A=
+>>>>>>> master
 github.com/keltia/sandbox v0.9.3 h1:v1Ro9wqk+OkR/hpek8b8Nf5h37OpwVKXYTTkdKiv6jE=
 github.com/keltia/sandbox v0.9.3/go.mod h1:Xscj8qL/B7j0GTs9cQdWckGG0lwpzmUTKfdRtvqfXw0=
 github.com/klauspost/compress v1.10.10 h1:a/y8CglcM7gLGYmlbP/stPE5sR3hbhFRUjCBfd/0B3I=
