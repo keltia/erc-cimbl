@@ -9,6 +9,7 @@ require (
 	github.com/maxim2266/csvplus v0.3.3
 	github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32 // indirect
 	github.com/pkg/errors v0.8.1
+	github.com/proglottis/gpgme v0.1.1 // indirect
 	github.com/stretchr/testify v1.3.0
 )
 
